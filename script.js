@@ -88,45 +88,102 @@ energyInterval = setInterval(() => {
     updateEnergyDisplay();
   }
 }, energyRegenInterval);
-function copyUsername() {
-  navigator.clipboard.writeText(document.getElementById("yourUsername").textContent);
+
+// Функция для создания анимации монетки и текста
+function createClickAnimation(x, y) {
+  // Создаем контейнер для анимации
+  const container = document.createElement('div');
+  container.className = 'click-animation-container';
+  container.style.left = `${x}px`;
+  container.style.top = `${y}px`;
+  
+  // Создаем текст +1
+  const floatingText = document.createElement('div');
+  floatingText.className = 'floating-text';
+  floatingText.textContent = '+1';
+  
+  // Создаем монетку
+  const floatingCoin = document.createElement('img');
+  floatingCoin.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
+  floatingCoin.className = 'floating-coin';
+  
+  // Добавляем элементы в контейнер
+  container.appendChild(floatingText);
+  container.appendChild(floatingCoin);
+  document.body.appendChild(container);
+
+  // Удаляем контейнер после анимации
+  setTimeout(() => {
+    container.remove();
+  }, 1000);
 }
-function addFriend() {
-  let friendUsername = document.getElementById("friendUsername").value;
-}
-document.getElementById('clickerButton').addEventListener('click', e => {
+
+// Функция для обработки клика
+function handleClick(event) {
   if (energy > 0) {
+    // Вибрация для мобильных устройств
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
+    }
+
+    // Определяем координаты клика
+    let x, y;
+    if (event.touches && event.touches.length > 0) {
+      // Для сенсорных устройств обрабатываем каждое касание
+      Array.from(event.touches).forEach(touch => {
+        createClickAnimation(touch.clientX, touch.clientY);
+      });
+    } else if (event.clientX && event.clientY) {
+      // Для клика мышью
+      createClickAnimation(event.clientX, event.clientY);
+    } else {
+      // Если координаты недоступны, используем центр кнопки
+      const button = document.getElementById('clickerButton');
+      const rect = button.getBoundingClientRect();
+      createClickAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    }
+
+    // Увеличиваем счетчик
     coins++;
     energy--;
     document.getElementById('balance').textContent = coins;
     updateEnergyDisplay();
-    const floatingCoin = document.createElement('img');
-    floatingCoin.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
-    floatingCoin.className = 'floating-coin';
-    floatingCoin.style.left = e.pageX + 'px';
-    floatingCoin.style.top = e.pageY + 'px';
-    document.body.appendChild(floatingCoin);
-    setTimeout(() => {
-      const floatingText = document.createElement('div');
-      floatingText.className = 'floating-text';
-      floatingText.textContent = '+1';
-      floatingText.style.left = e.pageX + 'px';
-      floatingText.style.top = e.pageY + 'px';
-      document.body.appendChild(floatingText);
-    }, 100);
-    setTimeout(() => {
-      floatingCoin.remove();
-    }, 1000);
-    setTimeout(() => {
-      document.querySelectorAll('.floating-text').forEach(el => el.remove());
-    }, 1100);
   }
+}
+
+// Инициализация обработчиков событий
+document.addEventListener('DOMContentLoaded', () => {
+  const clickerButton = document.getElementById('clickerButton');
+  
+  // Добавляем обработчики для мыши
+  clickerButton.addEventListener('click', handleClick);
+  
+  // Добавляем обработчики для сенсорных устройств
+  clickerButton.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Предотвращаем зум на мобильных
+    handleClick(e);
+  }, { passive: false });
+  
+  // Отключаем стандартное поведение при касании
+  clickerButton.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+  }, { passive: false });
 });
+
 function updateEnergyDisplay() {
   document.getElementById('energyFill').style.width = energy / maxEnergy * 100 + '%';
   document.getElementById('currentEnergy').textContent = energy;
   document.getElementById('maxEnergy').textContent = maxEnergy;
 }
+
+function copyUsername() {
+  navigator.clipboard.writeText(document.getElementById("yourUsername").textContent);
+}
+
+function addFriend() {
+  let friendUsername = document.getElementById("friendUsername").value;
+}
+
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', () => {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -152,6 +209,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     }
   });
 });
+
 document.getElementById('userAvatar').addEventListener('click', () => {
   const modal = document.createElement('div');
   modal.className = 'settings-overlay active';
@@ -206,6 +264,7 @@ document.getElementById('userAvatar').addEventListener('click', () => {
     });
   });
 });
+
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     clearInterval(energyInterval);
@@ -218,6 +277,7 @@ document.addEventListener('visibilitychange', () => {
     }, energyRegenInterval);
   }
 });
+
 const cards = [
     {
       id: 1,
@@ -225,6 +285,7 @@ const cards = [
       title: "Начало пути",
       description: "Коала только начинает своё путешествие. Даёт 120 эвкалипта в час",
       price: "10000",
+      perHour: 120,
       isNew: true
     },
     {
@@ -292,13 +353,17 @@ const cards = [
 function renderCards() {
   const cardsGrid = document.getElementById('cardsGrid');
   cardsGrid.innerHTML = '';
-  cards.forEach(card => {
+  
+  // Сначала добавляем все карточки в массив, чтобы отсортировать их по цене
+  const sortedCards = [...cards].sort((a, b) => parseInt(a.price) - parseInt(b.price));
+  
+  sortedCards.forEach(card => {
     const cardElement = document.createElement('div');
     cardElement.className = 'card';
     cardElement.innerHTML = `
         ${card.isNew ? '<div class="new-badge">NEW</div>' : ''}
         <div class="card-image-container">
-          <img src="${card.image}" alt="${card.title}">
+          <img src="${card.image}" alt="${card.title}" loading="lazy">
         </div>
         <div class="card-title">${card.title}</div>
         <div class="card-description">${card.description}</div>
@@ -314,6 +379,7 @@ function renderCards() {
     cardsGrid.appendChild(cardElement);
   });
 }
+
 function buyCard(cardId) {
   const card = cards.find(c => c.id === cardId);
   if (card && coins >= parseInt(card.price)) {
@@ -324,4 +390,5 @@ function buyCard(cardId) {
     alert('Недостаточно монет!');
   }
 }
+
 document.querySelector('.top-panel').style.zIndex = '2';
