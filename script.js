@@ -10,6 +10,11 @@ const savedEnergy = localStorage.getItem('energy');
 if (savedCoins) coins = parseInt(savedCoins);
 if (savedEnergy) energy = parseInt(savedEnergy);
 
+// Устанавливаем снег включенным по умолчанию
+if (localStorage.getItem('snowEnabled') === null) {
+    localStorage.setItem('snowEnabled', 'true');
+}
+
 // Инициализация Telegram Web App
 const tg = window.Telegram.WebApp;
 tg.expand(); // Раскрываем на весь экран
@@ -89,6 +94,32 @@ energyInterval = setInterval(() => {
   }
 }, energyRegenInterval);
 
+// Функция для показа уведомлений
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-message">${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 100);
+    
+    // Удаление уведомления через 3 секунды
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
 // Функция для создания анимации монетки и текста
 function createClickAnimation(x, y) {
   // Создаем контейнер для анимации
@@ -118,37 +149,66 @@ function createClickAnimation(x, y) {
   }, 1000);
 }
 
+// Функция для создания эффекта +1
+function createClickEffect(x, y) {
+    const gameContainer = document.querySelector('.game-container');
+    if (!gameContainer) return;
+
+    const effect = document.createElement('div');
+    effect.className = 'click-effect';
+    effect.textContent = '+1';
+    
+    // Получаем позицию относительно game-container
+    const rect = gameContainer.getBoundingClientRect();
+    effect.style.left = `${x - rect.left}px`;
+    effect.style.top = `${y - rect.top}px`;
+    
+    gameContainer.appendChild(effect);
+
+    // Удаляем элемент после завершения анимации
+    effect.addEventListener('animationend', () => {
+        effect.remove();
+    });
+}
+
+// Функция для вибрации
+function vibrate() {
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+}
+
 // Функция для обработки клика
 function handleClick(event) {
-  if (energy > 0) {
-    // Вибрация для мобильных устройств
-    if (navigator.vibrate) {
-      navigator.vibrate(50);
-    }
+    if (energy > 0) {
+        // Определяем координаты клика
+        const x = event.clientX;
+        const y = event.clientY;
 
-    // Определяем координаты клика
-    let x, y;
-    if (event.touches && event.touches.length > 0) {
-      // Для сенсорных устройств обрабатываем каждое касание
-      Array.from(event.touches).forEach(touch => {
-        createClickAnimation(touch.clientX, touch.clientY);
-      });
-    } else if (event.clientX && event.clientY) {
-      // Для клика мышью
-      createClickAnimation(event.clientX, event.clientY);
+        // Создаем эффект +1 только в разделе Home
+        const activeSection = document.querySelector('.section.active');
+        if (activeSection && activeSection.id === 'home') {
+            createClickEffect(x, y);
+            vibrate();
+        }
+
+        // Обновляем счетчик
+        coins++;
+        localStorage.setItem('coins', coins);
+        document.getElementById('balance').textContent = coins;
+
+        // Уменьшаем энергию
+        energy = Math.max(0, energy - 1);
+        localStorage.setItem('energy', energy);
+        updateEnergyDisplay();
+
+        // Показываем уведомление если энергия закончилась
+        if (energy === 0) {
+            showNotification('Недостаточно энергии!');
+        }
     } else {
-      // Если координаты недоступны, используем центр кнопки
-      const button = document.getElementById('clickerButton');
-      const rect = button.getBoundingClientRect();
-      createClickAnimation(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        showNotification('Недостаточно энергии!');
     }
-
-    // Увеличиваем счетчик
-    coins++;
-    energy--;
-    document.getElementById('balance').textContent = coins;
-    updateEnergyDisplay();
-  }
 }
 
 // Инициализация обработчиков событий
@@ -168,6 +228,33 @@ document.addEventListener('DOMContentLoaded', () => {
   clickerButton.addEventListener('touchmove', (e) => {
     e.preventDefault();
   }, { passive: false });
+});
+
+// Инициализация обработчиков кликов для разделов в разработке
+document.addEventListener('DOMContentLoaded', function() {
+    const containers = [
+        document.getElementById('construction-click-container'),
+        document.getElementById('construction-click-container-reward')
+    ];
+
+    containers.forEach(container => {
+        if (container) {
+            container.addEventListener('click', function(e) {
+                vibrate();
+            });
+        }
+    });
+
+    // Показываем сообщение о разработке при переключении на соответствующие разделы
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            if (targetId === 'mining' || targetId === 'reward') {
+                showNotification('Этот раздел находится в разработке');
+            }
+        });
+    });
 });
 
 function updateEnergyDisplay() {
@@ -210,73 +297,190 @@ document.querySelectorAll('.nav-item').forEach(item => {
   });
 });
 
-document.getElementById('userAvatar').addEventListener('click', () => {
-  const modal = document.createElement('div');
-  modal.className = 'settings-overlay active';
-  modal.innerHTML = `
-    <div class="settings-panel">
-      <div class="settings-header">
-        <h2>Настройки</h2>
-        <button class="close-settings" onclick="this.closest('.settings-overlay').remove()">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="settings-content">
-        <div class="settings-section">
-          <div class="settings-item">
-            <span>Звуки</span>
-            <label class="switch">
-              <input type="checkbox" id="soundToggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="settings-item">
-            <span>Музыка</span>  
-            <label class="switch">
-              <input type="checkbox" id="musicToggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="settings-item">
-            <span>Уведомления</span>
-            <label class="switch">
-              <input type="checkbox" id="notificationsToggle">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="settings-item">
-            <span>Снег</span>
-            <label class="switch">
-              <input type="checkbox" id="snowToggle" ${snowEnabled ? 'checked' : ''}>
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-  document.getElementById('snowToggle').addEventListener('change', e => {
-    snowEnabled = e.target.checked;
-    const flakes = document.querySelectorAll('.snowflake');
-    flakes.forEach(flake => {
-      flake.style.display = snowEnabled ? 'block' : 'none';
-    });
-  });
-});
+document.getElementById('userAvatar').addEventListener('click', showSettings);
 
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    clearInterval(energyInterval);
-  } else {
-    energyInterval = setInterval(() => {
-      if (energy < maxEnergy) {
-        energy = Math.min(maxEnergy, energy + energyRegenRate);
-        updateEnergyDisplay();
-      }
-    }, energyRegenInterval);
-  }
-});
+function showSettings() {
+    // Удаляем существующие настройки, если они есть
+    const existingSettings = document.querySelector('.settings-overlay');
+    if (existingSettings) {
+        existingSettings.remove();
+    }
+
+    const settingsHtml = `
+    <div class="settings-overlay">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h2>Настройки</h2>
+                <div class="header-buttons">
+                    <button id="settingsNewsButton" class="news-button">
+                        <i class="fas fa-newspaper"></i>
+                        Новости
+                    </button>
+                    <button class="close-settings">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <span>Звук</span>
+                    <label class="switch">
+                        <input type="checkbox" id="settingsSoundToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Вибрация</span>
+                    <label class="switch">
+                        <input type="checkbox" id="settingsVibrationToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Снег</span>
+                    <label class="switch">
+                        <input type="checkbox" id="settingsSnowToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно для новостей -->
+        <div id="settingsNewsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+            <div class="bg-zinc-900 w-11/12 max-w-lg rounded-lg p-6 relative max-h-[80vh] overflow-y-auto">
+                <button id="settingsCloseNewsModal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="text-xl font-bold text-white mb-4">Новости</h3>
+                <div id="settingsNewsContent" class="text-gray-300">
+                    <!-- Здесь будет контент из Telegraph -->
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', settingsHtml);
+
+    // Добавляем обработчик для закрытия окна настроек
+    const closeButtons = document.querySelectorAll('.close-settings');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const overlay = document.querySelector('.settings-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        });
+    });
+
+    // Инициализация кнопки новостей и модального окна
+    const newsButton = document.getElementById('settingsNewsButton');
+    const newsModal = document.getElementById('settingsNewsModal');
+    const closeNewsModal = document.getElementById('settingsCloseNewsModal');
+    const newsContent = document.getElementById('settingsNewsContent');
+
+    // URL статьи в Telegraph
+    const telegraphUrl = 'https://telegra.ph/Novosti-CoalaGame-01-22';
+
+    async function fetchNewsContent() {
+        try {
+            const response = await fetch(telegraphUrl, {
+                mode: 'cors',
+                headers: {
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Не удалось загрузить новости');
+            }
+
+            const text = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            
+            const article = doc.querySelector('article');
+            if (article) {
+                newsContent.innerHTML = article.innerHTML;
+            } else {
+                newsContent.innerHTML = '<p class="text-red-500">Не удалось загрузить новости. Пожалуйста, попробуйте позже.</p>';
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке новостей:', error);
+            newsContent.innerHTML = '<p class="text-red-500">Ошибка при загрузке новостей. Пожалуйста, попробуйте позже.</p>';
+        }
+    }
+
+    // Открытие модального окна новостей
+    newsButton.addEventListener('click', function() {
+        const modal = document.getElementById('settingsNewsModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            fetchNewsContent();
+        }
+    });
+
+    // Закрытие модального окна новостей
+    if (closeNewsModal) {
+        closeNewsModal.addEventListener('click', function() {
+            const modal = document.getElementById('settingsNewsModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
+
+    // Закрытие по клику вне модального окна
+    if (newsModal) {
+        newsModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    }
+
+    // Инициализация переключателей
+    const soundToggle = document.getElementById('settingsSoundToggle');
+    const vibrationToggle = document.getElementById('settingsVibrationToggle');
+    const snowToggle = document.getElementById('settingsSnowToggle');
+
+    // Загружаем сохраненные настройки
+    if (soundToggle) {
+        soundToggle.checked = localStorage.getItem('soundEnabled') === 'true';
+        soundToggle.addEventListener('change', function() {
+            localStorage.setItem('soundEnabled', this.checked);
+        });
+    }
+
+    if (vibrationToggle) {
+        vibrationToggle.checked = localStorage.getItem('vibrationEnabled') !== 'false';
+        vibrationToggle.addEventListener('change', function() {
+            localStorage.setItem('vibrationEnabled', this.checked);
+        });
+    }
+
+    if (snowToggle) {
+        // Используем значение по умолчанию true, если настройка не задана
+        const snowEnabled = localStorage.getItem('snowEnabled') !== 'false';
+        snowToggle.checked = snowEnabled;
+        
+        // Применяем текущее состояние снега
+        const flakes = document.querySelectorAll('.snowflake');
+        flakes.forEach(flake => {
+            flake.style.display = snowEnabled ? 'block' : 'none';
+        });
+
+        snowToggle.addEventListener('change', function() {
+            localStorage.setItem('snowEnabled', this.checked);
+            // Обновляем состояние снега
+            const flakes = document.querySelectorAll('.snowflake');
+            flakes.forEach(flake => {
+                flake.style.display = this.checked ? 'block' : 'none';
+            });
+        });
+    }
+}
 
 const cards = [
     {
@@ -351,44 +555,160 @@ const cards = [
   ];
   
 function renderCards() {
-  const cardsGrid = document.getElementById('cardsGrid');
-  cardsGrid.innerHTML = '';
-  
-  // Сначала добавляем все карточки в массив, чтобы отсортировать их по цене
-  const sortedCards = [...cards].sort((a, b) => parseInt(a.price) - parseInt(b.price));
-  
-  sortedCards.forEach(card => {
-    const cardElement = document.createElement('div');
-    cardElement.className = 'card';
-    cardElement.innerHTML = `
-        ${card.isNew ? '<div class="new-badge">NEW</div>' : ''}
-        <div class="card-image-container">
-          <img src="${card.image}" alt="${card.title}" loading="lazy">
-        </div>
-        <div class="card-title">${card.title}</div>
-        <div class="card-description">${card.description}</div>
-        <div class="card-footer">
-            <div class="card-price">
-                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins" class="coin-icon">
-                <span>${card.price}</span>
+    const cardsContainer = document.querySelector('#cards .grid');
+    if (!cardsContainer) {
+        console.error('Cards container not found');
+        return;
+    }
+    
+    cardsContainer.innerHTML = '';
+    
+    // Сортируем карточки по цене
+    const sortedCards = [...cards].sort((a, b) => parseInt(a.price) - parseInt(b.price));
+    
+    sortedCards.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'bg-[#1A1B1A] rounded-xl p-2';
+        cardElement.innerHTML = `
+            <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="${card.image}" style="color: transparent;">
             </div>
-            <button class="buy-button" onclick="buyCard(${card.id})">Купить</button>
-        </div>
-        <div class="per-hour">+${card.perHour}/час</div>
-    `;
-    cardsGrid.appendChild(cardElement);
-  });
+            <div class="text-white mb-1 text-center font-bold text-xs">${card.title}</div>
+            <div class="text-white text-[9px] mb-2 opacity-50">${card.description}</div>
+            <div class="flex items-center justify-between">
+                <button onclick="buyCard(${card.id})" class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                    <span class="text-sm font-bold text-white">${card.price}</span>
+                </button>
+                <div class="flex flex-col">
+                    <div class="flex items-center flex-row gap-1">
+                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                        <span class="text-white text-sm">${card.perHour}</span>
+                    </div>
+                    <span class="text-white/50 text-[10px] text-right">per hour</span>
+                </div>
+            </div>
+        `;
+        cardsContainer.appendChild(cardElement);
+    });
 }
 
 function buyCard(cardId) {
-  const card = cards.find(c => c.id === cardId);
-  if (card && coins >= parseInt(card.price)) {
-    coins -= parseInt(card.price);
-    document.getElementById('balance').textContent = coins;
-    alert(`Вы купили карту "${card.title}"!`);
-  } else {
-    alert('Недостаточно монет!');
-  }
+    const card = cards.find(c => c.id === cardId);
+    if (!card) {
+        showNotification('Карточка не найдена', 'error');
+        return;
+    }
+
+    const price = parseInt(card.price);
+    if (coins >= price) {
+        coins -= price;
+        localStorage.setItem('coins', coins);
+        document.getElementById('balance').textContent = coins;
+        
+        // Добавляем карточку в купленные
+        card.purchased = true;
+        
+        // Обновляем отображение карточек
+        renderCards();
+        
+        // Показываем уведомление об успешной покупке
+        showNotification(`Вы успешно приобрели "${card.title}"!`, 'success');
+        
+        // Добавляем эффект получения монет
+        const perHour = parseInt(card.perHour);
+        if (perHour > 0) {
+            setInterval(() => {
+                coins += perHour / 3600; // Конвертируем часовой доход в посекундный
+                document.getElementById('balance').textContent = Math.floor(coins);
+                localStorage.setItem('coins', coins);
+            }, 1000);
+        }
+    } else {
+        // Показываем уведомление о нехватке средств
+        showNotification('Недостаточно средств!', 'error');
+    }
 }
 
 document.querySelector('.top-panel').style.zIndex = '2';
+
+// Функционал новостей
+document.addEventListener('DOMContentLoaded', function() {
+    const newsButton = document.getElementById('newsButton');
+    const newsModal = document.getElementById('newsModal');
+    const closeNewsModal = document.getElementById('closeNewsModal');
+    const newsContent = document.getElementById('newsContent');
+
+    // URL вашей статьи в Telegraph
+    const telegraphUrl = 'https://telegra.ph/Obnovlenie-Mobile-Clicker-01-22';
+
+    async function fetchNewsContent() {
+        try {
+            const response = await fetch(telegraphUrl);
+            const text = await response.text();
+            
+            // Создаем временный элемент для парсинга HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, 'text/html');
+            
+            // Получаем основной контент статьи
+            const article = doc.querySelector('article');
+            if (article) {
+                newsContent.innerHTML = article.innerHTML;
+            } else {
+                newsContent.innerHTML = '<p class="text-red-500">Не удалось загрузить новости</p>';
+            }
+        } catch (error) {
+            newsContent.innerHTML = '<p class="text-red-500">Ошибка при загрузке новостей</p>';
+        }
+    }
+
+    // Открытие модального окна
+    newsButton.addEventListener('click', function() {
+        newsModal.classList.remove('hidden');
+        fetchNewsContent();
+    });
+
+    // Закрытие модального окна
+    closeNewsModal.addEventListener('click', function() {
+        newsModal.classList.add('hidden');
+    });
+
+    // Закрытие по клику вне модального окна
+    newsModal.addEventListener('click', function(e) {
+        if (e.target === newsModal) {
+            newsModal.classList.add('hidden');
+        }
+    });
+});
+
+// Показываем сообщение о разработке при переключении на соответствующие разделы
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.tab');
+    const sectionNames = {
+        'mining': 'Mining',
+        'reward': 'Reward'
+    };
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            if (targetId === 'mining' || targetId === 'reward') {
+                showNotification(`Раздел ${sectionNames[targetId]} в разработке`);
+            }
+        });
+    });
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearInterval(energyInterval);
+  } else {
+    energyInterval = setInterval(() => {
+      if (energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + energyRegenRate);
+        updateEnergyDisplay();
+      }
+    }, energyRegenInterval);
+  }
+});
