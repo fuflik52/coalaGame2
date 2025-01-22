@@ -347,14 +347,16 @@ function showSettings() {
         </div>
 
         <!-- Модальное окно для новостей -->
-        <div id="settingsNewsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-            <div class="bg-zinc-900 w-11/12 max-w-lg rounded-lg p-6 relative max-h-[80vh] overflow-y-auto">
-                <button id="settingsCloseNewsModal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="text-xl font-bold text-white mb-4">Новости</h3>
-                <div id="settingsNewsContent" class="text-gray-300">
-                    <!-- Здесь будет контент из Telegraph -->
+        <div id="settingsNewsModal" class="modal-overlay hidden">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3>Новости</h3>
+                    <button id="settingsCloseNewsModal" class="modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="settingsNewsContent" class="modal-content">
+                    <!-- Здесь будет контент новостей -->
                 </div>
             </div>
         </div>
@@ -373,39 +375,79 @@ function showSettings() {
         });
     });
 
-    // Инициализация кнопки новостей и модального окна
+    // Инициализация кнопки новостей
     const newsButton = document.getElementById('settingsNewsButton');
     const newsModal = document.getElementById('settingsNewsModal');
     const closeNewsModal = document.getElementById('settingsCloseNewsModal');
     const newsContent = document.getElementById('settingsNewsContent');
 
-    // URL статьи в Telegraph
-    const telegraphUrl = 'https://telegra.ph/Novosti-CoalaGame-01-22';
-
-    async function fetchNewsContent() {
+    // Загрузка новостей из локального файла
+    async function loadNews() {
         try {
-            const response = await fetch(telegraphUrl, {
-                mode: 'cors',
-                headers: {
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Не удалось загрузить новости');
-            }
+            newsContent.innerHTML = `
+                <div class="news-date text-gray-400 text-sm mb-2">23 января 2024</div>
+                <div class="news-content">
+                    <h1>📱 Mobile Clicker - Большое обновление!</h1>
+                    
+                    <h2>🌟 Версия 1.2.0</h2>
+                    <h3>✨ Новые функции</h3>
+                    <ul>
+                        <li>🎯 Добавлен эффект +1 при клике в разделе Home</li>
+                        <li>📱 Вибрация при нажатии для тактильной отдачи</li>
+                        <li>❄️ Красивый эффект падающего снега</li>
+                        <li>⚙️ Новое меню настроек с удобным доступом</li>
+                        <li>📰 Раздел новостей для отслеживания обновлений</li>
+                        <li>🎮 Улучшенный игровой процесс</li>
+                    </ul>
 
-            const text = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            
-            const article = doc.querySelector('article');
-            if (article) {
-                newsContent.innerHTML = article.innerHTML;
-            } else {
-                newsContent.innerHTML = '<p class="text-red-500">Не удалось загрузить новости. Пожалуйста, попробуйте позже.</p>';
-            }
+                    <h3>🔧 Улучшения</h3>
+                    <ul>
+                        <li>🎨 Обновлён дизайн интерфейса</li>
+                        <li>⚡ Улучшена производительность</li>
+                        <li>📱 Оптимизация под мобильные устройства</li>
+                        <li>🔄 Автоматическое сохранение настроек</li>
+                    </ul>
+
+                    <h3>🐛 Исправления</h3>
+                    <ul>
+                        <li>🔍 Исправлено позиционирование эффекта +1</li>
+                        <li>🔧 Улучшена работа с сохранением прогресса</li>
+                        <li>⚡ Оптимизирована анимация снега</li>
+                        <li>🎯 Исправлены проблемы с кликами</li>
+                    </ul>
+
+                    <div class="news-divider"></div>
+
+                    <div class="news-date text-gray-400 text-sm mb-2">22 января 2024</div>
+                    <h2>🌟 Версия 1.1.0</h2>
+                    <h3>✨ Новые функции</h3>
+                    <ul>
+                        <li>🎮 Базовая механика кликера</li>
+                        <li>💰 Система монет и энергии</li>
+                        <li>🏆 Система достижений</li>
+                        <li>🎨 Тёмная тема интерфейса</li>
+                    </ul>
+
+                    <h3>🔧 Улучшения</h3>
+                    <ul>
+                        <li>⚡ Базовая оптимизация</li>
+                        <li>📱 Адаптация под мобильные устройства</li>
+                        <li>💾 Сохранение прогресса</li>
+                    </ul>
+
+                    <div class="news-divider"></div>
+
+                    <div class="news-date text-gray-400 text-sm mb-2">20 января 2024</div>
+                    <h2>🌟 Версия 1.0.0</h2>
+                    <h3>✨ Первый релиз</h3>
+                    <ul>
+                        <li>🎮 Основной геймплей</li>
+                        <li>📱 Мобильный интерфейс</li>
+                        <li>🎨 Базовый дизайн</li>
+                        <li>💰 Система наград</li>
+                    </ul>
+                </div>
+            `;
         } catch (error) {
             console.error('Ошибка при загрузке новостей:', error);
             newsContent.innerHTML = '<p class="text-red-500">Ошибка при загрузке новостей. Пожалуйста, попробуйте позже.</p>';
@@ -414,31 +456,21 @@ function showSettings() {
 
     // Открытие модального окна новостей
     newsButton.addEventListener('click', function() {
-        const modal = document.getElementById('settingsNewsModal');
-        if (modal) {
-            modal.classList.remove('hidden');
-            fetchNewsContent();
-        }
+        newsModal.classList.remove('hidden');
+        loadNews();
     });
 
     // Закрытие модального окна новостей
-    if (closeNewsModal) {
-        closeNewsModal.addEventListener('click', function() {
-            const modal = document.getElementById('settingsNewsModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        });
-    }
+    closeNewsModal.addEventListener('click', function() {
+        newsModal.classList.add('hidden');
+    });
 
     // Закрытие по клику вне модального окна
-    if (newsModal) {
-        newsModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
-            }
-        });
-    }
+    newsModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
 
     // Инициализация переключателей
     const soundToggle = document.getElementById('settingsSoundToggle');
@@ -639,27 +671,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeNewsModal = document.getElementById('closeNewsModal');
     const newsContent = document.getElementById('newsContent');
 
-    // URL вашей статьи в Telegraph
-    const telegraphUrl = 'https://telegra.ph/Obnovlenie-Mobile-Clicker-01-22';
-
     async function fetchNewsContent() {
         try {
-            const response = await fetch(telegraphUrl);
-            const text = await response.text();
-            
-            // Создаем временный элемент для парсинга HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            
-            // Получаем основной контент статьи
-            const article = doc.querySelector('article');
-            if (article) {
-                newsContent.innerHTML = article.innerHTML;
+            const response = await fetch('news.json');
+            if (!response.ok) {
+                throw new Error('Не удалось загрузить новости');
+            }
+
+            const data = await response.json();
+            if (data.news && data.news.length > 0) {
+                const latestNews = data.news[0];
+                newsContent.innerHTML = `
+                    <div class="news-date text-gray-400 text-sm mb-2">${latestNews.date}</div>
+                    <div class="news-content">${latestNews.content}</div>
+                `;
             } else {
-                newsContent.innerHTML = '<p class="text-red-500">Не удалось загрузить новости</p>';
+                newsContent.innerHTML = '<p class="text-gray-400">Нет доступных новостей</p>';
             }
         } catch (error) {
-            newsContent.innerHTML = '<p class="text-red-500">Ошибка при загрузке новостей</p>';
+            console.error('Ошибка при загрузке новостей:', error);
+            newsContent.innerHTML = '<p class="text-red-500">Ошибка при загрузке новостей. Пожалуйста, попробуйте позже.</p>';
         }
     }
 
