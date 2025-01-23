@@ -19,6 +19,17 @@ if (localStorage.getItem('snowEnabled') === null) {
 const tg = window.Telegram.WebApp;
 tg.expand(); // Раскрываем на весь экран
 
+// Получаем параметр startapp из URL
+const urlParams = new URLSearchParams(window.location.search);
+const startParam = urlParams.get('tgWebAppStartParam');
+
+// Если есть параметр startapp, обрабатываем его
+if (startParam && startParam.startsWith('u')) {
+    const referrerId = startParam.substring(1); // Убираем 'u' из начала
+    // Здесь можно добавить логику для обработки реферальной системы
+    console.log('Пользователь пришел по реферальной ссылке от:', referrerId);
+}
+
 // Получаем данные пользователя из Telegram
 const user = tg.initDataUnsafe.user;
 const username = user ? user.username : 'Пользователь';
@@ -56,7 +67,7 @@ function updateOfflineEnergy() {
 
 // Функция копирования реферальной ссылки
 function copyReferralLink() {
-    const referralLink = `https://t.me/CoalaGame_Bot/play?startapp=u${userId}`;
+    const referralLink = `https://t.me/CoalaGame_Bot?start=u${userId}`;
     navigator.clipboard.writeText(referralLink).then(() => {
         const button = document.querySelector('.copy-link-button');
         button.innerHTML = '<i class="fas fa-check"></i> Скопировано';
@@ -1151,9 +1162,16 @@ function showRewardMenu(channelLink, rewardId) {
         window.open(channelLink, '_blank');
         // После открытия ссылки, переходим на главную страницу
         const homeSection = document.getElementById('home');
+        const energyBar = document.querySelector('.energy-bar');
+        const topPanel = document.querySelector('.top-panel');
+        
         if (homeSection) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             homeSection.classList.add('active');
+            
+            // Показываем энергию и верхнюю панель
+            if (energyBar) energyBar.classList.remove('hidden');
+            if (topPanel) topPanel.classList.remove('hidden');
             
             // Активируем соответствующий пункт меню
             document.querySelectorAll('.nav-item').forEach(item => {
@@ -1174,6 +1192,10 @@ function showRewardMenu(channelLink, rewardId) {
                     icon.style.filter = 'invert(56%) sepia(97%) saturate(349%) hue-rotate(89deg) brightness(95%) contrast(92%)';
                 }
             }
+
+            // Обновляем отображение энергии и баланса
+            updateEnergyDisplay();
+            document.getElementById('balance').textContent = Math.floor(coins);
         }
         menu.remove();
     });
