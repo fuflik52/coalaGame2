@@ -369,30 +369,50 @@ function addFriend() {
   let friendUsername = document.getElementById("friendUsername").value;
 }
 
+// Обновляем обработчик для вкладок
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => {
-      n.classList.remove('active');
-      n.style.color = '#888';
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => {
+            n.classList.remove('active');
+            n.style.color = '#888';
+        });
+        item.classList.add('active');
+        item.style.color = '#4CAF50';
+        const sectionId = item.getAttribute('data-section');
+        document.getElementById(sectionId).classList.add('active');
+        const energyBar = document.querySelector('.energy-bar');
+        const topPanel = document.querySelector('.top-panel');
+        const rewardSection = document.getElementById('reward');
+        
+        if (sectionId === 'home') {
+            energyBar.classList.remove('hidden');
+            topPanel.classList.remove('hidden');
+            // Скрываем раздел заданий в главном разделе
+            if (rewardSection) {
+                rewardSection.style.display = 'none';
+            }
+        } else if (sectionId === 'reward') {
+            energyBar.classList.add('hidden');
+            topPanel.classList.add('hidden');
+            // Показываем раздел заданий
+            if (rewardSection) {
+                rewardSection.style.display = 'block';
+                renderRewards();
+            }
+            // Убираем отступ сверху у контента
+            document.querySelector('.content').style.marginTop = '0';
+        } else {
+            energyBar.classList.add('hidden');
+            topPanel.classList.add('hidden');
+            // Возвращаем отступ для других разделов
+            document.querySelector('.content').style.marginTop = '70px';
+        }
+        
+        if (sectionId === 'cards') {
+            renderCards();
+        }
     });
-    item.classList.add('active');
-    item.style.color = '#4CAF50';
-    const sectionId = item.getAttribute('data-section');
-    document.getElementById(sectionId).classList.add('active');
-    const energyBar = document.querySelector('.energy-bar');
-    const topPanel = document.querySelector('.top-panel');
-    if (sectionId === 'home') {
-      energyBar.classList.remove('hidden');
-      topPanel.classList.remove('hidden');
-    } else {
-      energyBar.classList.add('hidden');
-      topPanel.classList.add('hidden');
-    }
-    if (sectionId === 'cards') {
-      renderCards();
-    }
-  });
 });
 
 document.getElementById('userAvatar').addEventListener('click', showSettings);
@@ -992,72 +1012,42 @@ async function handleRewardClaim(channelLink, rewardId) {
     }
 
     if (!reward.isChecking) {
-        // Начинаем проверку
+        // При нажатии Start сразу открываем канал
+        window.open(channelLink, '_blank');
+        
+        // Меняем состояние на проверку
         reward.isChecking = true;
-        reward.checkingTimeout = setTimeout(() => {
-            reward.isChecking = false;
-            saveRewards(currentRewards);
-            renderRewards();
-        }, 60000); // 1 минута таймаут
         saveRewards(currentRewards);
         renderRewards();
-        
-        // Открываем канал в Telegram
-        window.open(channelLink, '_blank');
     } else {
-        // Проверяем подписку
-        const isSubscribed = await checkSubscription(reward.channelUsername);
-        
-        if (isSubscribed) {
-            clearTimeout(reward.checkingTimeout);
-            coins += reward.amount;
-            localStorage.setItem('coins', coins);
-            document.getElementById('balance').textContent = Math.floor(coins);
-            reward.isDone = true;
-            reward.isChecking = false;
-            saveRewards(currentRewards);
-            renderRewards();
-            showNotification(`Получено ${reward.amount} монет!`, 'success');
-        } else {
-            showNotification('Для получения награды необходимо подписаться на канал!', 'error');
-            // Повторно открываем канал, если подписка не обнаружена
-            window.open(channelLink, '_blank');
-        }
-    }
-}
-
-// Обновляем обработчик для вкладки Reward
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.nav-item');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const sectionId = tab.getAttribute('data-section');
-            if (sectionId === 'reward') {
+        try {
+            // Проверяем подписку через Telegram Mini App
+            const result = await tg.sendData(JSON.stringify({
+                action: 'check_subscription',
+                channel: reward.channelUsername.replace('@', '')
+            }));
+            
+            // Убираем временную автоматическую проверку
+            const isSubscribed = false; // Теперь по умолчанию считаем что не подписан
+            
+            if (isSubscribed) {
+                coins += reward.amount;
+                localStorage.setItem('coins', coins);
+                document.getElementById('balance').textContent = Math.floor(coins);
+                reward.isDone = true;
+                reward.isChecking = false;
+                saveRewards(currentRewards);
                 renderRewards();
-                // Убираем отступ сверху у контента
-                document.querySelector('.content').style.marginTop = '0';
+                showNotification(`Получено ${reward.amount} монет!`, 'success');
             } else {
-                // Возвращаем отступ для других разделов
-                document.querySelector('.content').style.marginTop = '70px';
+                showNotification('Для получения награды необходимо подписаться на канал!', 'error');
+                // Открываем канал повторно
+                window.open(channelLink, '_blank');
             }
-        });
-    });
-});
-
-// Функция проверки подписки на канал через Telegram Bot API
-async function checkSubscription(channelUsername) {
-    try {
-        // Проверяем подписку через Telegram Mini App
-        const result = await tg.sendData(JSON.stringify({
-            action: 'check_subscription',
-            channel: channelUsername
-        }));
-        
-        // Пока не реализована проверка на сервере, возвращаем false
-        return false;
-    } catch (error) {
-        console.error('Ошибка при проверке подписки:', error);
-        return false;
+        } catch (error) {
+            console.error('Ошибка при проверке подписки:', error);
+            showNotification('Произошла ошибка при проверке подписки', 'error');
+        }
     }
 }
 
