@@ -900,22 +900,22 @@ function renderRewards() {
     
     rewardSection.innerHTML = `
         <div class="rewards-container">
-            <div class="rewards-header w-full text-center bg-[#1A1B1A] p-4 rounded-xl mb-4">
+            <div class="rewards-header">
                 Задания
             </div>
-            <div class="w-full flex gap-2 mb-4">
+            <div class="tab-container">
                 <button id="ingameTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 bg-[#262626] text-white" onclick="switchRewardTab('ingame')">In-game</button>
                 <button id="partnerTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 text-white opacity-50" onclick="switchRewardTab('partner')">Partner</button>
             </div>
             <div id="ingame-rewards" class="rewards-list">
                 ${currentRewards.map(reward => `
-                    <div class="reward-item w-full">
+                    <div class="reward-item">
                         <div class="reward-info">
                             <div class="reward-icon">
                                 <img src="${reward.image}" alt="${reward.title}">
                             </div>
-                            <div class="reward-details w-full">
-                                <div class="reward-title w-full">${reward.title}</div>
+                            <div class="reward-details">
+                                <div class="reward-title">${reward.title}</div>
                                 <div class="reward-amount">
                                     <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="reward">
                                     <span>${reward.amount}</span>
@@ -1001,6 +1001,9 @@ async function handleRewardClaim(channelLink, rewardId) {
         }, 60000); // 1 минута таймаут
         saveRewards(currentRewards);
         renderRewards();
+        
+        // Открываем канал в Telegram
+        window.open(channelLink, '_blank');
     } else {
         // Проверяем подписку
         const isSubscribed = await checkSubscription(reward.channelUsername);
@@ -1017,6 +1020,8 @@ async function handleRewardClaim(channelLink, rewardId) {
             showNotification(`Получено ${reward.amount} монет!`, 'success');
         } else {
             showNotification('Для получения награды необходимо подписаться на канал!', 'error');
+            // Повторно открываем канал, если подписка не обнаружена
+            window.open(channelLink, '_blank');
         }
     }
 }

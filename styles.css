@@ -1072,24 +1072,42 @@ input:checked + .slider:before {
 
 /* Стили для раздела наград */
 .rewards-container {
-    padding: 1rem;
+    padding: 0;
+    height: 100%;
+    overflow-y: auto;
+    max-width: 100%;
 }
 
 .rewards-header {
+    width: 100%;
+    text-align: center;
+    background: #1A1B1A;
+    padding: 1rem;
+    margin: 0;
     font-size: 1.5rem;
     font-weight: bold;
-    margin-bottom: 1rem;
     color: white;
+    border-radius: 20px 20px 0 0;
+}
+
+.section#reward {
+    padding: 0 !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: hidden;
 }
 
 .reward-item {
     background: #1A1B1A;
     border-radius: 1rem;
     padding: 1rem;
-    margin-bottom: 1rem;
+    margin: 0.5rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    overflow: hidden;
 }
 
 .reward-info {
@@ -1097,12 +1115,21 @@ input:checked + .slider:before {
     gap: 1rem;
     align-items: center;
     flex: 1;
+    min-width: 0; /* Предотвращает выход за границы */
 }
 
 .reward-title {
     font-size: 1.1rem;
     color: white;
     margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reward-details {
+    min-width: 0; /* Предотвращает выход за границы */
+    flex: 1;
 }
 
 .reward-amount {
@@ -1115,6 +1142,7 @@ input:checked + .slider:before {
 .reward-amount img {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
 }
 
 .reward-button {
@@ -1122,40 +1150,44 @@ input:checked + .slider:before {
     border-radius: 0.5rem;
     font-weight: 500;
     transition: all 0.3s ease;
-}
-
-.reward-button.done {
-    background-color: #666;
-    cursor: default;
-}
-
-.reward-button.done:hover {
-    background-color: #666;
-    transform: none;
-}
-
-.reward-button.checking {
-    background-color: #3B82F6;
+    background-color: #4CAF50;
     color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-.reward-button.checking:hover {
-    background-color: #2563EB;
+.tab-container {
+    background: hsla(0, 0%, 100%, .1);
+    margin: 1rem;
+    border-radius: 1rem;
+    padding: 0.25rem;
+    display: flex;
+    gap: 0.5rem;
 }
 
-#adminPanel input[type="number"] {
-    width: 120px;
-    outline: none;
-}
-
-#adminPanel input[type="number"]:focus {
-    border: 1px solid #3B82F6;
-}
-
-#adminPanel button {
+#ingameTab, #partnerTab {
+    margin: 0;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #1A1B1A;
+    color: white;
     transition: all 0.3s ease;
+    flex: 1;
 }
 
-#adminPanel button:hover {
-    opacity: 0.9;
+#ingameTab.active, #partnerTab.active {
+    background: #262626;
+}
+
+.rewards-list {
+    overflow-y: auto;
+    padding-bottom: 1rem;
+}
+
+.bottom-nav {
+    border-radius: 20px 20px 0 0;
+    margin-top: auto;
 }
