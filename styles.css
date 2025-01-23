@@ -1069,3 +1069,93 @@ input:checked + .slider:before {
     max-height: 70vh;
     overflow-y: auto;
 }
+
+/* Стили для раздела наград */
+.rewards-container {
+    padding: 1rem;
+}
+
+.rewards-header {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.reward-item {
+    background: #1A1B1A;
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.reward-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex: 1;
+}
+
+.reward-title {
+    font-size: 1.1rem;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.reward-amount {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #9CA3AF;
+}
+
+.reward-amount img {
+    width: 20px;
+    height: 20px;
+}
+
+.reward-button {
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.reward-button.done {
+    background-color: #666;
+    cursor: default;
+}
+
+.reward-button.done:hover {
+    background-color: #666;
+    transform: none;
+}
+
+.reward-button.checking {
+    background-color: #3B82F6;
+    color: white;
+}
+
+.reward-button.checking:hover {
+    background-color: #2563EB;
+}
+
+#adminPanel input[type="number"] {
+    width: 120px;
+    outline: none;
+}
+
+#adminPanel input[type="number"]:focus {
+    border: 1px solid #3B82F6;
+}
+
+#adminPanel button {
+    transition: all 0.3s ease;
+}
+
+#adminPanel button:hover {
+    opacity: 0.9;
+}

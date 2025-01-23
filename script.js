@@ -27,6 +27,33 @@ const userId = user ? user.id : '0';
 // Устанавливаем имя пользователя
 document.getElementById('username').textContent = username;
 
+// Добавляем переменную для хранения времени последнего обновления энергии
+let lastEnergyUpdate = localStorage.getItem('lastEnergyUpdate') || Date.now();
+
+// Функция для обновления энергии с учетом прошедшего времени
+function updateOfflineEnergy() {
+    const currentTime = Date.now();
+    const lastUpdate = parseInt(localStorage.getItem('lastEnergyUpdate')) || currentTime;
+    const timePassed = currentTime - lastUpdate;
+    
+    // Рассчитываем сколько энергии нужно добавить за все прошедшее время
+    const energyToAdd = Math.floor(timePassed / energyRegenInterval) * energyRegenRate;
+    
+    if (energyToAdd > 0) {
+        // Получаем актуальное значение энергии из localStorage
+        let currentEnergy = parseInt(localStorage.getItem('energy')) || energy;
+        currentEnergy = Math.min(maxEnergy, currentEnergy + energyToAdd);
+        
+        // Обновляем значения
+        energy = currentEnergy;
+        localStorage.setItem('energy', energy);
+        updateEnergyDisplay();
+    }
+    
+    // Обновляем время последнего обновления
+    localStorage.setItem('lastEnergyUpdate', currentTime.toString());
+}
+
 // Функция копирования реферальной ссылки
 function copyReferralLink() {
     const referralLink = `https://t.me/CoalaGame_Bot/play?startapp=u${userId}`;
@@ -180,6 +207,8 @@ function vibrate() {
 
 // Функция для обработки клика
 function handleClick(event) {
+    const gameSettings = getGameSettings();
+    const adminSettings = getAdminSettings();
     if (energy > 0) {
         // Определяем координаты клика
         const x = event.clientX;
@@ -193,12 +222,12 @@ function handleClick(event) {
         }
 
         // Обновляем счетчик
-        coins++;
+        coins += gameSettings.coinsPerClick * gameSettings.clickMultiplier;
         localStorage.setItem('coins', coins);
         document.getElementById('balance').textContent = coins;
 
         // Уменьшаем энергию
-        energy = Math.max(0, energy - 1);
+        energy = Math.max(0, energy - gameSettings.energyPerClick * gameSettings.clickMultiplier);
         localStorage.setItem('energy', energy);
         updateEnergyDisplay();
 
@@ -211,23 +240,85 @@ function handleClick(event) {
     }
 }
 
-// Инициализация обработчиков событий
+// Функция для получения настроек игры
+function getGameSettings() {
+    const defaultSettings = {
+        clickMultiplier: 1,
+        autoClickInterval: 1000,
+        coinsPerClick: 1,
+        energyPerClick: 1,
+        priceMultiplier: 1
+    };
+    
+    const settings = JSON.parse(localStorage.getItem('gameSettings') || '{}');
+    return { ...defaultSettings, ...settings };
+}
+
+// Функция для получения админ настроек
+function getAdminSettings() {
+    const defaultSettings = {
+        devMode: false,
+        homeDevMode: false,
+        shopDevMode: false,
+        achievementsDevMode: false
+    };
+    
+    const settings = JSON.parse(localStorage.getItem('adminSettings') || '{}');
+    return { ...defaultSettings, ...settings };
+}
+
+// Обновляем обработчик DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-  const clickerButton = document.getElementById('clickerButton');
-  
-  // Добавляем обработчики для мыши
-  clickerButton.addEventListener('click', handleClick);
-  
-  // Добавляем обработчики для сенсорных устройств
-  clickerButton.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Предотвращаем зум на мобильных
-    handleClick(e);
-  }, { passive: false });
-  
-  // Отключаем стандартное поведение при касании
-  clickerButton.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-  }, { passive: false });
+    // Обновляем отображение баланса и энергии сразу при загрузке
+    document.getElementById('balance').textContent = Math.floor(coins);
+    
+    // Проверяем и начисляем энергию за время отсутствия
+    updateOfflineEnergy();
+    updateEnergyDisplay();
+    
+    const clickerButton = document.getElementById('clickerButton');
+    
+    // Добавляем обработчики для мыши и тачскрина
+    clickerButton.addEventListener('click', handleClick);
+    clickerButton.addEventListener('touchstart', handleClick);
+});
+
+// Обновляем интервал восстановления энергии
+clearInterval(energyInterval);
+energyInterval = setInterval(() => {
+    if (energy < maxEnergy) {
+        energy = Math.min(maxEnergy, energy + energyRegenRate);
+        localStorage.setItem('energy', energy);
+        localStorage.setItem('lastEnergyUpdate', Date.now().toString());
+        updateEnergyDisplay();
+    }
+}, energyRegenInterval);
+
+// Обработчик видимости страницы
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Сохраняем текущее состояние перед скрытием
+        localStorage.setItem('energy', energy);
+        localStorage.setItem('lastEnergyUpdate', Date.now().toString());
+        clearInterval(energyInterval);
+    } else {
+        // Обновляем энергию при возвращении на страницу
+        updateOfflineEnergy();
+        energyInterval = setInterval(() => {
+            if (energy < maxEnergy) {
+                energy = Math.min(maxEnergy, energy + energyRegenRate);
+                localStorage.setItem('energy', energy);
+                localStorage.setItem('lastEnergyUpdate', Date.now().toString());
+                updateEnergyDisplay();
+            }
+        }, energyRegenInterval);
+    }
+});
+
+// Сохраняем состояние перед закрытием страницы
+window.addEventListener('beforeunload', () => {
+    localStorage.setItem('energy', energy);
+    localStorage.setItem('lastEnergyUpdate', Date.now().toString());
 });
 
 // Инициализация обработчиков кликов для разделов в разработке
@@ -257,10 +348,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Функция обновления отображения энергии
 function updateEnergyDisplay() {
-  document.getElementById('energyFill').style.width = energy / maxEnergy * 100 + '%';
-  document.getElementById('currentEnergy').textContent = energy;
-  document.getElementById('maxEnergy').textContent = maxEnergy;
+    const energyFill = document.getElementById('energyFill');
+    const currentEnergyElement = document.getElementById('currentEnergy');
+    const maxEnergyElement = document.getElementById('maxEnergy');
+    
+    if (energyFill && currentEnergyElement && maxEnergyElement) {
+        energyFill.style.width = (energy / maxEnergy * 100) + '%';
+        currentEnergyElement.textContent = Math.floor(energy);
+        maxEnergyElement.textContent = maxEnergy;
+    }
 }
 
 function copyUsername() {
@@ -731,15 +829,342 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    clearInterval(energyInterval);
-  } else {
-    energyInterval = setInterval(() => {
-      if (energy < maxEnergy) {
-        energy = Math.min(maxEnergy, energy + energyRegenRate);
-        updateEnergyDisplay();
-      }
-    }, energyRegenInterval);
-  }
+// Добавляем массив наград
+const rewards = [
+    {
+        id: 1,
+        title: "Разработчики",
+        amount: 1000,
+        image: "https://i.postimg.cc/FFx7T4Bh/image.png",
+        channelUsername: "your_channel_1",
+        channelLink: "https://t.me/your_channel_1",
+        isDone: false
+    },
+    {
+        id: 2,
+        title: "Коала",
+        amount: 2000,
+        image: "https://i.postimg.cc/FFx7T4Bh/image.png",
+        channelUsername: "your_channel_2",
+        channelLink: "https://t.me/your_channel_2",
+        isDone: false
+    }
+];
+
+// Функция для очистки всех локальных данных
+function clearAllData() {
+    // Очищаем все данные из localStorage
+    localStorage.removeItem('coins');
+    localStorage.removeItem('energy');
+    localStorage.removeItem('lastEnergyUpdate');
+    localStorage.removeItem('rewards');
+    localStorage.removeItem('gameSettings');
+    localStorage.removeItem('adminSettings');
+    
+    // Сбрасываем переменные
+    coins = 0;
+    energy = 100;
+    document.getElementById('balance').textContent = '0';
+    updateEnergyDisplay();
+    
+    // Обновляем отображение наград
+    renderRewards();
+    
+    showNotification('Все данные очищены!', 'success');
+}
+
+// Добавляем вызов функции при нажатии определенной комбинации клавиш (Ctrl + Shift + R)
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.shiftKey && event.key === 'R') {
+        clearAllData();
+    }
 });
+
+// Функция для получения наград из localStorage
+function getSavedRewards() {
+    const savedRewards = localStorage.getItem('rewards');
+    return savedRewards ? JSON.parse(savedRewards) : rewards;
+}
+
+// Функция для сохранения наград в localStorage
+function saveRewards(rewards) {
+    localStorage.setItem('rewards', JSON.stringify(rewards));
+}
+
+// Функция для отображения раздела наград
+function renderRewards() {
+    const rewardSection = document.getElementById('reward');
+    if (!rewardSection) return;
+
+    const currentRewards = getSavedRewards();
+    
+    rewardSection.innerHTML = `
+        <div class="rewards-container">
+            <div class="rewards-header w-full text-center bg-[#1A1B1A] p-4 rounded-xl mb-4">
+                Задания
+            </div>
+            <div class="w-full flex gap-2 mb-4">
+                <button id="ingameTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 bg-[#262626] text-white" onclick="switchRewardTab('ingame')">In-game</button>
+                <button id="partnerTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 text-white opacity-50" onclick="switchRewardTab('partner')">Partner</button>
+            </div>
+            <div id="ingame-rewards" class="rewards-list">
+                ${currentRewards.map(reward => `
+                    <div class="reward-item w-full">
+                        <div class="reward-info">
+                            <div class="reward-icon">
+                                <img src="${reward.image}" alt="${reward.title}">
+                            </div>
+                            <div class="reward-details w-full">
+                                <div class="reward-title w-full">${reward.title}</div>
+                                <div class="reward-amount">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="reward">
+                                    <span>${reward.amount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${reward.isDone ? `
+                                <div class="flex items-center gap-2 text-[#4CAF50]">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M13.3337 4L6.00033 11.3333L2.66699 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                    <span>Выполнено</span>
+                                </div>
+                            ` : `
+                                <button 
+                                    id="reward-button-${reward.id}"
+                                    class="reward-button ${reward.isChecking ? 'checking' : ''}"
+                                    onclick="handleRewardClaim('${reward.channelLink}', ${reward.id})"
+                                >
+                                    ${reward.isChecking ? `
+                                        <div class="flex items-center gap-2">
+                                            <img src="https://i.postimg.cc/26VZfrgK/image.png" alt="verify" class="w-5 h-5">
+                                            <span>Проверить</span>
+                                        </div>
+                                    ` : 'Start'}
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div id="partner-rewards" class="rewards-list hidden">
+                <div class="text-center text-white/50 py-4">
+                    Партнерские задания скоро появятся
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Функция переключения вкладок наград
+function switchRewardTab(tab) {
+    const ingameTab = document.getElementById('ingame-rewards');
+    const partnerTab = document.getElementById('partner-rewards');
+    const ingameButton = document.getElementById('ingameTab');
+    const partnerButton = document.getElementById('partnerTab');
+    
+    if (tab === 'ingame') {
+        ingameTab.classList.remove('hidden');
+        partnerTab.classList.add('hidden');
+        ingameButton.classList.add('bg-[#262626]');
+        ingameButton.classList.remove('opacity-50');
+        partnerButton.classList.remove('bg-[#262626]');
+        partnerButton.classList.add('opacity-50');
+    } else {
+        ingameTab.classList.add('hidden');
+        partnerTab.classList.remove('hidden');
+        partnerButton.classList.add('bg-[#262626]');
+        partnerButton.classList.remove('opacity-50');
+        ingameButton.classList.remove('bg-[#262626]');
+        ingameButton.classList.add('opacity-50');
+    }
+}
+
+// Функция для получения награды
+async function handleRewardClaim(channelLink, rewardId) {
+    const currentRewards = getSavedRewards();
+    const reward = currentRewards.find(r => r.id === rewardId);
+    
+    if (!reward || reward.isDone) {
+        showNotification('Награда уже получена!', 'error');
+        return;
+    }
+
+    if (!reward.isChecking) {
+        // Начинаем проверку
+        reward.isChecking = true;
+        reward.checkingTimeout = setTimeout(() => {
+            reward.isChecking = false;
+            saveRewards(currentRewards);
+            renderRewards();
+        }, 60000); // 1 минута таймаут
+        saveRewards(currentRewards);
+        renderRewards();
+    } else {
+        // Проверяем подписку
+        const isSubscribed = await checkSubscription(reward.channelUsername);
+        
+        if (isSubscribed) {
+            clearTimeout(reward.checkingTimeout);
+            coins += reward.amount;
+            localStorage.setItem('coins', coins);
+            document.getElementById('balance').textContent = Math.floor(coins);
+            reward.isDone = true;
+            reward.isChecking = false;
+            saveRewards(currentRewards);
+            renderRewards();
+            showNotification(`Получено ${reward.amount} монет!`, 'success');
+        } else {
+            showNotification('Для получения награды необходимо подписаться на канал!', 'error');
+        }
+    }
+}
+
+// Обновляем обработчик для вкладки Reward
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = document.querySelectorAll('.nav-item');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const sectionId = tab.getAttribute('data-section');
+            if (sectionId === 'reward') {
+                renderRewards();
+                // Убираем отступ сверху у контента
+                document.querySelector('.content').style.marginTop = '0';
+            } else {
+                // Возвращаем отступ для других разделов
+                document.querySelector('.content').style.marginTop = '70px';
+            }
+        });
+    });
+});
+
+// Функция проверки подписки на канал через Telegram Bot API
+async function checkSubscription(channelUsername) {
+    try {
+        // Проверяем подписку через Telegram Mini App
+        const result = await tg.sendData(JSON.stringify({
+            action: 'check_subscription',
+            channel: channelUsername
+        }));
+        
+        // Пока не реализована проверка на сервере, возвращаем false
+        return false;
+    } catch (error) {
+        console.error('Ошибка при проверке подписки:', error);
+        return false;
+    }
+}
+
+// Админ-панель
+let adminPanelVisible = false;
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'o' || event.key === 'O') {
+        toggleAdminPanel();
+    }
+});
+
+function toggleAdminPanel() {
+    const existingPanel = document.getElementById('adminPanel');
+    if (existingPanel) {
+        existingPanel.remove();
+        adminPanelVisible = false;
+        return;
+    }
+
+    adminPanelVisible = true;
+    const adminPanel = document.createElement('div');
+    adminPanel.id = 'adminPanel';
+    adminPanel.className = 'fixed top-4 right-4 bg-[#1A1B1A] p-4 rounded-xl shadow-lg z-50';
+    adminPanel.innerHTML = `
+        <div class="flex flex-col gap-3">
+            <div class="text-white font-bold mb-2">Админ панель</div>
+            <div class="flex gap-2">
+                <input type="number" id="setCoins" placeholder="Монеты" class="bg-[#262626] text-white p-2 rounded">
+                <button onclick="setCoins()" class="bg-blue-500 text-white px-3 rounded">OK</button>
+            </div>
+            <div class="flex gap-2">
+                <input type="number" id="setEnergy" placeholder="Энергия" class="bg-[#262626] text-white p-2 rounded">
+                <button onclick="setEnergy()" class="bg-blue-500 text-white px-3 rounded">OK</button>
+            </div>
+            <button onclick="clearAllData()" class="bg-red-500 text-white p-2 rounded">Сбросить всё</button>
+        </div>
+    `;
+    document.body.appendChild(adminPanel);
+}
+
+function setCoins() {
+    const newCoins = parseInt(document.getElementById('setCoins').value);
+    if (!isNaN(newCoins)) {
+        coins = newCoins;
+        localStorage.setItem('coins', coins);
+        document.getElementById('balance').textContent = Math.floor(coins);
+        showNotification('Баланс обновлен!', 'success');
+    }
+}
+
+function setEnergy() {
+    const newEnergy = parseInt(document.getElementById('setEnergy').value);
+    if (!isNaN(newEnergy)) {
+        energy = Math.min(maxEnergy, newEnergy);
+        localStorage.setItem('energy', energy);
+        updateEnergyDisplay();
+        showNotification('Энергия обновлена!', 'success');
+    }
+}
+
+// Обновляем стили для кнопок
+const styles = `
+.reward-button {
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background-color: #4CAF50;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reward-button:hover {
+    background-color: #45a049;
+}
+
+.reward-button.checking {
+    background-color: #3B82F6;
+}
+
+.reward-button.checking:hover {
+    background-color: #2563EB;
+}
+
+.reward-button img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.reward-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1A1B1A;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+}
+
+.reward-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex: 1;
+}
+`;
+
+// Добавляем стили на страницу
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
