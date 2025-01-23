@@ -238,7 +238,7 @@ function vibrate(duration = 50) {
     }
 }
 
-// Обновляем функцию handleClick с новой вибрацией
+// Обновляем функцию handleClick с более сильной вибрацией
 function handleClick(event) {
     const gameSettings = getGameSettings();
     const adminSettings = getAdminSettings();
@@ -251,7 +251,11 @@ function handleClick(event) {
         const activeSection = document.querySelector('.section.active');
         if (activeSection && activeSection.id === 'home') {
             createClickEffect(x, y);
-            vibrate(50); // Добавляем вибрацию при клике
+            
+            // Добавляем более сильную вибрацию
+            if ('vibrate' in navigator) {
+                navigator.vibrate([100, 30, 100]); // Паттерн вибрации: 100мс вкл, 30мс выкл, 100мс вкл
+            }
         }
 
         // Обновляем счетчик
@@ -267,11 +271,15 @@ function handleClick(event) {
         // Показываем уведомление если энергия закончилась
         if (energy === 0) {
             showNotification('Недостаточно энергии!');
-            vibrate([100, 50, 100]); // Добавляем паттерн вибрации для уведомления
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]); // Более длинная вибрация для уведомления
+            }
         }
     } else {
         showNotification('Недостаточно энергии!');
-        vibrate([100, 50, 100]); // Добавляем паттерн вибрации для уведомления
+        if ('vibrate' in navigator) {
+            navigator.vibrate([200, 100, 200]); // Более длинная вибрация для уведомления
+        }
     }
 }
 
@@ -693,6 +701,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Добавляем массив rewards
+const rewards = [
+    {
+        id: 1,
+        title: "Разработчики",
+        amount: 1000,
+        image: "https://i.postimg.cc/FFx7T4Bh/image.png",
+        channelUsername: "your_channel_1",
+        channelLink: "https://t.me/your_channel_1",
+        isDone: false
+    },
+    {
+        id: 2,
+        title: "Коала",
+        amount: 2000,
+        image: "https://i.postimg.cc/FFx7T4Bh/image.png",
+        channelUsername: "your_channel_2",
+        channelLink: "https://t.me/your_channel_2",
+        isDone: false
+    }
+];
+
 // Функция для получения наград из localStorage
 function getSavedRewards() {
     const savedRewards = localStorage.getItem('rewards');
@@ -1034,7 +1064,7 @@ function showRewardMenu(channelLink, rewardId) {
             color: rgba(255, 255, 255, 0.9);
             width: 100%;
             text-align: center;
-            padding-right: 24px; /* Компенсация для кнопки закрытия */
+            padding-right: 24px;
         }
 
         .close-menu {
@@ -1082,11 +1112,6 @@ function showRewardMenu(channelLink, rewardId) {
             margin-bottom: 5px;
         }
 
-        .channel-subscribers {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-        }
-
         .channel-button {
             width: 100%;
             padding: 15px;
@@ -1112,11 +1137,6 @@ function showRewardMenu(channelLink, rewardId) {
     // Добавляем меню в игровой контейнер
     const gameContainer = document.querySelector('.game-container');
     gameContainer.appendChild(menu);
-
-    // Получаем реальное количество подписчиков
-    const channelUsername = channelLink.split('/').pop();
-    // Временно устанавливаем фиксированное значение подписчиков
-    document.getElementById('channelSubscribers').textContent = '1.2M подписчиков';
 
     // Обработчики событий
     const closeButton = menu.querySelector('.close-menu');
