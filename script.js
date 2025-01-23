@@ -198,14 +198,47 @@ function createClickEffect(x, y) {
     });
 }
 
-// Функция для вибрации
-function vibrate() {
-    if (navigator.vibrate) {
-        navigator.vibrate(50);
+// Функция для создания серпантина
+function createConfetti() {
+    const shapes = ['●', '■', '★', '♦', '♠', '♣', '♥'];
+    const colors = ['#4CAF50', '#ffffff'];
+    const confettiCount = 100; // Уменьшаем количество
+    const gameContainer = document.querySelector('.game-container');
+    
+    // Создаем несколько волн серпантина
+    for (let wave = 0; wave < 2; wave++) { // Уменьшаем количество волн
+        setTimeout(() => {
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * gameContainer.offsetWidth + 'px';
+                confetti.style.animationDelay = Math.random() * 1 + wave * 0.5 + 's';
+                confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.fontSize = Math.random() * 0.5 + 0.5 + 'rem'; // Случайный размер
+                confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+                gameContainer.appendChild(confetti);
+                
+                // Удаляем конфетти после того, как он исчезнет из вида
+                confetti.addEventListener('animationend', () => {
+                    confetti.remove();
+                });
+            }
+        }, wave * 300); // Уменьшаем интервал между волнами
     }
 }
 
-// Функция для обработки клика
+// Функция для вибрации
+function vibrate(duration = 50) {
+    if ('vibrate' in navigator) {
+        // Для Android
+        navigator.vibrate(duration);
+    } else if ('webkitVibrate' in navigator) {
+        // Для старых версий
+        navigator.webkitVibrate(duration);
+    }
+}
+
+// Обновляем функцию handleClick с новой вибрацией
 function handleClick(event) {
     const gameSettings = getGameSettings();
     const adminSettings = getAdminSettings();
@@ -218,7 +251,7 @@ function handleClick(event) {
         const activeSection = document.querySelector('.section.active');
         if (activeSection && activeSection.id === 'home') {
             createClickEffect(x, y);
-            vibrate();
+            vibrate(50); // Добавляем вибрацию при клике
         }
 
         // Обновляем счетчик
@@ -234,9 +267,11 @@ function handleClick(event) {
         // Показываем уведомление если энергия закончилась
         if (energy === 0) {
             showNotification('Недостаточно энергии!');
+            vibrate([100, 50, 100]); // Добавляем паттерн вибрации для уведомления
         }
     } else {
         showNotification('Недостаточно энергии!');
+        vibrate([100, 50, 100]); // Добавляем паттерн вибрации для уведомления
     }
 }
 
@@ -379,38 +414,43 @@ document.querySelectorAll('.nav-item').forEach(item => {
         });
         item.classList.add('active');
         item.style.color = '#4CAF50';
+        
+        // Окрашиваем иконку в зеленый цвет
+        const icon = item.querySelector('.nav-icon');
+        if (icon) {
+            document.querySelectorAll('.nav-icon').forEach(i => i.style.filter = '');
+            icon.style.filter = 'invert(56%) sepia(97%) saturate(349%) hue-rotate(89deg) brightness(95%) contrast(92%)';
+        }
+
         const sectionId = item.getAttribute('data-section');
         document.getElementById(sectionId).classList.add('active');
         const energyBar = document.querySelector('.energy-bar');
         const topPanel = document.querySelector('.top-panel');
         const rewardSection = document.getElementById('reward');
         
+        // Показываем уведомление для разделов в разработке
+        if (sectionId === 'cards' || sectionId === 'mining') {
+            showNotification('Этот раздел находится в разработке');
+        }
+        
         if (sectionId === 'home') {
             energyBar.classList.remove('hidden');
             topPanel.classList.remove('hidden');
-            // Скрываем раздел заданий в главном разделе
             if (rewardSection) {
                 rewardSection.style.display = 'none';
             }
         } else if (sectionId === 'reward') {
             energyBar.classList.add('hidden');
             topPanel.classList.add('hidden');
-            // Показываем раздел заданий
             if (rewardSection) {
                 rewardSection.style.display = 'block';
                 renderRewards();
             }
-            // Убираем отступ сверху у контента
             document.querySelector('.content').style.marginTop = '0';
         } else {
             energyBar.classList.add('hidden');
             topPanel.classList.add('hidden');
-            // Возвращаем отступ для других разделов
             document.querySelector('.content').style.marginTop = '70px';
-        }
-        
-        if (sectionId === 'cards') {
-            renderCards();
         }
     });
 });
@@ -632,272 +672,25 @@ function showSettings() {
     }
 }
 
-const cards = [
-    {
-      id: 1,
-      image: "https://res.cloudinary.com/dib4woqge/image/upload/v1735300135/1000000472_wu48p4.png",
-      title: "Начало пути",
-      description: "Коала только начинает своё путешествие. Даёт 120 эвкалипта в час",
-      price: "10000",
-      perHour: 120,
-      isNew: true
-    },
-    {
-      id: 2,
-      image: "https://i.postimg.cc/sxpJmh0S/image.png",
-      title: "Первые деньги",
-      description: "Коала заработала свои первые деньги. Продолжаем в том же духе. Добавляет 350 эвкалипта в час",
-      price: "25000",
-      perHour: 350
-    },
-    {
-      id: 3,
-      image: "https://i.postimg.cc/pVwWnFHC/image.png",
-      title: "Коала на отдыхе",
-      description: "После первых заработанных денег можно хорошенько отдохнуть. Добавляет 800 эвкалипта в час",
-      price: "50000",
-      perHour: 800
-    },
-    {
-      id: 4,
-      image: "https://i.postimg.cc/nLCgk3KD/image.png",
-      title: "Снежные забавы",
-      description: "Наступила зима, а значит можно хорошо порезвиться в снежки. Но не забываем про прибыль в 1800 эвкалипта в час",
-      price: "100000",
-      perHour: 1800
-    },
-    {
-      id: 5,
-      image: "https://i.postimg.cc/wTxjfh3V/Leonardo-Phoenix-10-A-vibrant-whimsical-illustration-of-Koala-2.jpg",
-      title: "Коала-путешественник",
-      description: "Наша коала отправляется в кругосветное путешествие, собирая эвкалипт по всему миру. Приносит 3500 эвкалипта в час",
-      price: "200000",
-      perHour: 3500,
-      isNew: true
-    },
-    {
-      id: 6,
-      image: "https://i.postimg.cc/3JnrGd8c/Leonardo-Phoenix-10-A-whimsical-digital-illustration-of-a-koal-0.jpg",
-      title: "Бизнес-коала",
-      description: "Пора открывать свой бизнес! Коала в деловом костюме управляет сетью эвкалиптовых плантаций. Добавляет 7000 эвкалипта в час",
-      price: "500000",
-      perHour: 7000,
-      isNew: true
-    },
-    {
-      id: 7,
-      image: "https://i.postimg.cc/zvqbJ67b/Leonardo-Phoenix-10-A-vibrant-whimsical-illustration-of-Space-0.jpg",
-      title: "Космический исследователь",
-      description: "Коала покоряет космос в поисках редких видов эвкалипта на других планетах. Приносит 12000 эвкалипта в час",
-      price: "1000000",
-      perHour: 12000,
-      isNew: true
-    },
-    {
-      id: 8,
-      image: "https://i.postimg.cc/bv23bSh0/Leonardo-Phoenix-10-In-a-whimsical-vibrant-illustration-depict-0.jpg",
-      title: "Коала-волшебник",
-      description: "Магия и эвкалипт - отличное сочетание! Коала освоила древние заклинания приумножения эвкалипта. Добавляет 20000 эвкалипта в час",
-      price: "5000000",
-      perHour: 20000,
-      isNew: true
-    }
-  ];
-  
-function renderCards() {
-    const cardsContainer = document.querySelector('#cards .grid');
-    if (!cardsContainer) {
-        console.error('Cards container not found');
-        return;
-    }
-    
-    cardsContainer.innerHTML = '';
-    
-    // Сортируем карточки по цене
-    const sortedCards = [...cards].sort((a, b) => parseInt(a.price) - parseInt(b.price));
-    
-    sortedCards.forEach(card => {
-        const cardElement = document.createElement('div');
-        cardElement.className = 'bg-[#1A1B1A] rounded-xl p-2';
-        cardElement.innerHTML = `
-            <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
-                <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="${card.image}" style="color: transparent;">
-            </div>
-            <div class="text-white mb-1 text-center font-bold text-xs">${card.title}</div>
-            <div class="text-white text-[9px] mb-2 opacity-50">${card.description}</div>
-            <div class="flex items-center justify-between">
-                <button onclick="buyCard(${card.id})" class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
-                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
-                    <span class="text-sm font-bold text-white">${card.price}</span>
-                </button>
-                <div class="flex flex-col">
-                    <div class="flex items-center flex-row gap-1">
-                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
-                        <span class="text-white text-sm">${card.perHour}</span>
-                    </div>
-                    <span class="text-white/50 text-[10px] text-right">per hour</span>
-                </div>
-            </div>
-        `;
-        cardsContainer.appendChild(cardElement);
-    });
-}
-
-function buyCard(cardId) {
-    const card = cards.find(c => c.id === cardId);
-    if (!card) {
-        showNotification('Карточка не найдена', 'error');
-        return;
-    }
-
-    const price = parseInt(card.price);
-    if (coins >= price) {
-        coins -= price;
-        localStorage.setItem('coins', coins);
-        document.getElementById('balance').textContent = coins;
-        
-        // Добавляем карточку в купленные
-        card.purchased = true;
-        
-        // Обновляем отображение карточек
-        renderCards();
-        
-        // Показываем уведомление об успешной покупке
-        showNotification(`Вы успешно приобрели "${card.title}"!`, 'success');
-        
-        // Добавляем эффект получения монет
-        const perHour = parseInt(card.perHour);
-        if (perHour > 0) {
-            setInterval(() => {
-                coins += perHour / 3600; // Конвертируем часовой доход в посекундный
-                document.getElementById('balance').textContent = Math.floor(coins);
-                localStorage.setItem('coins', coins);
-            }, 1000);
-        }
-    } else {
-        // Показываем уведомление о нехватке средств
-        showNotification('Недостаточно средств!', 'error');
-    }
-}
-
-document.querySelector('.top-panel').style.zIndex = '2';
-
-// Функционал новостей
+// Добавляем обработчик для раздела cards
 document.addEventListener('DOMContentLoaded', function() {
-    const newsButton = document.getElementById('newsButton');
-    const newsModal = document.getElementById('newsModal');
-    const closeNewsModal = document.getElementById('closeNewsModal');
-    const newsContent = document.getElementById('newsContent');
-
-    async function fetchNewsContent() {
-        try {
-            const response = await fetch('news.json');
-            if (!response.ok) {
-                throw new Error('Не удалось загрузить новости');
-            }
-
-            const data = await response.json();
-            if (data.news && data.news.length > 0) {
-                const latestNews = data.news[0];
-                newsContent.innerHTML = `
-                    <div class="news-date text-gray-400 text-sm mb-2">${latestNews.date}</div>
-                    <div class="news-content">${latestNews.content}</div>
-                `;
-            } else {
-                newsContent.innerHTML = '<p class="text-gray-400">Нет доступных новостей</p>';
-            }
-        } catch (error) {
-            console.error('Ошибка при загрузке новостей:', error);
-            newsContent.innerHTML = '<p class="text-red-500">Ошибка при загрузке новостей. Пожалуйста, попробуйте позже.</p>';
-        }
+    const cardsContainer = document.getElementById('construction-click-container-cards');
+    if (cardsContainer) {
+        cardsContainer.addEventListener('click', function() {
+            vibrate();
+        });
     }
 
-    // Открытие модального окна
-    newsButton.addEventListener('click', function() {
-        newsModal.classList.remove('hidden');
-        fetchNewsContent();
-    });
-
-    // Закрытие модального окна
-    closeNewsModal.addEventListener('click', function() {
-        newsModal.classList.add('hidden');
-    });
-
-    // Закрытие по клику вне модального окна
-    newsModal.addEventListener('click', function(e) {
-        if (e.target === newsModal) {
-            newsModal.classList.add('hidden');
-        }
-    });
-});
-
-// Показываем сообщение о разработке при переключении на соответствующие разделы
-document.addEventListener('DOMContentLoaded', function() {
-    const tabs = document.querySelectorAll('.tab');
-    const sectionNames = {
-        'mining': 'Mining',
-        'reward': 'Reward'
-    };
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            if (targetId === 'mining' || targetId === 'reward') {
-                showNotification(`Раздел ${sectionNames[targetId]} в разработке`);
+    // Показываем сообщение о разработке при переключении на раздел cards
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section');
+            if (sectionId === 'cards') {
+                showNotification('Этот раздел находится в разработке');
             }
         });
     });
-});
-
-// Добавляем массив наград
-const rewards = [
-    {
-        id: 1,
-        title: "Разработчики",
-        amount: 1000,
-        image: "https://i.postimg.cc/FFx7T4Bh/image.png",
-        channelUsername: "your_channel_1",
-        channelLink: "https://t.me/your_channel_1",
-        isDone: false
-    },
-    {
-        id: 2,
-        title: "Коала",
-        amount: 2000,
-        image: "https://i.postimg.cc/FFx7T4Bh/image.png",
-        channelUsername: "your_channel_2",
-        channelLink: "https://t.me/your_channel_2",
-        isDone: false
-    }
-];
-
-// Функция для очистки всех локальных данных
-function clearAllData() {
-    // Очищаем все данные из localStorage
-    localStorage.removeItem('coins');
-    localStorage.removeItem('energy');
-    localStorage.removeItem('lastEnergyUpdate');
-    localStorage.removeItem('rewards');
-    localStorage.removeItem('gameSettings');
-    localStorage.removeItem('adminSettings');
-    
-    // Сбрасываем переменные
-    coins = 0;
-    energy = 100;
-    document.getElementById('balance').textContent = '0';
-    updateEnergyDisplay();
-    
-    // Обновляем отображение наград
-    renderRewards();
-    
-    showNotification('Все данные очищены!', 'success');
-}
-
-// Добавляем вызов функции при нажатии определенной комбинации клавиш (Ctrl + Shift + R)
-document.addEventListener('keydown', function(event) {
-    if (event.ctrlKey && event.shiftKey && event.key === 'R') {
-        clearAllData();
-    }
 });
 
 // Функция для получения наград из localStorage
@@ -924,8 +717,8 @@ function renderRewards() {
                 Задания
             </div>
             <div class="tab-container">
-                <button id="ingameTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 bg-[#262626] text-white" onclick="switchRewardTab('ingame')">In-game</button>
-                <button id="partnerTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 text-white opacity-50" onclick="switchRewardTab('partner')">Partner</button>
+                <button id="ingameTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 bg-[#262626] text-white" onclick="switchRewardTab('ingame')">Игровые</button>
+                <button id="partnerTab" class="flex-1 py-3 rounded-lg text-center transition-all duration-300 text-white opacity-50" onclick="switchRewardTab('partner')">Партнёрские</button>
             </div>
             <div id="ingame-rewards" class="rewards-list">
                 ${currentRewards.map(reward => `
@@ -961,7 +754,7 @@ function renderRewards() {
                                             <img src="https://i.postimg.cc/26VZfrgK/image.png" alt="verify" class="w-5 h-5">
                                             <span>Проверить</span>
                                         </div>
-                                    ` : 'Start'}
+                                    ` : 'Начать'}
                                 </button>
                             `}
                         </div>
@@ -970,7 +763,7 @@ function renderRewards() {
             </div>
             <div id="partner-rewards" class="rewards-list hidden">
                 <div class="text-center text-white/50 py-4">
-                    Партнерские задания скоро появятся
+                    Партнёрские задания скоро появятся
                 </div>
             </div>
         </div>
@@ -1001,7 +794,7 @@ function switchRewardTab(tab) {
     }
 }
 
-// Функция для получения награды
+// Обновляем функцию handleRewardClaim
 async function handleRewardClaim(channelLink, rewardId) {
     const currentRewards = getSavedRewards();
     const reward = currentRewards.find(r => r.id === rewardId);
@@ -1012,41 +805,26 @@ async function handleRewardClaim(channelLink, rewardId) {
     }
 
     if (!reward.isChecking) {
-        // При нажатии Start сразу открываем канал
-        window.open(channelLink, '_blank');
-        
-        // Меняем состояние на проверку
+        showRewardMenu(channelLink, rewardId);
         reward.isChecking = true;
         saveRewards(currentRewards);
         renderRewards();
     } else {
-        try {
-            // Проверяем подписку через Telegram Mini App
-            const result = await tg.sendData(JSON.stringify({
-                action: 'check_subscription',
-                channel: reward.channelUsername.replace('@', '')
-            }));
-            
-            // Убираем временную автоматическую проверку
-            const isSubscribed = false; // Теперь по умолчанию считаем что не подписан
-            
-            if (isSubscribed) {
-                coins += reward.amount;
-                localStorage.setItem('coins', coins);
-                document.getElementById('balance').textContent = Math.floor(coins);
-                reward.isDone = true;
-                reward.isChecking = false;
-                saveRewards(currentRewards);
-                renderRewards();
-                showNotification(`Получено ${reward.amount} монет!`, 'success');
-            } else {
-                showNotification('Для получения награды необходимо подписаться на канал!', 'error');
-                // Открываем канал повторно
-                window.open(channelLink, '_blank');
-            }
-        } catch (error) {
-            console.error('Ошибка при проверке подписки:', error);
-            showNotification('Произошла ошибка при проверке подписки', 'error');
+        const isSubscribed = true;
+        
+        if (isSubscribed) {
+            coins += reward.amount;
+            localStorage.setItem('coins', coins);
+            document.getElementById('balance').textContent = Math.floor(coins);
+            reward.isDone = true;
+            reward.isChecking = false;
+            saveRewards(currentRewards);
+            renderRewards();
+            showNotification(`Получено ${reward.amount} монет!`, 'success');
+            createConfetti();
+        } else {
+            showNotification('Для получения награды необходимо подписаться на канал!', 'error');
+            window.open(channelLink, '_blank');
         }
     }
 }
@@ -1083,6 +861,7 @@ function toggleAdminPanel() {
                 <input type="number" id="setEnergy" placeholder="Энергия" class="bg-[#262626] text-white p-2 rounded">
                 <button onclick="setEnergy()" class="bg-blue-500 text-white px-3 rounded">OK</button>
             </div>
+            <button onclick="createConfetti()" class="bg-green-500 text-white p-2 rounded">Показать серпантин</button>
             <button onclick="clearAllData()" class="bg-red-500 text-white p-2 rounded">Сбросить всё</button>
         </div>
     `;
@@ -1163,3 +942,243 @@ const styles = `
 const styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
+
+// Добавляем обработчик для установки активной вкладки при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    // Находим элемент Home в навигации и делаем его активным
+    const homeNavItem = document.querySelector('.nav-item[data-section="home"]');
+    if (homeNavItem) {
+        homeNavItem.classList.add('active');
+        homeNavItem.style.color = '#4CAF50';
+        const icon = homeNavItem.querySelector('.nav-icon');
+        if (icon) {
+            icon.style.filter = 'invert(56%) sepia(97%) saturate(349%) hue-rotate(89deg) brightness(95%) contrast(92%)';
+        }
+    }
+
+    // Активируем секцию Home
+    const homeSection = document.getElementById('home');
+    if (homeSection) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        homeSection.classList.add('active');
+    }
+});
+
+// Обновляем функцию showRewardMenu
+function showRewardMenu(channelLink, rewardId) {
+    // Создаем элемент меню
+    const menu = document.createElement('div');
+    menu.className = 'reward-menu';
+    menu.innerHTML = `
+        <div class="reward-menu-header">
+            <div class="header-title">Подписка на канал</div>
+            <button class="close-menu">✕</button>
+        </div>
+        <div class="reward-menu-content">
+            <div class="channel-info">
+                <img src="https://i.postimg.cc/T3NbNK4D/image.png" alt="Channel Icon" class="channel-icon">
+                <div class="channel-details">
+                    <span class="channel-name">Название канала</span>
+                </div>
+            </div>
+            <button class="channel-button">Перейти на канал</button>
+        </div>
+    `;
+
+    // Добавляем стили для меню
+    const styles = `
+        .reward-menu {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: #1A1B1A;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            animation: slideUp 0.3s forwards;
+            z-index: 1000;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(100%);
+            }
+        }
+
+        .reward-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+            width: 100%;
+            text-align: center;
+            padding-right: 24px; /* Компенсация для кнопки закрытия */
+        }
+
+        .close-menu {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .close-menu:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .channel-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .channel-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 40px;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .channel-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .channel-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+        }
+
+        .channel-subscribers {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .channel-button {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .channel-button:hover {
+            background: #45a049;
+        }
+    `;
+
+    const styleSheet = document.createElement('style');
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
+
+    // Добавляем меню в игровой контейнер
+    const gameContainer = document.querySelector('.game-container');
+    gameContainer.appendChild(menu);
+
+    // Получаем реальное количество подписчиков
+    const channelUsername = channelLink.split('/').pop();
+    // Временно устанавливаем фиксированное значение подписчиков
+    document.getElementById('channelSubscribers').textContent = '1.2M подписчиков';
+
+    // Обработчики событий
+    const closeButton = menu.querySelector('.close-menu');
+    const channelButton = menu.querySelector('.channel-button');
+
+    closeButton.addEventListener('click', () => {
+        menu.style.animation = 'slideDown 0.3s forwards';
+        setTimeout(() => menu.remove(), 300);
+    });
+
+    channelButton.addEventListener('click', () => {
+        window.open(channelLink, '_blank');
+        // После открытия ссылки, переходим на главную страницу
+        const homeSection = document.getElementById('home');
+        if (homeSection) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            homeSection.classList.add('active');
+            
+            // Активируем соответствующий пункт меню
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                item.style.color = '';
+                const icon = item.querySelector('.nav-icon');
+                if (icon) {
+                    icon.style.filter = '';
+                }
+            });
+            
+            const homeNavItem = document.querySelector('.nav-item[data-section="home"]');
+            if (homeNavItem) {
+                homeNavItem.classList.add('active');
+                homeNavItem.style.color = '#4CAF50';
+                const icon = homeNavItem.querySelector('.nav-icon');
+                if (icon) {
+                    icon.style.filter = 'invert(56%) sepia(97%) saturate(349%) hue-rotate(89deg) brightness(95%) contrast(92%)';
+                }
+            }
+        }
+        menu.remove();
+    });
+}
+
+// Обновляем функцию clearAllData
+function clearAllData() {
+    // Очищаем все данные из localStorage
+    localStorage.removeItem('coins');
+    localStorage.removeItem('energy');
+    localStorage.removeItem('lastEnergyUpdate');
+    localStorage.removeItem('rewards');
+    localStorage.removeItem('gameSettings');
+    localStorage.removeItem('adminSettings');
+    
+    // Сбрасываем переменные
+    coins = 0;
+    energy = 100;
+    document.getElementById('balance').textContent = '0';
+    updateEnergyDisplay();
+    
+    // Обновляем отображение наград
+    renderRewards();
+    
+    // Показываем уведомление и создаем эффект серпантина
+    showNotification('Все данные очищены!', 'success');
+    createConfetti();
+}
