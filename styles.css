@@ -213,6 +213,13 @@ body {
     border-radius: 50%;
     overflow: hidden;
     margin-top: 10px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    cursor: pointer;
+}
+
+.clicker-koala:active {
+    transform: translate(-50%, -50%) scale(0.95);
 }
 
 /* Navigation styles */
@@ -610,56 +617,157 @@ body {
     font-size: 1.1rem;
 }
 
-/* Удаляем старые стили для карт */
-.cards-container,
-.cards-grid,
-.card,
-.card-image-container,
-.card-title,
-.card-description,
-.card-footer,
-.card-price,
-.buy-button,
-.per-hour,
-.new-badge,
-.tab-container,
-.new-cards-tab,
-.purchased-cards-tab {
-    display: none;
+/* Add card styles */
+.cards-container {
+    padding: 10px;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
 }
 
-/* Обновляем стили для раздела cards */
-.section#cards {
-    display: none;
-    height: 100%;
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 10px;
     width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
-.section#cards.active {
+.card {
+    background: #1e2620;
+    border-radius: 15px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-}
-
-/* Используем существующие стили under-construction */
-.under-construction {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    gap: 8px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     text-align: center;
+    min-width: 0;
+}
+
+.card-image-container {
+    width: 100%;
+    height: 120px;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #151a17;
+}
+
+.card img {
+    width: 100%;
     height: 100%;
-    padding: 1rem;
+    object-fit: cover;
+    border-radius: 10px;
 }
 
-.under-construction img {
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
-    transition: transform 0.1s ease-in-out;
+.card-title {
+    color: #4CAF50;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 5px;
 }
 
-.under-construction img:active {
-    transform: scale(0.95);
+.card-description {
+    color: #888;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.3;
+    margin: 0 5px;
+}
+
+.card-footer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.card-price {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.card-price .coin-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.buy-button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+}
+
+.per-hour {
+    color: #4CAF50;
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.new-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4CAF50;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+/* Медиа-запросы для адаптивной сетки */
+@media (min-width: 768px) {
+    .cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .card-image-container {
+        height: 150px;
+    }
+}
+
+@media (max-width: 767px) {
+    .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .card-image-container {
+        height: 120px;
+    }
+}
+
+/* Медиа-запрос для мобильных устройств */
+@media (max-width: 480px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-image-container {
+        height: 180px;
+    }
+}
+
+/* Медиа-запрос для больших экранов */
+@media (min-width: 481px) {
+    .card-image-container {
+        height: 160px;
+    }
 }
 
 /* Стили для уведомлений */
@@ -693,7 +801,7 @@ body {
 }
 
 .notification.info {
-    border-left: 4px solid #2196F3;
+    border-left: 4px solid #FFD700;
 }
 
 .notification-content {
@@ -706,6 +814,15 @@ body {
     font-size: 14px;
     text-align: center;
     font-weight: 500;
+}
+
+.under-construction img {
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+    transition: transform 0.1s ease-in-out;
+}
+
+.under-construction img:active {
+    transform: scale(0.95);
 }
 
 .click-effect {
@@ -1105,32 +1222,366 @@ input:checked + .slider:before {
 
 /* Стили для серпантина */
 .confetti {
-    position: absolute;
+    position: fixed;
     z-index: 1000;
     pointer-events: none;
-    animation: confettiFall 2.5s linear forwards;
-    top: -20px;
+    font-size: 1.5rem;
+    animation: confettiFall 3s linear forwards;
 }
 
 @keyframes confettiFall {
     0% {
-        transform: translateY(0) rotate(0deg);
+        transform: translateY(-10vh) rotate(0deg);
         opacity: 1;
-    }
-    25% {
-        opacity: 1;
-        transform: translateY(25vh) rotate(180deg);
-    }
-    50% {
-        opacity: 0.8;
-        transform: translateY(50vh) rotate(360deg);
-    }
-    75% {
-        opacity: 0.6;
-        transform: translateY(75vh) rotate(720deg);
     }
     100% {
-        transform: translateY(105vh) rotate(1080deg);
+        transform: translateY(100vh) rotate(720deg);
         opacity: 0;
     }
+}
+
+/* Стили для меню заданий */
+.reward-menu {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1A1B1A;
+    border-radius: 20px 20px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    z-index: 1000;
+}
+
+.reward-menu.show {
+    transform: translateY(0);
+}
+
+.reward-menu-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    position: relative;
+    border-bottom: 1px solid hsla(0, 0%, 100%, .1);
+}
+
+.reward-menu-title {
+    color: #888;
+    font-size: 1rem;
+    text-align: center;
+    padding-right: 24px;
+}
+
+.reward-menu-close {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 1.5rem;
+    line-height: 1;
+    padding: 0.25rem;
+}
+
+.reward-menu-content {
+    padding: 1rem;
+}
+
+.channel-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.channel-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+.channel-details {
+    text-align: center;
+}
+
+.channel-name {
+    color: white;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.channel-button {
+    display: block;
+    width: 100%;
+    padding: 0.75rem;
+    background: #4CAF50;
+    color: white;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.channel-button:hover {
+    background: #45a049;
+}
+
+/* Стили для вкладок */
+.tab-container {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.25rem;
+    margin: 1rem;
+    background: hsla(0, 0%, 100%, .1);
+    border-radius: 1rem;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    color: white;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.tab-button.active {
+    background: #262626;
+}
+
+.tab-button:not(.active) {
+    opacity: 0.5;
+}
+
+/* Стили для элементов задания */
+.reward-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1A1B1A;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin: 0.5rem 1rem;
+}
+
+.reward-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.reward-button {
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.reward-button:not(.done) {
+    background: #4CAF50;
+    color: white;
+}
+
+.reward-button.checking {
+    background: #3B82F6;
+}
+
+.reward-button.done {
+    background: transparent;
+    color: #4CAF50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Стили для новой рулетки */
+.fortune-wheel-container {
+    background: #1A1B1A;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+.fortune-wheel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.spins-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.spin-count {
+    background: #262626;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.fortune-wheel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.fortune-wheel-viewport {
+    width: 100%;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #1A1B1A;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.wheel-pointer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 25px solid #FFD700;
+    z-index: 2;
+}
+
+.fortune-wheel-track {
+    display: flex;
+    position: absolute;
+    left: 50%;
+    top: 35px;
+    height: calc(100% - 35px);
+    transform: translateX(-50%);
+    transition: transform 15s cubic-bezier(0.1, 0, 0.2, 1);
+}
+
+.prize-item {
+    flex: 0 0 200px;
+    height: 200px;
+    background: #262626;
+    border: 2px solid #2d2d2d;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-right: 20px;
+}
+
+.prize-item.selected {
+    border-color: #FFD700;
+    animation: glow 1s infinite;
+}
+
+.prize-icon {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.prize-balance {
+    font-size: 2em;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.prize-name {
+    color: #FFD700;
+    font-size: 1.2em;
+}
+
+.prize-value {
+    color: white;
+    font-size: 1em;
+    opacity: 0.8;
+}
+
+.spin-button {
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 15px 30px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.spin-button:hover {
+    background: #16a34a;
+}
+
+.remaining {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-top: 5px;
+}
+
+@keyframes glow {
+    0% { box-shadow: 0 0 5px #FFD700; }
+    50% { box-shadow: 0 0 20px #FFD700; }
+    100% { box-shadow: 0 0 5px #FFD700; }
+}
+
+.fortune-wheel-track.spinning {
+    animation: none;
+}
+
+/* Стили для уведомления о выигрыше */
+.win-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(26, 27, 26, 0.95);
+    border: 2px solid #FFD700;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: white;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.win-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.win-content h3 {
+    font-size: 1.2em;
+    margin: 0;
+}
+
+.win-content .prize-name {
+    font-size: 2em;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.win-content .prize-value {
+    font-size: 1.1em;
+    opacity: 0.8;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
 }

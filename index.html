@@ -7,6 +7,7 @@
     <title>Mobile Clicker Game</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="mining.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"/>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"/>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -81,26 +82,228 @@
             </div>
 
             <div class="section" id="cards">
-                <div class="under-construction flex-1 flex flex-col items-center justify-center p-4">
-                    <div id="construction-click-container-cards" class="relative cursor-pointer">
-                        <img src="https://i.postimg.cc/CLs6npzb/image.png" alt="Under Construction" class="w-48 h-48 mb-6">
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dib4woqge/image/upload/v1735300135/1000000472_wu48p4.png" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Начало пути</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Коала только начинает своё путешествие. Даёт 120 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">100</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">120</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
                     </div>
-                    <h2 class="text-2xl font-bold text-white mb-3">Раздел в разработке</h2>
-                    <p class="text-gray-400 text-center max-w-md">
-                        Мы усердно работаем над этим разделом. Скоро здесь появится что-то интересное!
-                    </p>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735343484/qcbeycxnzp2mkxqavmya.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Первые деньги</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Коала заработала свои первые деньги. Продолжаем в том же духе. Добавляет 350 эвкалипта каждый час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">500</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">350</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735343571/kgkhxeboypjqdjhm9zbp.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Коала на отдыхе</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">После первых заработанных денег нужно хорошенько отдохнуть. Добавляет 800 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">1000</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">800</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735343643/gha5dsuveb5zn5fu2flf.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Снежные забавы</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Наступила зима, а значит можно хорошо поразвлечься играя в снежки. Но не забываем про прибыль. Даёт 1800 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">2500</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">1800</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593289/rhq8bbtqg0rcgd7xzm5y.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Коала брокер</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Коала начинает свой путь в брокерском деле. Пожелаем ему удачи. Приносит 4000 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">5000</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">4000</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593396/clrwnoyy5yw3dtzw5tzu.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Чуть выше среднего класса</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Коала поднимается у нас на глазах. Он достиг уже результатов и готов двигаться дальше. Добавляет 6000 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">10000</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">6000</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593538/yxbo4kc35xy8qcpim3j2.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Коала миллиардер</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Вот и первый заработанный миллиард. Добавляет 10000 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">20000</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">10000</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593643/k5lqxjvw62lqzu4ka3dz.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Кибер заработок</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Коала показывает прибыли будущего. Она вообще остановится или все деньги что существуют станут его?</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">50000</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">15000</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#1A1B1A] rounded-xl p-2">
+                        <div class="w-full h-[60px] bg-zinc-800 rounded-[15px] mb-2 mx-auto flex justify-center items-center">
+                            <img alt="card" loading="eager" width="96" height="96" decoding="async" data-nimg="1" class="w-12 h-12 object-cover max-w-full" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593768/ifdpv3dyv7oduzarphu0.jpg" style="color: transparent;">
+                        </div>
+                        <div class="text-white mb-1 text-center font-bold text-xs">Межгалактический заработок</div>
+                        <div class="text-white text-[9px] mb-2 opacity-50">Ну, больше уже некуда. Добавляет 50000 эвкалипта в час</div>
+                        <div class="flex items-center justify-between">
+                            <button class="rounded-full py-1 px-3 flex items-center bg-green-500 hover:bg-green-600">
+                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3 mr-1">
+                                <span class="text-sm font-bold text-white">100000</span>
+                            </button>
+                            <div class="flex flex-col">
+                                <div class="flex items-center flex-row gap-1">
+                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="w-3 h-3">
+                                    <span class="text-white text-sm">50000</span>
+                                </div>
+                                <span class="text-white/50 text-[10px] text-right">per hour</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="section" id="mining">
-                <div class="under-construction flex-1 flex flex-col items-center justify-center p-4">
-                    <div id="construction-click-container" class="relative cursor-pointer">
-                        <img src="https://i.postimg.cc/CLs6npzb/image.png" alt="Under Construction" class="w-48 h-48 mb-6">
+                <div class="mining-container">
+                    <div class="mining-header">
+                        <h2>Рулетка</h2>
+                        <p class="text-gray-400">Испытай свою удачу</p>
                     </div>
-                    <h2 class="text-2xl font-bold text-white mb-3">Раздел в разработке</h2>
-                    <p class="text-gray-400 text-center max-w-md">
-                        Мы усердно работаем над этим разделом. Скоро здесь появится что-то интересное!
-                    </p>
+
+                    <!-- Секция рулетки -->
+                    <div class="fortune-wheel-container">
+                        <div class="fortune-wheel-header">
+                            <div class="spins-info">
+                                <span>Spin</span>
+                                <span class="spin-count">5</span>
+                            </div>
+                        </div>
+                        
+                        <div class="fortune-wheel-viewport">
+                            <div class="wheel-pointer"></div>
+                            <div class="fortune-wheel-track">
+                                <!-- Призы будут добавляться динамически -->
+                            </div>
+                        </div>
+
+                        <div class="fortune-wheel-controls">
+                            <button id="spinButton" class="spin-button">
+                                <span>Buy More</span>
+                                <div class="remaining">Осталось прокрутов: <span id="spinsCount">5</span></div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -212,6 +415,29 @@
             </a>
         </nav>
     </div>
+    <div class="admin-panel">
+        <h2>Админ панель</h2>
+        
+        <div class="admin-section">
+            <h3>Нагрузка сервера</h3>
+            <div class="admin-load-graph"></div>
+            <div class="server-stats">
+                <div class="stat-item">
+                    <span class="stat-label">CPU:</span>
+                    <span class="stat-value">45%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">RAM:</span>
+                    <span class="stat-value">3.2/8 GB</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Онлайн:</span>
+                    <span class="stat-value">24/100</span>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="script.js"></script>
+    <script src="mining.js"></script>
 </body>
 </html>
