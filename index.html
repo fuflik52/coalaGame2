@@ -1,474 +1,329 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <base href="./">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Clicker Game</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <title>Игровая Платформа</title>
     <link rel="stylesheet" href="styles.css">
-
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"/>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        zinc: {
-                            800: '#27272a'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="game-container">
-        <div class="top-panel">
-            <div class="user-info">
-                <img src="https://i.postimg.cc/vBBWGZjL/image.png" alt="Avatar" class="avatar" id="userAvatar">
-                <span id="username">&#x41f;&#x43e;&#x43b;&#x44c;&#x437;&#x43e;&#x432;&#x430;&#x442;&#x435;&#x43b;&#x44c;</span>
+    <div class="mobile-container">
+        <div class="container">
+            <div class="main-content">
+                <!-- Секция Home -->
+                <section class="content-section" id="homeSection">
+                    <div class="profile-section">
+                        <div class="user-info">
+                            <img src="https://i.postimg.cc/vBBWGZjL/image.png" alt="Avatar" class="avatar" id="settingsButton">
+                            <span class="username">Пользователь</span>
+                        </div>
+                        <div class="balance">
+                            <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Balance" class="balance-img">
+                            <span class="balance-value">0</span>
+                        </div>
+                    </div>
+                    <div class="click-section">
+                        <div class="clicker-button" id="clickerButton">
+                            <div class="clicker-gradient"></div>
+                            <div class="clicker-gradient-inner"></div>
+                            <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="clicker-koala">
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 100%;">100/100</div>
+                    </div>
+                </section>
+
+                <!-- Секция Frens -->
+                <section class="content-section" id="frensSection">
+                    <div class="frens-container">
+                        <div class="frens-header">
+                            <div class="frens-title">
+                                <h2>Приглашай друзей!</h2>
+                                <p>Получайте бонусы вместе с друзьями</p>
+                            </div>
+                            <div class="frens-stats">
+                                <div class="stat-card">
+                                    <i class="fas fa-users"></i>
+                                    <div class="stat-info">
+                                        <span class="stat-value" id="friendCount">0</span>
+                                        <span class="stat-label">Друзей</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <i class="fas fa-coins"></i>
+                                    <div class="stat-info">
+                                        <span class="stat-value">25%</span>
+                                        <span class="stat-label">Бонус</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="referral-section">
+                            <div class="referral-card">
+                                <div class="referral-info">
+                                    <i class="fas fa-link"></i>
+                                    <div>
+                                        <h3>Твоя реферальная ссылка</h3>
+                                        <p>Поделись с друзьями и получай бонусы</p>
+                                    </div>
+                                </div>
+                                <button id="copyReferralLink" class="copy-link-button">
+                                    <i class="fas fa-copy"></i>
+                                    <span>Копировать</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="referral-info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-info-circle"></i>
+                            </div>
+                            <div class="info-content">
+                                <h3>Двухуровневая реферальная система</h3>
+                                <p>Получайте ¼ от токенов пользователей, приглашенных вашими друзьями</p>
+                            </div>
+                        </div>
+
+                        <div class="friends-list-section">
+                            <div class="friends-list-header">
+                                <h3>Список друзей</h3>
+                                <span class="friends-count" id="friendCountBadge">0</span>
+                            </div>
+                            <div class="friends-list" id="friendList">
+                                <div class="empty-friends-message">
+                                    <i class="fas fa-user-plus"></i>
+                                    <p>Пригласите друзей, чтобы начать зарабатывать вместе</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Секция Cards -->
+                <section class="content-section" id="cardsSection">
+                    <div class="cards-container">
+                        <div class="cards-header">
+                            <h2>Коллекция карточек</h2>
+                            <p>Собирайте карточки и получайте пассивный доход</p>
+                        </div>
+                        <div class="cards-grid" id="cardsGrid">
+                            <!-- Карточки будут добавлены через JavaScript -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Секция Mining -->
+                <section class="content-section" id="miningSection">
+                    <div class="section-content mining-content">
+                        <div class="mining-header">
+                            <div class="mining-icon-container">
+                                <img src="https://i.postimg.cc/jStPJsMg/image.png" alt="Mining" class="section-icon mining-icon">
+                                <div class="mining-glow"></div>
+                            </div>
+                            <h2>Майнинг-ферма</h2>
+                            <p class="status">В разработке</p>
+                        </div>
+
+                        <div class="mining-preview">
+                            <div class="preview-card">
+                                <div class="card-icon">🏭</div>
+                                <h3>Автоматический майнинг</h3>
+                                <p>Создавайте и улучшайте свою майнинг-ферму</p>
+                            </div>
+                            <div class="preview-card">
+                                <div class="card-icon">⚡</div>
+                                <h3>Бустеры</h3>
+                                <p>Ускоряйте добычу с помощью бустеров</p>
+                            </div>
+                            <div class="preview-card">
+                                <div class="card-icon">📈</div>
+                                <h3>Статистика</h3>
+                                <p>Отслеживайте свой прогресс</p>
+                            </div>
+                        </div>
+
+                        <div class="mining-progress">
+                            <div class="progress-header">
+                                <span class="version">Версия 0.0.1</span>
+                                <span class="release-date">До релиза: 14 дней</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-track">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step completed">
+                                        <div class="step-dot"></div>
+                                        <span>Дизайн</span>
+                                    </div>
+                                    <div class="step completed">
+                                        <div class="step-dot"></div>
+                                        <span>Разработка</span>
+                                    </div>
+                                    <div class="step active">
+                                        <div class="step-dot"></div>
+                                        <span>Тестирование</span>
+                                    </div>
+                                    <div class="step">
+                                        <div class="step-dot"></div>
+                                        <span>Релиз</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="construction-animation">
+                            <div class="gear gear-1"></div>
+                            <div class="gear gear-2"></div>
+                            <div class="gear gear-3"></div>
+                            <div class="construction-beam"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Секция Reward -->
+                <section class="content-section" id="rewardSection">
+                    <div class="section-content mining-content">
+                        <div class="mining-header">
+                            <div class="mining-icon-container">
+                                <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Reward" class="section-icon mining-icon">
+                                <div class="mining-glow"></div>
+                            </div>
+                            <h2>Система наград</h2>
+                            <p class="status">В разработке</p>
+                        </div>
+
+                        <div class="mining-preview">
+                            <div class="preview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                                <h3>Достижения</h3>
+                                <p>Выполняйте задания и получайте награды</p>
+                            </div>
+                            <div class="preview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <h3>Бонусы</h3>
+                                <p>Ежедневные награды и подарки</p>
+                            </div>
+                            <div class="preview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h3>Рейтинг</h3>
+                                <p>Соревнуйтесь с другими игроками</p>
+                            </div>
+                        </div>
+
+                        <div class="mining-progress">
+                            <div class="progress-header">
+                                <span class="version">Версия 0.0.1</span>
+                                <span class="release-date">До релиза: 35 дней</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width: 45%"></div>
+                                </div>
+                                <div class="progress-steps">
+                                    <div class="step completed">
+                                        <div class="step-dot"></div>
+                                        <span>Дизайн</span>
+                                    </div>
+                                    <div class="step active">
+                                        <div class="step-dot"></div>
+                                        <span>Разработка</span>
+                                    </div>
+                                    <div class="step">
+                                        <div class="step-dot"></div>
+                                        <span>Тестирование</span>
+                                    </div>
+                                    <div class="step">
+                                        <div class="step-dot"></div>
+                                        <span>Релиз</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="construction-animation">
+                            <div class="gear gear-1"></div>
+                            <div class="gear gear-2"></div>
+                            <div class="gear gear-3"></div>
+                            <div class="construction-beam"></div>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <div class="balance">
-                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins" class="coin-icon">
-                <span id="balance">0</span>
-            </div>
+
+            <nav class="bottom-nav">
+                <div class="nav-item active" data-section="home">
+                    <img src="https://i.postimg.cc/Y986QWcW/image.png" alt="Home" class="nav-icon">
+                    <span>Home</span>
+                </div>
+                <div class="nav-item" data-section="frens">
+                    <img src="https://i.postimg.cc/bYHMFCPx/image.png" alt="Frens" class="nav-icon">
+                    <span>Frens</span>
+                </div>
+                <div class="nav-item" data-section="cards">
+                    <img src="https://i.postimg.cc/T2C0DZG4/image.png" alt="Cards" class="nav-icon">
+                    <span>Cards</span>
+                </div>
+                <div class="nav-item" data-section="mining">
+                    <img src="https://i.postimg.cc/jd48ZLzZ/image.png" alt="Mining" class="nav-icon">
+                    <span>Mining</span>
+                </div>
+                <div class="nav-item" data-section="reward">
+                    <img src="https://i.postimg.cc/XY2s6m15/image.png" alt="Reward" class="nav-icon">
+                    <span>Reward</span>
+                </div>
+            </nav>
         </div>
-
-        <div class="content" id="content">
-            <div class="section active" id="home">
-                <div class="clicker-button" id="clickerButton">
-                    <div class="clicker-gradient"></div>
-                    <div class="clicker-gradient-inner"></div>
-                    <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="clicker-koala">
-                </div>
-            </div>
-
-            <div class="section" id="frensSection">
-                <div class="frens-container">
-                    <div class="frens-header">
-                        <div class="frens-title">
-                            <h2>Приглашай друзей!</h2>
-                            <p>Получайте бонусы вместе с друзьями</p>
-                        </div>
-                        <div class="frens-stats">
-                            <div class="stat-card">
-                                <i class="fas fa-users"></i>
-                                <div class="stat-info">
-                                    <span class="stat-value" id="friendCount">0</span>
-                                    <span class="stat-label">Друзей</span>
-                                </div>
-                            </div>
-                            <div class="stat-card">
-                                <i class="fas fa-coins"></i>
-                                <div class="stat-info">
-                                    <span class="stat-value">25%</span>
-                                    <span class="stat-label">Бонус</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="referral-section">
-                        <div class="referral-card">
-                            <div class="referral-info">
-                                <i class="fas fa-link"></i>
-                                <div>
-                                    <h3>Твоя реферальная ссылка</h3>
-                                    <p>Поделись с друзьями и получай бонусы</p>
-                                </div>
-                            </div>
-                            <button onclick="copyReferralLink()" class="copy-link-button">
-                                <i class="fas fa-copy"></i>
-                                <span>Копировать</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="referral-info-card">
-                        <div class="info-icon">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div class="info-content">
-                            <h3>Двухуровневая реферальная система</h3>
-                            <p>Получайте ¼ от токенов пользователей, приглашенных вашими друзьями</p>
-                        </div>
-                    </div>
-
-                    <div class="friends-list-section">
-                        <div class="friends-list-header">
-                            <h3>Список друзей</h3>
-                            <span class="friends-count" id="friendCountBadge">0</span>
-                        </div>
-                        <div class="friends-list" id="friendList">
-                            <!-- Friends will be added here dynamically -->
-                            <div class="empty-friends-message">
-                                <i class="fas fa-user-plus"></i>
-                                <p>Пригласите друзей, чтобы начать зарабатывать вместе</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section" id="cards">
-                <div class="grid">
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dib4woqge/image/upload/v1735300135/1000000472_wu48p4.png">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Начало пути</h3>
-                            <p class="card-text">Коала только начинает своё путешествие. Даёт 120 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>10000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>120</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735343484/qcbeycxnzp2mkxqavmya.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Первые деньги</h3>
-                            <p class="card-text">Коала заработала свои первые деньги. Продолжаем в том же духе. Добавляет 350 эвкалипта каждый час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>5000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>350</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735343571/kgkhxeboypjqdjhm9zbp.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Коала на отдыхе</h3>
-                            <p class="card-text">После первых заработанных денег нужно хорошенько отдохнуть. Добавляет 800 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>10000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>800</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735343643/gha5dsuveb5zn5fu2flf.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Снежные забавы</h3>
-                            <p class="card-text">Наступила зима, а значит можно хорошо поразвлечься играя в снежки. Но не забываем про прибыль. Даёт 1800 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>2500</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>1800</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593289/rhq8bbtqg0rcgd7xzm5y.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Коала брокер</h3>
-                            <p class="card-text">Коала начинает свой путь в брокерском деле. Пожелаем ему удачи. Приносит 4000 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>5000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>4000</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593396/clrwnoyy5yw3dtzw5tzu.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Чуть выше среднего класса</h3>
-                            <p class="card-text">Коала поднимается у нас на глазах. Он достиг уже результатов и готов двигаться дальше. Добавляет 6000 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>10000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>6000</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593538/yxbo4kc35xy8qcpim3j2.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Коала миллиардер</h3>
-                            <p class="card-text">Вот и первый заработанный миллиард. Добавляет 10000 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>20000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>10000</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593643/k5lqxjvw62lqzu4ka3dz.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Кибер заработок</h3>
-                            <p class="card-text">Коала показывает прибыли будущего. Она вообще остановится или все деньги что существуют станут его?</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>50000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>15000</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-item">
-                        <div class="card-container">
-                            <img alt="card" class="card-thumbnail" src="https://res.cloudinary.com/dr0kqkdi1/image/upload/v1735593768/ifdpv3dyv7oduzarphu0.jpg">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-heading">Межгалактический заработок</h3>
-                            <p class="card-text">Ну, больше уже некуда. Добавляет 50000 эвкалипта в час</p>
-                            <div class="card-footer">
-                                <button class="purchase-button">
-                                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                    <span>100000</span>
-                                </button>
-                                <div class="reward-details">
-                                    <div class="reward-amount">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf">
-                                        <span>50000</span>
-                                    </div>
-                                    <span class="reward-period">per hour</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section" id="mining">
-                <div class="construction-container">
-                    <div class="construction-content">
-                        <div class="construction-icon">
-                            <i class="fas fa-tools fa-4x"></i>
-                            <div class="gear-animation">
-                                <i class="fas fa-cog fa-spin"></i>
-                            </div>
-                        </div>
-                        <h2 class="construction-title">Скоро будет готово!</h2>
-                        <p class="construction-text">Наша команда усердно работает над созданием уникальной майнинг-фермы</p>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: 65%"></div>
-                        </div>
-                        <div class="construction-stats">
-                            <div class="stat-item">
-                                <i class="fas fa-code-branch"></i>
-                                <span>Версия 0.9.1</span>
-                            </div>
-                            <div class="stat-item">
-                                <i class="fas fa-clock"></i>
-                                <span>До релиза: 14 дней</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section" id="reward">
-                <!-- Награды будут добавлены динамически через JavaScript -->
-            </div>
-
-            <div class="section" id="settings">
-                <div class="flex-1 flex flex-col items-center justify-start p-4">
-                    <h2 class="text-2xl font-bold text-white mb-6">Настройки</h2>
-                    
-                    <!-- Кнопка новостей -->
-                    <button id="newsButton" class="w-full max-w-md bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 px-6 rounded-lg mb-4 flex items-center justify-between">
-                        <span class="flex items-center">
-                            <i class="fas fa-newspaper mr-3"></i>
-                            Новости
-                        </span>
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-
-                    <!-- Модальное окно для новостей -->
-                    <div id="newsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-                        <div class="bg-zinc-900 w-11/12 max-w-lg rounded-lg p-6 relative max-h-[80vh] overflow-y-auto">
-                            <button id="closeNewsModal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-                                <i class="fas fa-times"></i>
-                            </button>
-                            <h3 class="text-xl font-bold text-white mb-4">Новости</h3>
-                            <div id="newsContent" class="text-gray-300">
-                                <!-- Здесь будет контент из Telegraph -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Остальные настройки -->
-                    <div class="w-full max-w-md space-y-4">
-                        <div class="flex items-center justify-between bg-zinc-800 p-4 rounded-lg">
-                            <span class="text-white">Звук</span>
-                            <label class="switch">
-                                <input type="checkbox" id="soundToggle">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                        <div class="flex items-center justify-between bg-zinc-800 p-4 rounded-lg">
-                            <span class="text-white">Вибрация</span>
-                            <label class="switch">
-                                <input type="checkbox" id="vibrationToggle" checked>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="energy-bar">
-            <div class="energy-fill" id="energyFill">
-                <div class="absolute inset-0 overflow-hidden mix-blend-overlay opacity-20">
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: -44px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: -26px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: -8px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 10px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 28px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 46px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 64px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 82px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 100px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 118px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 136px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 154px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 172px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 190px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 208px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 226px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 244px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 262px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 280px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 298px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 316px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 334px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 352px; top: 5px;"></div>
-                    <div class="absolute w-[73.54px] h-0 border-t-[5px] border-white rotate-[-45deg]" style="left: 370px; top: 5px;"></div>
-                </div>
-            </div>
-            <div class="energy-text">
-                <span id="currentEnergy">100</span>/<span id="maxEnergy">100</span>
-            </div>
-        </div>
-
-        <nav class="bottom-nav">
-            <div class="nav-item active" data-section="home">
-                <img src="https://i.postimg.cc/Y986QWcW/image.png" alt="Home" class="nav-icon">
-                <span>Home</span>
-            </div>
-            <div class="nav-item" data-section="frens">
-                <img src="https://i.postimg.cc/bYHMFCPx/image.png" alt="Frens" class="nav-icon">
-                <span>Frens</span>
-            </div>
-            <div class="nav-item" data-section="cards">
-                <img src="https://i.postimg.cc/T2C0DZG4/image.png" alt="Cards" class="nav-icon">
-                <span>Cards</span>
-            </div>
-            <div class="nav-item" data-section="mining">
-                <img src="https://i.postimg.cc/jd48ZLzZ/image.png" alt="Mining" class="nav-icon">
-                <span>Mining</span>
-            </div>
-            <div class="nav-item" data-section="reward">
-                <img src="https://i.postimg.cc/XY2s6m15/image.png" alt="Reward" class="nav-icon">
-                <span>Reward</span>
-            </div>
-            <div class="nav-item" data-section="admin" id="adminButton" style="display: none;">
-                <i class="fas fa-cog nav-icon"></i>
-                <span>Admin</span>
-            </div>
-        </nav>
     </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2>Настройки</h2>
+                <div class="header-buttons">
+                    <button class="news-button">
+                        <img src="https://i.postimg.cc/Y986QWcW/image.png" alt="News" class="news-icon">
+                        Новости
+                    </button>
+                    <button class="close-button">✕</button>
+                </div>
+            </div>
+            <div class="settings-list">
+                <div class="setting-item">
+                    <span>Звук</span>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Вибрация</span>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span>Снег</span>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
-</html>
+</html> 
