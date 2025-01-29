@@ -56,23 +56,73 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsButton = document.getElementById('settingsButton');
     const settingsModal = document.getElementById('settingsModal');
     const closeButton = settingsModal.querySelector('.close-button');
+    const newsButton = settingsModal.querySelector('.news-button');
+    const settingsList = settingsModal.querySelector('.settings-list');
     
     // Изначально скрываем модальное окно
     if (settingsModal) {
         settingsModal.style.display = 'none';
     }
     
-    if (settingsButton) {
-        settingsButton.addEventListener('click', () => {
-            settingsModal.style.display = 'flex';
-        });
-    }
-    
-    if (closeButton) {
-        closeButton.addEventListener('click', () => {
-            settingsModal.style.display = 'none';
-        });
-    }
+    // Добавляем форму промокода в настройки
+    const promoSection = document.createElement('div');
+    promoSection.className = 'setting-item promo-section';
+    promoSection.innerHTML = `
+        <div class="promo-form">
+            <input type="text" id="promoCodeInput" placeholder="Введите промокод" maxlength="20">
+            <button onclick="usePromoCode()">Активировать</button>
+        </div>
+    `;
+    settingsList.appendChild(promoSection);
+
+    // Добавляем стили для формы промокода
+    const style = document.createElement('style');
+    style.textContent = `
+        .promo-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .promo-form {
+            display: flex;
+            gap: 10px;
+        }
+        .promo-form input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background: #21262d;
+            color: #c9d1d9;
+            font-size: 14px;
+        }
+        .promo-form button {
+            padding: 8px 16px;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .promo-form button:hover {
+            background: #2ea043;
+        }
+    `;
+    document.head.appendChild(style);
+
+    settingsButton.addEventListener('click', () => {
+        settingsModal.style.display = 'block';
+    });
+
+    closeButton.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+    });
+
+    newsButton.addEventListener('click', () => {
+        showNews();
+    });
 
     // Закрытие модального окна при клике вне его
     window.addEventListener('click', (event) => {
@@ -81,49 +131,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Добавляем поле для промокода в модальное окно
-    const settingsList = settingsModal.querySelector('.settings-list');
-    const promoCodeHtml = `
-        <div class="setting-item promo-code-section">
-            <div class="promo-code-input">
-                <input type="text" id="promoCodeInput" placeholder="Введите промокод">
-                <button id="applyPromoCode">Применить</button>
-            </div>
-        </div>
-    `;
-    settingsList.insertAdjacentHTML('beforeend', promoCodeHtml);
+    // Добавляем функцию использования промокода
+    async function usePromoCode() {
+        const input = document.getElementById('promoCodeInput');
+        if (!input || !input.value) {
+            showNotification('Введите промокод', 'error');
+            return;
+        }
 
-    // Обработчик применения промокода
-    const promoCodeInput = document.getElementById('promoCodeInput');
-    const applyPromoCodeButton = document.getElementById('applyPromoCode');
+        const code = input.value.trim().toUpperCase();
+        if (!code) {
+            showNotification('Введите промокод', 'error');
+            return;
+        }
 
-    const promoCodes = {
-        '1': 500000,
-    };
-
-    applyPromoCodeButton.addEventListener('click', () => {
-        const code = promoCodeInput.value.toLowerCase();
-        const reward = promoCodes[code];
-
-        if (reward) {
-            // Проверяем, использовался ли промокод
-            const usedCodes = JSON.parse(localStorage.getItem('usedPromoCodes') || '[]');
-            if (usedCodes.includes(code)) {
-                showNotification('Этот промокод уже был использован', 'error');
+        try {
+            // Получаем текущий Telegram ID
+            const telegramId = window.tg?.initDataUnsafe?.user?.id?.toString();
+            if (!telegramId) {
+                showNotification('Ошибка: не удалось получить ID пользователя', 'error');
                 return;
             }
 
-            // Начисляем награду
-            addMoney(reward);
+            // Используем промокод
+            const result = await window.db.usePromoCode(telegramId, code);
             
-            // Сохраняем использованный промокод
-            usedCodes.push(code);
-            localStorage.setItem('usedPromoCodes', JSON.stringify(usedCodes));
-            
-            showNotification(`Промокод активирован! Получено ${reward} монет`, 'success');
-            promoCodeInput.value = '';
-        } else {
-            showNotification('Неверный промокод', 'error');
+            if (result.success) {
+                showNotification(result.message, 'success');
+                input.value = ''; // Очищаем поле ввода
+                
+                // Обновляем баланс или энергию в зависимости от типа награды
+                if (result.reward.type === 'coins') {
+                    updateBalanceDisplay();
+                } else if (result.reward.type === 'energy') {
+                    const userData = await window.db.getUserData(telegramId);
+                    if (userData && typeof updateEnergyDisplay === 'function') {
+                        updateEnergyDisplay(userData.energy, userData.max_energy);
+                    }
+                }
+            } else {
+                showNotification(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Ошибка при использовании промокода:', error);
+            showNotification('Произошла ошибка при использовании промокода', 'error');
         }
-    });
+    }
+
+    // Добавляем обработчик для кнопки активации промокода
+    const promoButton = promoSection.querySelector('button');
+    if (promoButton) {
+        promoButton.onclick = usePromoCode;
+    }
 }); 

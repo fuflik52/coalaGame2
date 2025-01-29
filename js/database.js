@@ -2,8 +2,13 @@
 const SUPABASE_URL = 'https://xvmjotofqhnkxatfmqxc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2bWpvdG9mcWhua3hhdGZtcXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgxODQwNDUsImV4cCI6MjA1Mzc2MDA0NX0.9Ql8P7P8WpHqbfuTT_fpLAFv4r1Sbn9ChR3F6_bYHbU';
 
-// Создаем клиент Supabase
+// Создаем клиент Supabase и экспортируем его в глобальный объект
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Экспортируем клиент в глобальный объект
+window.db = {
+    supabaseClient: supabaseClient
+};
 
 // Получаем данные из Telegram WebApp если они еще не получены
 if (!window.tg) {
