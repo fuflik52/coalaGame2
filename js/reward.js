@@ -1,106 +1,125 @@
 let lastClaimTime = 0;
 let currentDay = 1;
-let currentUserId = null; // Добавляем ID текущего пользователя
+let currentUserId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Получаем или создаем пользователя
-    currentUserId = localStorage.getItem('userId');
-    if (!currentUserId) {
-        const newUser = await window.db.createNewUser({
-            username: 'user_' + Math.random().toString(36).substr(2, 9)
-        });
-        if (newUser) {
-            currentUserId = newUser.id;
-            localStorage.setItem('userId', currentUserId);
+    try {
+        // Ждем инициализации базы данных
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Получаем ID из Telegram или создаем нового пользователя
+        const telegramId = window.db.currentUser.id?.toString();
+        if (telegramId) {
+            // Пытаемся найти пользователя по Telegram ID
+            const existingUser = await window.db.getUserData(telegramId);
+            if (existingUser) {
+                currentUserId = existingUser.id;
+            } else {
+                // Создаем нового пользователя
+                const newUser = await window.db.createNewUser({});
+                if (newUser) {
+                    currentUserId = newUser.id;
+                }
+            }
         }
-    }
 
-    // Загружаем данные пользователя
-    const userData = await window.db.getUserData(currentUserId);
-    if (userData) {
-        lastClaimTime = userData.last_claim_time;
-        currentDay = userData.current_day;
-        // Обновляем баланс в интерфейсе
-        if (typeof updateBalanceDisplay === 'function') {
-            updateBalanceDisplay(userData.balance);
+        if (!currentUserId) {
+            console.error('Не удалось получить или создать пользователя');
+            return;
         }
-    }
 
-    const rewardSection = document.getElementById('rewardSection');
-    
-    // Создаем HTML структуру
-    rewardSection.innerHTML = `
-        <div class="reward-content">
-            <div class="reward-buttons">
-                <button class="reward-button active" id="dailyRewardsBtn">Ежедневные призы</button>
-                <button class="reward-button" id="developmentBtn">В разработке</button>
-            </div>
+        // Загружаем данные пользователя
+        const userData = await window.db.getUserData(currentUserId);
+        if (userData) {
+            lastClaimTime = userData.last_claim_time;
+            currentDay = userData.current_day;
+            // Обновляем баланс в интерфейсе
+            if (typeof updateBalanceDisplay === 'function') {
+                updateBalanceDisplay(userData.balance);
+            }
+        }
 
-            <div class="daily-rewards active" id="dailyRewardsSection">
-                <div class="rewards-grid">
-                    ${generateRewardDays()}
+        // Обновляем имя пользователя
+        window.db.updateUsername();
+
+        const rewardSection = document.getElementById('rewardSection');
+        
+        // Создаем HTML структуру
+        rewardSection.innerHTML = `
+            <div class="reward-content">
+                <div class="reward-buttons">
+                    <button class="reward-button active" id="dailyRewardsBtn">Ежедневные призы</button>
+                    <button class="reward-button" id="developmentBtn">В разработке</button>
                 </div>
-            </div>
-            
-            <div class="development-section" id="developmentSection">
-                <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Награды" class="reward-icon">
-                <h2 class="reward-header">Система наград</h2>
-                <div class="development-badge">В разработке</div>
-                <div class="reward-preview">
-     
-                    <div class="preview-card">
-                        <h3>Бонусы</h3>
-            
+
+                <div class="daily-rewards active" id="dailyRewardsSection">
+                    <div class="rewards-grid">
+                        ${generateRewardDays()}
                     </div>
+                </div>
+                
+                <div class="development-section" id="developmentSection">
+                    <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Награды" class="reward-icon">
+                    <h2 class="reward-header">Система наград</h2>
+                    <div class="development-badge">В разработке</div>
+                    <div class="reward-preview">
+         
+                        <div class="preview-card">
+                            <h3>Бонусы</h3>
+                
+                        </div>
 
-                </div>
-                <div class="version-info">
-                    <span class="version-item">Версия 0.0.1</span>
-                    <span class="version-item">До релиза: 35 дней</span>
-                </div>
-                <div class="progress-steps">
-                    <div class="progress-line"></div>
-                    <div class="progress-step completed"></div>
-                    <div class="progress-step completed"></div>
-                    <div class="progress-step current"></div>
-                    <div class="progress-step pending"></div>
-                </div>
-                <div class="progress-labels">
-                    <span class="progress-label">Дизайн</span>
-                    <span class="progress-label">Разработка</span>
-                    <span class="progress-label">Тестирование</span>
-                    <span class="progress-label">Релиз</span>
+                    </div>
+                    <div class="version-info">
+                        <span class="version-item">Версия 0.0.1</span>
+                        <span class="version-item">До релиза: 35 дней</span>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-line"></div>
+                        <div class="progress-step completed"></div>
+                        <div class="progress-step completed"></div>
+                        <div class="progress-step current"></div>
+                        <div class="progress-step pending"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span class="progress-label">Дизайн</span>
+                        <span class="progress-label">Разработка</span>
+                        <span class="progress-label">Тестирование</span>
+                        <span class="progress-label">Релиз</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    `;
-    
-    const dailyRewardsBtn = document.getElementById('dailyRewardsBtn');
-    const developmentBtn = document.getElementById('developmentBtn');
-    const dailyRewardsSection = document.getElementById('dailyRewardsSection');
-    const developmentSection = document.getElementById('developmentSection');
-    
-    // Обработчики кнопок
-    dailyRewardsBtn.addEventListener('click', () => {
-        dailyRewardsSection.classList.add('active');
-        developmentSection.classList.remove('active');
-        dailyRewardsBtn.classList.add('active');
-        developmentBtn.classList.remove('active');
-    });
-    
-    developmentBtn.addEventListener('click', () => {
-        dailyRewardsSection.classList.remove('active');
-        developmentSection.classList.add('active');
-        dailyRewardsBtn.classList.remove('active');
-        developmentBtn.classList.add('active');
-        showNotification('Этот раздел находится в разработке', 'info');
-    });
-    
-    // Обновляем статус наград при загрузке
-    updateRewardStatus();
-    
-    // Проверяем статус каждую минуту
-    setInterval(updateRewardStatus, 60000);
+        `;
+        
+        const dailyRewardsBtn = document.getElementById('dailyRewardsBtn');
+        const developmentBtn = document.getElementById('developmentBtn');
+        const dailyRewardsSection = document.getElementById('dailyRewardsSection');
+        const developmentSection = document.getElementById('developmentSection');
+        
+        // Обработчики кнопок
+        dailyRewardsBtn.addEventListener('click', () => {
+            dailyRewardsSection.classList.add('active');
+            developmentSection.classList.remove('active');
+            dailyRewardsBtn.classList.add('active');
+            developmentBtn.classList.remove('active');
+        });
+        
+        developmentBtn.addEventListener('click', () => {
+            dailyRewardsSection.classList.remove('active');
+            developmentSection.classList.add('active');
+            dailyRewardsBtn.classList.remove('active');
+            developmentBtn.classList.add('active');
+            showNotification('Этот раздел находится в разработке', 'info');
+        });
+        
+        // Обновляем статус наград при загрузке
+        updateRewardStatus();
+        
+        // Проверяем статус каждую минуту
+        setInterval(updateRewardStatus, 60000);
+    } catch (error) {
+        console.error('Ошибка при инициализации:', error);
+    }
 });
 
 function generateRewardDays() {
