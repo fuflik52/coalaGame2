@@ -24,38 +24,17 @@ function updateEnergyDisplay() {
 }
 
 function handleClick(event) {
-    if (energy <= 0) {
-        showNotification('Недостаточно энергии!', 'error');
-        return;
+    const button = event.currentTarget;
+    const section = button.getAttribute('data-section');
+    
+    // Проверяем, существует ли элемент перед установкой textContent
+    const balanceElement = document.querySelector('.balance');
+    if (balanceElement) {
+        balanceElement.textContent = '0';
     }
-
-    energy--;
-    balance++;
-    updateEnergyDisplay();
-    document.querySelector('.balance-value').textContent = balance.toLocaleString();
-
-    // Создаем анимацию +1
-    const floatingValue = document.createElement('div');
-    floatingValue.className = 'floating-value';
-    floatingValue.textContent = '+1';
     
-    // Позиционируем относительно клика
-    const rect = event.target.getBoundingClientRect();
-    floatingValue.style.left = `${event.clientX}px`;
-    floatingValue.style.top = `${event.clientY}px`;
-    
-    document.body.appendChild(floatingValue);
-    
-    // Анимация движения вверх и исчезновения
-    requestAnimationFrame(() => {
-        floatingValue.style.transform = 'translateY(-50px)';
-        floatingValue.style.opacity = '0';
-    });
-    
-    // Удаляем элемент после анимации
-    setTimeout(() => {
-        floatingValue.remove();
-    }, 1000);
+    // Переключаем секции
+    switchSection(section);
 }
 
 function updateBalance(amount) {
