@@ -1,19 +1,18 @@
-let lastClaimTime = 0;
-let currentDay = 1;
+// Глобальные переменные для текущего пользователя
 let currentTelegramId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Ждем инициализацию Telegram WebApp
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Ждем инициализацию Telegram WebApp и базы данных
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Получаем Telegram ID
-        if (!window.db.currentUser.id) {
+        if (!window.tg?.initDataUnsafe?.user?.id) {
             console.error('Нет данных пользователя Telegram');
             return;
         }
 
-        currentTelegramId = window.db.currentUser.id.toString();
+        currentTelegramId = window.tg.initDataUnsafe.user.id.toString();
 
         // Пытаемся найти пользователя
         let userData = await window.db.getUserData(currentTelegramId);
@@ -27,13 +26,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Загружаем данные пользователя
-        lastClaimTime = userData.last_claim_time;
-        currentDay = userData.current_day;
+        // Восстанавливаем энергию
+        await window.db.regenerateEnergy(currentTelegramId);
+        
+        // Получаем обновленные данные пользователя
+        userData = await window.db.getUserData(currentTelegramId);
+        if (!userData) return;
 
         // Обновляем баланс в интерфейсе
         if (typeof updateBalanceDisplay === 'function') {
             updateBalanceDisplay(userData.balance);
+        }
+
+        // Обновляем энергию в интерфейсе
+        if (typeof updateEnergyDisplay === 'function') {
+            updateEnergyDisplay(userData.energy, userData.max_energy);
         }
 
         // Обновляем имя пользователя
@@ -60,12 +67,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h2 class="reward-header">Система наград</h2>
                     <div class="development-badge">В разработке</div>
                     <div class="reward-preview">
-         
                         <div class="preview-card">
                             <h3>Бонусы</h3>
-                
                         </div>
-
                     </div>
                     <div class="version-info">
                         <span class="version-item">Версия 0.0.1</span>
@@ -110,10 +114,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         
         // Обновляем статус наград при загрузке
-        updateRewardStatus();
+        await updateRewardStatus();
         
         // Проверяем статус каждую минуту
         setInterval(updateRewardStatus, 60000);
+
+        // Проверяем энергию каждую минуту
+        setInterval(async () => {
+            await window.db.regenerateEnergy(currentTelegramId);
+            const updatedData = await window.db.getUserData(currentTelegramId);
+            if (updatedData && typeof updateEnergyDisplay === 'function') {
+                updateEnergyDisplay(updatedData.energy, updatedData.max_energy);
+            }
+        }, 60000);
+
     } catch (error) {
         console.error('Ошибка при инициализации:', error);
     }
@@ -154,9 +168,15 @@ function formatTimeLeft(milliseconds) {
     }
 }
 
-function updateRewardStatus() {
+async function updateRewardStatus() {
+    if (!currentTelegramId) return;
+
+    // Получаем актуальные данные из базы
+    const userData = await window.db.getUserData(currentTelegramId);
+    if (!userData) return;
+
     const now = Date.now();
-    const timePassedSinceLastClaim = now - lastClaimTime;
+    const timePassedSinceLastClaim = now - userData.last_claim_time;
     const timeLeft = 60 * 1000 - timePassedSinceLastClaim; // 1 минута вместо 24 часов
     const canClaim = timeLeft <= 0;
     
@@ -166,11 +186,11 @@ function updateRewardStatus() {
         
         const claimButton = dayElement.querySelector('.claim-button');
         
-        if (i < currentDay) {
+        if (i < userData.current_day) {
             dayElement.classList.add('claimed');
             claimButton.disabled = true;
             claimButton.textContent = 'Получено';
-        } else if (i > currentDay) {
+        } else if (i > userData.current_day) {
             claimButton.disabled = true;
             claimButton.textContent = 'Недоступно';
         } else if (!canClaim) {
@@ -185,20 +205,22 @@ function updateRewardStatus() {
 }
 
 async function claimReward(day, amount) {
-    if (day !== currentDay || !currentTelegramId) return;
+    if (!currentTelegramId) return;
+    
+    // Получаем актуальные данные из базы
+    const userData = await window.db.getUserData(currentTelegramId);
+    if (!userData) return;
+    
+    if (day !== userData.current_day) return;
     
     const now = Date.now();
-    const timePassedSinceLastClaim = now - lastClaimTime;
+    const timePassedSinceLastClaim = now - userData.last_claim_time;
     const timeLeft = 60 * 1000 - timePassedSinceLastClaim;
     
     if (timeLeft > 0) {
         showNotification(`Следующая награда будет доступна через ${formatTimeLeft(timeLeft)}`, 'info');
         return;
     }
-    
-    // Получаем текущий баланс из базы данных
-    const userData = await window.db.getUserData(currentTelegramId);
-    if (!userData) return;
 
     const newBalance = userData.balance + amount;
     
@@ -210,14 +232,13 @@ async function claimReward(day, amount) {
     }
     
     // Обновляем время получения награды и текущий день
-    lastClaimTime = now;
-    currentDay = Math.min(currentDay + 1, 8);
+    const newDay = Math.min(userData.current_day + 1, 8);
     
     // Сохраняем прогресс наград
-    await window.db.updateUserRewards(currentTelegramId, currentDay, lastClaimTime);
+    await window.db.updateUserRewards(currentTelegramId, newDay, now);
     
     // Обновляем статус наград
-    updateRewardStatus();
+    await updateRewardStatus();
     
     // Показываем уведомление
     showNotification(`Вы получили ${amount.toString().replace(/\s+/g, '')} монет!`, 'success');
