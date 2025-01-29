@@ -208,3 +208,25 @@ function createCard(data) {
         </div>
     `;
 }
+
+// Функция для обновления отображения баланса
+async function updateBalanceDisplay(balance) {
+    const balanceElement = document.querySelector('.balance');
+    if (balanceElement) {
+        // Если баланс передан как параметр, используем его
+        if (typeof balance === 'number') {
+            balanceElement.textContent = balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            return;
+        }
+        
+        // Иначе получаем актуальный баланс из базы данных
+        try {
+            const userData = await window.db.getUserData(window.tg?.initDataUnsafe?.user?.id?.toString());
+            if (userData) {
+                balanceElement.textContent = userData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            }
+        } catch (error) {
+            console.error('Ошибка при обновлении отображения баланса:', error);
+        }
+    }
+}

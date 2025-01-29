@@ -274,6 +274,38 @@ async function regenerateEnergy(telegramId) {
     }
 }
 
+// Функция для синхронизации локального баланса с базой данных
+async function syncLocalBalance(telegramId) {
+    try {
+        // Получаем локальный баланс из localStorage, если он есть
+        const localBalance = parseInt(localStorage.getItem('balance') || '0');
+        
+        if (localBalance > 0) {
+            console.log('Найден локальный баланс:', localBalance);
+            
+            // Обновляем баланс в базе данных
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ balance: localBalance })
+                .eq('telegram_id', telegramId);
+            
+            if (error) {
+                console.error('Ошибка при синхронизации баланса:', error);
+                return false;
+            }
+            
+            // Очищаем локальное хранилище
+            localStorage.removeItem('balance');
+            console.log('Локальный баланс успешно синхронизирован с базой данных');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Ошибка при синхронизации баланса:', error);
+        return false;
+    }
+}
+
 // Экспортируем функции и данные
 window.db = {
     getUserData,
@@ -284,5 +316,6 @@ window.db = {
     currentUser,
     updateUserEnergy,
     usePromoCode,
-    regenerateEnergy
+    regenerateEnergy,
+    syncLocalBalance
 }; 

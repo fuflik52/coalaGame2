@@ -26,6 +26,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
+        // Синхронизируем локальный баланс с базой данных
+        await window.db.syncLocalBalance(currentTelegramId);
+        
+        // Получаем обновленные данные пользователя после синхронизации
+        userData = await window.db.getUserData(currentTelegramId);
+        if (!userData) return;
+
         // Восстанавливаем энергию
         await window.db.regenerateEnergy(currentTelegramId);
         
