@@ -100,26 +100,61 @@ function renderCards() {
     `).join('');
 }
 
-function buyCard(cardId) {
-    const card = cardsData.find(c => c.id === cardId);
-    if (!card) return;
+async function buyCard(cardId) {
+    try {
+        const card = cardsData.find(c => c.id === cardId);
+        if (!card) {
+            console.error('Карта не найдена:', cardId);
+            return;
+        }
 
-    const currentBalance = parseInt(document.querySelector('.balance-value').textContent);
-    
-    if (currentBalance >= card.price) {
+        // Получаем ID пользователя
+        const currentTelegramId = window.tg?.initDataUnsafe?.user?.id?.toString();
+        if (!currentTelegramId) {
+            console.error('ID пользователя не найден');
+            showNotification('Ошибка: не удалось определить пользователя', 'error');
+            return;
+        }
+
+        // Получаем актуальные данные пользователя из базы
+        const userData = await window.db.getUserData(currentTelegramId);
+        if (!userData) {
+            console.error('Не удалось получить данные пользователя');
+            showNotification('Ошибка: не удалось получить данные пользователя', 'error');
+            return;
+        }
+
+        // Проверяем достаточно ли средств
+        if (userData.balance < card.price) {
+            showNotification('Недостаточно средств для покупки!', 'error');
+            return;
+        }
+
         // Вычитаем стоимость карты из баланса
-        const newBalance = currentBalance - card.price;
-        document.querySelector('.balance-value').textContent = newBalance;
+        const newBalance = userData.balance - card.price;
         
-        // Сохраняем новый баланс
-        localStorage.setItem('balance', newBalance);
-        
+        // Обновляем баланс в базе данных
+        const success = await window.db.updateUserBalance(currentTelegramId, newBalance);
+        if (!success) {
+            console.error('Ошибка при обновлении баланса');
+            showNotification('Ошибка при покупке карты', 'error');
+            return;
+        }
+
+        // Обновляем отображение баланса в интерфейсе
+        if (typeof updateBalanceDisplay === 'function') {
+            updateBalanceDisplay(newBalance);
+        }
+
         // Показываем уведомление об успешной покупке
         showNotification(`Вы приобрели "${card.title}"!`, 'success');
-        
-        // Здесь можно добавить логику для начисления дохода от карты
-    } else {
-        showNotification('Недостаточно средств для покупки!', 'error');
+
+        // TODO: Добавить логику сохранения купленной карты в базе данных
+        // и обновления пассивного дохода пользователя
+
+    } catch (error) {
+        console.error('Ошибка при покупке карты:', error);
+        showNotification('Произошла ошибка при покупке карты', 'error');
     }
 }
 

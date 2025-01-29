@@ -1,6 +1,4 @@
-// Глобальные переменные для текущего пользователя
-let currentTelegramId = null;
-
+// Инициализация страницы наград
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Ждем инициализацию Telegram WebApp и базы данных
@@ -12,7 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        currentTelegramId = window.tg.initDataUnsafe.user.id.toString();
+        const currentTelegramId = window.tg.initDataUnsafe.user.id.toString();
+        window.rewardData = { currentTelegramId }; // Сохраняем ID в объекте window
 
         // Пытаемся найти пользователя
         let userData = await window.db.getUserData(currentTelegramId);
@@ -54,71 +53,74 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.db.updateUsername();
 
         const rewardSection = document.getElementById('rewardSection');
-        
-        // Создаем HTML структуру
-        rewardSection.innerHTML = `
-            <div class="reward-content">
-                <div class="reward-buttons">
-                    <button class="reward-button active" id="dailyRewardsBtn">Ежедневные призы</button>
-                    <button class="reward-button" id="developmentBtn">В разработке</button>
-                </div>
-
-                <div class="daily-rewards active" id="dailyRewardsSection">
-                    <div class="rewards-grid">
-                        ${generateRewardDays()}
+        if (!rewardSection.querySelector('.reward-content')) {
+            // Создаем HTML структуру только если она еще не создана
+            rewardSection.innerHTML = `
+                <div class="reward-content">
+                    <div class="reward-buttons">
+                        <button class="reward-button active" id="dailyRewardsBtn">Ежедневные призы</button>
+                        <button class="reward-button" id="developmentBtn">В разработке</button>
                     </div>
-                </div>
-                
-                <div class="development-section" id="developmentSection">
-                    <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Награды" class="reward-icon">
-                    <h2 class="reward-header">Система наград</h2>
-                    <div class="development-badge">В разработке</div>
-                    <div class="reward-preview">
-                        <div class="preview-card">
-                            <h3>Бонусы</h3>
+
+                    <div class="daily-rewards active" id="dailyRewardsSection">
+                        <div class="rewards-grid">
+                            ${generateRewardDays()}
                         </div>
                     </div>
-                    <div class="version-info">
-                        <span class="version-item">Версия 0.0.1</span>
-                        <span class="version-item">До релиза: 35 дней</span>
-                    </div>
-                    <div class="progress-steps">
-                        <div class="progress-line"></div>
-                        <div class="progress-step completed"></div>
-                        <div class="progress-step completed"></div>
-                        <div class="progress-step current"></div>
-                        <div class="progress-step pending"></div>
-                    </div>
-                    <div class="progress-labels">
-                        <span class="progress-label">Дизайн</span>
-                        <span class="progress-label">Разработка</span>
-                        <span class="progress-label">Тестирование</span>
-                        <span class="progress-label">Релиз</span>
+                    
+                    <div class="development-section" id="developmentSection">
+                        <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Награды" class="reward-icon">
+                        <h2 class="reward-header">Система наград</h2>
+                        <div class="development-badge">В разработке</div>
+                        <div class="reward-preview">
+                            <div class="preview-card">
+                                <h3>Бонусы</h3>
+                            </div>
+                        </div>
+                        <div class="version-info">
+                            <span class="version-item">Версия 0.0.1</span>
+                            <span class="version-item">До релиза: 35 дней</span>
+                        </div>
+                        <div class="progress-steps">
+                            <div class="progress-line"></div>
+                            <div class="progress-step completed"></div>
+                            <div class="progress-step completed"></div>
+                            <div class="progress-step current"></div>
+                            <div class="progress-step pending"></div>
+                        </div>
+                        <div class="progress-labels">
+                            <span class="progress-label">Дизайн</span>
+                            <span class="progress-label">Разработка</span>
+                            <span class="progress-label">Тестирование</span>
+                            <span class="progress-label">Релиз</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-        
-        const dailyRewardsBtn = document.getElementById('dailyRewardsBtn');
-        const developmentBtn = document.getElementById('developmentBtn');
-        const dailyRewardsSection = document.getElementById('dailyRewardsSection');
-        const developmentSection = document.getElementById('developmentSection');
-        
-        // Обработчики кнопок
-        dailyRewardsBtn.addEventListener('click', () => {
-            dailyRewardsSection.classList.add('active');
-            developmentSection.classList.remove('active');
-            dailyRewardsBtn.classList.add('active');
-            developmentBtn.classList.remove('active');
-        });
-        
-        developmentBtn.addEventListener('click', () => {
-            dailyRewardsSection.classList.remove('active');
-            developmentSection.classList.add('active');
-            dailyRewardsBtn.classList.remove('active');
-            developmentBtn.classList.add('active');
-            showNotification('Этот раздел находится в разработке', 'info');
-        });
+            `;
+            
+            // Добавляем обработчики событий только один раз
+            const dailyRewardsBtn = document.getElementById('dailyRewardsBtn');
+            const developmentBtn = document.getElementById('developmentBtn');
+            const dailyRewardsSection = document.getElementById('dailyRewardsSection');
+            const developmentSection = document.getElementById('developmentSection');
+            
+            if (dailyRewardsBtn && developmentBtn) {
+                dailyRewardsBtn.addEventListener('click', () => {
+                    dailyRewardsSection.classList.add('active');
+                    developmentSection.classList.remove('active');
+                    dailyRewardsBtn.classList.add('active');
+                    developmentBtn.classList.remove('active');
+                });
+                
+                developmentBtn.addEventListener('click', () => {
+                    dailyRewardsSection.classList.remove('active');
+                    developmentSection.classList.add('active');
+                    dailyRewardsBtn.classList.remove('active');
+                    developmentBtn.classList.add('active');
+                    showNotification('Этот раздел находится в разработке', 'info');
+                });
+            }
+        }
         
         // Обновляем статус наград при загрузке
         await updateRewardStatus();
@@ -176,6 +178,7 @@ function formatTimeLeft(milliseconds) {
 }
 
 async function updateRewardStatus() {
+    const currentTelegramId = window.rewardData?.currentTelegramId;
     if (!currentTelegramId) return;
 
     // Получаем актуальные данные из базы
@@ -184,7 +187,7 @@ async function updateRewardStatus() {
 
     const now = Date.now();
     const timePassedSinceLastClaim = now - userData.last_claim_time;
-    const timeLeft = 60 * 1000 - timePassedSinceLastClaim; // 1 минута вместо 24 часов
+    const timeLeft = 60 * 1000 - timePassedSinceLastClaim;
     const canClaim = timeLeft <= 0;
     
     for (let i = 1; i <= 8; i++) {
@@ -192,6 +195,7 @@ async function updateRewardStatus() {
         if (!dayElement) continue;
         
         const claimButton = dayElement.querySelector('.claim-button');
+        if (!claimButton) continue;
         
         if (i < userData.current_day) {
             dayElement.classList.add('claimed');
@@ -212,6 +216,7 @@ async function updateRewardStatus() {
 }
 
 async function claimReward(day, amount) {
+    const currentTelegramId = window.rewardData?.currentTelegramId;
     if (!currentTelegramId) {
         console.error('Нет ID пользователя Telegram');
         return;
