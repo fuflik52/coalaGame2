@@ -39,13 +39,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         userData = await window.db.getUserData(currentTelegramId);
         if (!userData) return;
 
-        // Обновляем баланс в интерфейсе
-        if (typeof updateBalanceDisplay === 'function') {
+        // Обновляем баланс в интерфейсе только если активен нужный раздел
+        if (typeof updateBalanceDisplay === 'function' && document.querySelector('.reward-section.active')) {
             updateBalanceDisplay(userData.balance);
         }
 
-        // Обновляем энергию в интерфейсе
-        if (typeof updateEnergyDisplay === 'function') {
+        // Обновляем энергию в интерфейсе только если активен нужный раздел
+        if (typeof updateEnergyDisplay === 'function' && document.querySelector('.reward-section.active')) {
             updateEnergyDisplay(userData.energy, userData.max_energy);
         }
 
@@ -53,90 +53,90 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.db.updateUsername();
 
         const rewardSection = document.getElementById('rewardSection');
-        if (!rewardSection.querySelector('.reward-content')) {
-            // Создаем HTML структуру только если она еще не создана
-            rewardSection.innerHTML = `
-                <div class="reward-content">
-                    <div class="reward-buttons">
-                        <button class="reward-button active" id="dailyRewardsBtn">Ежедневные призы</button>
-                        <button class="reward-button" id="developmentBtn">В разработке</button>
-                    </div>
+        if (!rewardSection || !document.querySelector('.reward-section.active')) return;
 
-                    <div class="daily-rewards active" id="dailyRewardsSection">
-                        <div class="rewards-grid">
-                            ${generateRewardDays()}
+        if (!rewardSection.querySelector('.reward-content')) {
+            rewardSection.innerHTML = `
+                <div class="dev-section">
+                    <div class="dev-header">
+                        <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Rewards">
+                        <h2>Система наград</h2>
+                        <div class="dev-status">В разработке</div>
+                    </div>
+                    
+                    <div class="dev-cards">
+                        <div class="dev-card">
+                            <div class="dev-card-icon">🏆</div>
+                            <h3 class="dev-card-title">Достижения</h3>
+                            <p class="dev-card-text">Выполняйте задания и получайте награды</p>
+                        </div>
+                        <div class="dev-card">
+                            <div class="dev-card-icon">🎁</div>
+                            <h3 class="dev-card-title">Бонусы</h3>
+                            <p class="dev-card-text">Ежедневные награды и подарки</p>
+                        </div>
+                        <div class="dev-card">
+                            <div class="dev-card-icon">📊</div>
+                            <h3 class="dev-card-title">Рейтинг</h3>
+                            <p class="dev-card-text">Соревнуйтесь с другими игроками</p>
                         </div>
                     </div>
                     
-                    <div class="development-section" id="developmentSection">
-                        <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Награды" class="reward-icon">
-                        <h2 class="reward-header">Система наград</h2>
-                        <div class="development-badge">В разработке</div>
-                        <div class="reward-preview">
-                            <div class="preview-card">
-                                <h3>Бонусы</h3>
+                    <div class="dev-progress">
+                        <div class="dev-progress-info">
+                            <span class="dev-version">Версия 0.0.1</span>
+                            <span class="dev-date">До релиза: 35 дней</span>
+                        </div>
+                        
+                        <div class="dev-bar">
+                            <div class="dev-bar-fill" style="width: 45%"></div>
+                        </div>
+                        
+                        <div class="dev-stages">
+                            <div class="dev-stage done">
+                                <div class="dev-stage-dot"></div>
+                                <span class="dev-stage-text">Дизайн</span>
                             </div>
-                        </div>
-                        <div class="version-info">
-                            <span class="version-item">Версия 0.0.1</span>
-                            <span class="version-item">До релиза: 35 дней</span>
-                        </div>
-                        <div class="progress-steps">
-                            <div class="progress-line"></div>
-                            <div class="progress-step completed"></div>
-                            <div class="progress-step completed"></div>
-                            <div class="progress-step current"></div>
-                            <div class="progress-step pending"></div>
-                        </div>
-                        <div class="progress-labels">
-                            <span class="progress-label">Дизайн</span>
-                            <span class="progress-label">Разработка</span>
-                            <span class="progress-label">Тестирование</span>
-                            <span class="progress-label">Релиз</span>
+                            <div class="dev-stage done">
+                                <div class="dev-stage-dot"></div>
+                                <span class="dev-stage-text">Разработка</span>
+                            </div>
+                            <div class="dev-stage current">
+                                <div class="dev-stage-dot"></div>
+                                <span class="dev-stage-text">Тестирование</span>
+                            </div>
+                            <div class="dev-stage">
+                                <div class="dev-stage-dot"></div>
+                                <span class="dev-stage-text">Релиз</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
-            
-            // Добавляем обработчики событий только один раз
-            const dailyRewardsBtn = document.getElementById('dailyRewardsBtn');
-            const developmentBtn = document.getElementById('developmentBtn');
-            const dailyRewardsSection = document.getElementById('dailyRewardsSection');
-            const developmentSection = document.getElementById('developmentSection');
-            
-            if (dailyRewardsBtn && developmentBtn) {
-                dailyRewardsBtn.addEventListener('click', () => {
-                    dailyRewardsSection.classList.add('active');
-                    developmentSection.classList.remove('active');
-                    dailyRewardsBtn.classList.add('active');
-                    developmentBtn.classList.remove('active');
-                });
-                
-                developmentBtn.addEventListener('click', () => {
-                    dailyRewardsSection.classList.remove('active');
-                    developmentSection.classList.add('active');
-                    dailyRewardsBtn.classList.remove('active');
-                    developmentBtn.classList.add('active');
-                    showNotification('Этот раздел находится в разработке', 'info');
-                });
-            }
         }
         
-        // Обновляем статус наград при загрузке
-        await updateRewardStatus();
-        
-        // Проверяем статус каждую минуту
-        setInterval(updateRewardStatus, 60000);
+        // Обновляем статус наград только если активен нужный раздел
+        if (document.querySelector('.reward-section.active')) {
+            await updateRewardStatus();
+            
+            // Проверяем статус каждую минуту только если активен нужный раздел
+            setInterval(() => {
+                if (document.querySelector('.reward-section.active')) {
+                    updateRewardStatus();
+                }
+            }, 60000);
 
-        // Проверяем энергию каждую минуту
-        setInterval(async () => {
-            await window.db.regenerateEnergy(currentTelegramId);
-            const updatedData = await window.db.getUserData(currentTelegramId);
-            if (updatedData && typeof updateEnergyDisplay === 'function') {
-                updateEnergyDisplay(updatedData.energy, updatedData.max_energy);
-            }
-        }, 60000);
-
+            // Проверяем энергию каждую минуту только если активен нужный раздел
+            setInterval(async () => {
+                if (document.querySelector('.reward-section.active')) {
+                    await window.db.regenerateEnergy(currentTelegramId);
+                    const updatedData = await window.db.getUserData(currentTelegramId);
+                    if (updatedData && typeof updateEnergyDisplay === 'function') {
+                        updateEnergyDisplay(updatedData.energy, updatedData.max_energy);
+                    }
+                }
+            }, 60000);
+        }
     } catch (error) {
         console.error('Ошибка при инициализации:', error);
     }
@@ -283,5 +283,20 @@ async function claimReward(day, amount) {
         updateBalanceDisplay(newBalance);
     } else {
         console.error('Функция updateBalanceDisplay не найдена');
+    }
+}
+
+// Добавляем функцию переключения разделов
+function switchRewardSection(section) {
+    const cards = document.querySelectorAll('.nav-card');
+    cards.forEach(card => card.classList.remove('active'));
+    
+    const selectedCard = document.querySelector(`.nav-card[onclick*="${section}"]`);
+    if (selectedCard) {
+        selectedCard.classList.add('active');
+    }
+    
+    if (section !== 'daily') {
+        showNotification('Этот раздел находится в разработке', 'info');
     }
 } 

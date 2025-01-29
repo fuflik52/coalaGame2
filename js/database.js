@@ -11,32 +11,114 @@ if (!window.tg) {
 }
 const currentUser = window.tg?.initDataUnsafe?.user || {};
 
-// Функция для получения данных пользователя по Telegram ID
-async function getUserData(telegramId) {
-    try {
-        console.log('Получаем данные пользователя:', telegramId);
-        const { data, error } = await supabaseClient
-            .from('users')
-            .select('*')
-            .eq('telegram_id', telegramId)
-            .single();
-        
-        if (error) {
-            if (error.code === 'PGRST116') {
-                console.log('Пользователь не найден:', telegramId);
-                return null;
+class Database {
+    constructor() {
+        this.isLocalMode = true; // Флаг локального режима
+    }
+
+    async getUserData(telegramId) {
+        if (this.isLocalMode) {
+            return {
+                energy: parseInt(localStorage.getItem('energy')) || 100,
+                max_energy: parseInt(localStorage.getItem('maxEnergy')) || 100,
+                balance: parseInt(localStorage.getItem('balance')) || 0
+            };
+        }
+
+        try {
+            // Код для работы с Supabase
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('*')
+                .eq('telegram_id', telegramId)
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            // В локальном режиме не логируем ошибки
+            if (!this.isLocalMode) {
+                console.error('Ошибка при получении данных пользователя:', error);
             }
-            console.error('Ошибка при получении данных:', error);
             return null;
         }
-        
-        console.log('Получены данные пользователя:', data);
-        return data;
-    } catch (error) {
-        console.error('Ошибка при получении данных:', error);
-        return null;
+    }
+
+    async updateUserEnergy(telegramId, energy) {
+        if (this.isLocalMode) {
+            localStorage.setItem('energy', energy);
+            return true;
+        }
+
+        try {
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ energy })
+                .eq('telegram_id', telegramId);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            if (!this.isLocalMode) {
+                console.error('Ошибка при обновлении энергии:', error);
+            }
+            return false;
+        }
+    }
+
+    async updateUserBalance(telegramId, balance) {
+        if (this.isLocalMode) {
+            localStorage.setItem('balance', balance);
+            return true;
+        }
+
+        try {
+            const { error } = await supabaseClient
+                .from('users')
+                .update({ balance })
+                .eq('telegram_id', telegramId);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            if (!this.isLocalMode) {
+                console.error('Ошибка при обновлении баланса:', error);
+            }
+            return false;
+        }
+    }
+
+    async regenerateEnergy(telegramId) {
+        if (this.isLocalMode) {
+            const currentEnergy = parseInt(localStorage.getItem('energy')) || 100;
+            const maxEnergy = parseInt(localStorage.getItem('maxEnergy')) || 100;
+            if (currentEnergy < maxEnergy) {
+                const newEnergy = Math.min(maxEnergy, currentEnergy + 1);
+                localStorage.setItem('energy', newEnergy);
+            }
+            return true;
+        }
+
+        try {
+            const userData = await this.getUserData(telegramId);
+            if (!userData) return false;
+
+            if (userData.energy < userData.max_energy) {
+                const newEnergy = Math.min(userData.max_energy, userData.energy + 1);
+                await this.updateUserEnergy(telegramId, newEnergy);
+            }
+            return true;
+        } catch (error) {
+            if (!this.isLocalMode) {
+                console.error('Ошибка при регенерации энергии:', error);
+            }
+            return false;
+        }
     }
 }
+
+// Экспортируем инстанс базы данных
+window.db = new Database();
 
 // Функция для обновления баланса
 async function updateUserBalance(telegramId, newBalance) {
@@ -252,28 +334,6 @@ async function usePromoCode(telegramId, promoCode) {
     }
 }
 
-// Функция для восстановления энергии
-async function regenerateEnergy(telegramId) {
-    try {
-        const userData = await getUserData(telegramId);
-        if (!userData) return false;
-
-        const now = Date.now();
-        const timePassed = now - userData.last_energy_update;
-        const energyToAdd = Math.floor(timePassed / (5 * 60 * 1000)); // 1 энергия каждые 5 минут
-
-        if (energyToAdd > 0 && userData.energy < userData.max_energy) {
-            const newEnergy = Math.min(userData.max_energy, userData.energy + energyToAdd);
-            return await updateUserEnergy(telegramId, newEnergy);
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Ошибка при восстановлении энергии:', error);
-        return false;
-    }
-}
-
 // Функция для синхронизации локального баланса с базой данных
 async function syncLocalBalance(telegramId) {
     try {
@@ -304,19 +364,4 @@ async function syncLocalBalance(telegramId) {
         console.error('Ошибка при синхронизации баланса:', error);
         return false;
     }
-}
-
-// Экспортируем все функции и данные в единый объект window.db
-window.db = {
-    supabaseClient,
-    getUserData,
-    updateUserBalance,
-    updateUserRewards,
-    createNewUser,
-    updateUsername,
-    currentUser,
-    updateUserEnergy,
-    usePromoCode,
-    regenerateEnergy,
-    syncLocalBalance
-}; 
+} 
