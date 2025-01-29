@@ -14,6 +14,7 @@ const currentUser = window.tg?.initDataUnsafe?.user || {};
 // Функция для получения данных пользователя по Telegram ID
 async function getUserData(telegramId) {
     try {
+        console.log('Получаем данные пользователя:', telegramId);
         const { data, error } = await supabaseClient
             .from('users')
             .select('*')
@@ -21,11 +22,15 @@ async function getUserData(telegramId) {
             .single();
         
         if (error) {
-            if (error.code === 'PGRST116') return null; // Пользователь не найден
+            if (error.code === 'PGRST116') {
+                console.log('Пользователь не найден:', telegramId);
+                return null;
+            }
             console.error('Ошибка при получении данных:', error);
             return null;
         }
         
+        console.log('Получены данные пользователя:', data);
         return data;
     } catch (error) {
         console.error('Ошибка при получении данных:', error);
@@ -36,6 +41,7 @@ async function getUserData(telegramId) {
 // Функция для обновления баланса
 async function updateUserBalance(telegramId, newBalance) {
     try {
+        console.log('Обновляем баланс пользователя:', telegramId, 'Новый баланс:', newBalance);
         const { error } = await supabaseClient
             .from('users')
             .update({ balance: newBalance })
@@ -46,6 +52,7 @@ async function updateUserBalance(telegramId, newBalance) {
             return false;
         }
         
+        console.log('Баланс успешно обновлен');
         return true;
     } catch (error) {
         console.error('Ошибка при обновлении баланса:', error);

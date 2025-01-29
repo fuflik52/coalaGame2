@@ -205,37 +205,59 @@ async function updateRewardStatus() {
 }
 
 async function claimReward(day, amount) {
-    if (!currentTelegramId) return;
+    if (!currentTelegramId) {
+        console.error('Нет ID пользователя Telegram');
+        return;
+    }
+    
+    console.log('Получение награды. День:', day, 'Сумма:', amount);
     
     // Получаем актуальные данные из базы
     const userData = await window.db.getUserData(currentTelegramId);
-    if (!userData) return;
+    if (!userData) {
+        console.error('Не удалось получить данные пользователя');
+        return;
+    }
     
-    if (day !== userData.current_day) return;
+    console.log('Текущие данные пользователя:', userData);
+    
+    if (day !== userData.current_day) {
+        console.log('Неверный день для награды');
+        return;
+    }
     
     const now = Date.now();
     const timePassedSinceLastClaim = now - userData.last_claim_time;
     const timeLeft = 60 * 1000 - timePassedSinceLastClaim;
     
     if (timeLeft > 0) {
+        console.log('Слишком рано для получения награды. Осталось времени:', timeLeft);
         showNotification(`Следующая награда будет доступна через ${formatTimeLeft(timeLeft)}`, 'info');
         return;
     }
 
     const newBalance = userData.balance + amount;
+    console.log('Новый баланс:', newBalance);
     
     // Обновляем баланс в базе данных
     const success = await window.db.updateUserBalance(currentTelegramId, newBalance);
     if (!success) {
+        console.error('Ошибка при обновлении баланса');
         showNotification('Произошла ошибка при получении награды', 'error');
         return;
     }
     
+    console.log('Баланс успешно обновлен');
+    
     // Обновляем время получения награды и текущий день
     const newDay = Math.min(userData.current_day + 1, 8);
+    console.log('Новый день:', newDay);
     
     // Сохраняем прогресс наград
-    await window.db.updateUserRewards(currentTelegramId, newDay, now);
+    const rewardSuccess = await window.db.updateUserRewards(currentTelegramId, newDay, now);
+    if (!rewardSuccess) {
+        console.error('Ошибка при обновлении прогресса наград');
+    }
     
     // Обновляем статус наград
     await updateRewardStatus();
@@ -245,6 +267,9 @@ async function claimReward(day, amount) {
     
     // Обновляем баланс в интерфейсе
     if (typeof updateBalanceDisplay === 'function') {
+        console.log('Обновляем отображение баланса:', newBalance);
         updateBalanceDisplay(newBalance);
+    } else {
+        console.error('Функция updateBalanceDisplay не найдена');
     }
 } 
