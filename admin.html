@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Управление промокодами</title>
+    <!-- Сначала загружаем Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Затем наш database.js -->
     <script src="js/database.js"></script>
     <style>
         body {
@@ -117,21 +119,20 @@
     </div>
 
     <script>
-        // Инициализация Supabase
-        const SUPABASE_URL = 'https://xvmjotofqhnkxatfmqxc.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2bWpvdG9mcWhua3hhdGZtcXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgxODQwNDUsImV4cCI6MjA1Mzc2MDA0NX0.9Ql8P7P8WpHqbfuTT_fpLAFv4r1Sbn9ChR3F6_bYHbU';
-        
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true
-            }
-        });
-
-        // Проверка подключения
+        // Функция проверки подключения
         async function checkConnection() {
             try {
-                const { data, error } = await supabaseClient
+                // Проверяем загрузку Supabase
+                if (!window.supabase) {
+                    throw new Error('Библиотека Supabase не загружена');
+                }
+
+                // Проверяем инициализацию клиента
+                if (!window.db || !window.db.supabaseClient) {
+                    throw new Error('Клиент Supabase не инициализирован');
+                }
+
+                const { data, error } = await window.db.supabaseClient
                     .from('promo_codes')
                     .select('count')
                     .limit(1);
@@ -150,10 +151,12 @@
                         ❌ Ошибка подключения к базе данных: ${error.message}
                     </div>
                 `;
+                console.error('Ошибка подключения:', error);
                 return false;
             }
         }
 
+        // Функция для создания промокода
         document.getElementById('promoForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -169,7 +172,7 @@
             const expiresIn = parseInt(document.getElementById('expiresIn').value);
 
             try {
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.db.supabaseClient
                     .from('promo_codes')
                     .insert([{
                         code: code,
@@ -184,12 +187,13 @@
 
                 showNotification('Промокод успешно создан!', 'success');
                 document.getElementById('promoForm').reset();
-                loadPromoCodes();
+                await loadPromoCodes();
             } catch (error) {
                 showNotification('Ошибка при создании промокода: ' + error.message, 'error');
             }
         });
 
+        // Функция для отображения уведомлений
         function showNotification(message, type) {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
@@ -198,39 +202,63 @@
             setTimeout(() => notification.remove(), 5000);
         }
 
+        // Функция для загрузки списка промокодов
         async function loadPromoCodes() {
             try {
-                const { data, error } = await supabaseClient
+                console.log('Загрузка промокодов...');
+                const { data, error } = await window.db.supabaseClient
                     .from('promo_codes')
                     .select('*')
                     .gt('expires_at', new Date().toISOString())
                     .gt('uses_left', 0)
                     .order('created_at', { ascending: false });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Ошибка при загрузке промокодов:', error);
+                    throw error;
+                }
+
+                console.log('Получены промокоды:', data);
 
                 const promoList = document.getElementById('promoList');
                 promoList.innerHTML = '';
 
-                data.forEach(promo => {
-                    const promoItem = document.createElement('div');
-                    promoItem.className = 'promo-item';
-                    promoItem.innerHTML = `
-                        <strong>Код:</strong> ${promo.code}<br>
-                        <strong>Тип награды:</strong> ${promo.reward_type === 'coins' ? 'Монеты' : 'Энергия'}<br>
-                        <strong>Количество:</strong> ${promo.reward_amount}<br>
-                        <strong>Осталось использований:</strong> ${promo.uses_left}<br>
-                        <strong>Действует до:</strong> ${new Date(promo.expires_at).toLocaleDateString()}
-                    `;
-                    promoList.appendChild(promoItem);
-                });
+                if (data && data.length > 0) {
+                    data.forEach(promo => {
+                        const promoItem = document.createElement('div');
+                        promoItem.className = 'promo-item';
+                        promoItem.innerHTML = `
+                            <strong>Код:</strong> ${promo.code}<br>
+                            <strong>Тип награды:</strong> ${promo.reward_type === 'coins' ? 'Монеты' : 'Энергия'}<br>
+                            <strong>Количество:</strong> ${promo.reward_amount}<br>
+                            <strong>Осталось использований:</strong> ${promo.uses_left}<br>
+                            <strong>Действует до:</strong> ${new Date(promo.expires_at).toLocaleDateString()}
+                        `;
+                        promoList.appendChild(promoItem);
+                    });
+                } else {
+                    promoList.innerHTML = '<div class="promo-item">Нет активных промокодов</div>';
+                }
             } catch (error) {
+                console.error('Ошибка при загрузке промокодов:', error);
                 showNotification('Ошибка при загрузке промокодов: ' + error.message, 'error');
             }
         }
 
-        // Проверяем подключение при загрузке страницы
-        checkConnection();
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Страница загружена, проверяем Supabase...');
+            console.log('window.supabase:', !!window.supabase);
+            console.log('window.db:', window.db);
+            
+            // Добавляем задержку для уверенности, что все скрипты загрузились
+            setTimeout(async () => {
+                const isConnected = await checkConnection();
+                if (isConnected) {
+                    await loadPromoCodes();
+                }
+            }, 1000);
+        });
     </script>
 </body>
 </html> 
