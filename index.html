@@ -7,7 +7,7 @@
     <title>Mobile Clicker Game</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="mining.css">
+
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css"/>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css"/>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -275,33 +275,28 @@
             </div>
 
             <div class="section" id="mining">
-                <div class="mining-container">
-                    <div class="mining-header">
-                        <h2>Рулетка</h2>
-                        <p class="text-gray-400">Испытай свою удачу</p>
-                    </div>
-
-                    <!-- Секция рулетки -->
-                    <div class="fortune-wheel-container">
-                        <div class="fortune-wheel-header">
-                            <div class="spins-info">
-                                <span>Spin</span>
-                                <span class="spin-count">5</span>
+                <div class="construction-container">
+                    <div class="construction-content">
+                        <div class="construction-icon">
+                            <i class="fas fa-tools fa-4x"></i>
+                            <div class="gear-animation">
+                                <i class="fas fa-cog fa-spin"></i>
                             </div>
                         </div>
-                        
-                        <div class="fortune-wheel-viewport">
-                            <div class="wheel-pointer"></div>
-                            <div class="fortune-wheel-track">
-                                <!-- Призы будут добавляться динамически -->
-                            </div>
+                        <h2 class="construction-title">Скоро будет готово!</h2>
+                        <p class="construction-text">Наша команда усердно работает над созданием уникальной майнинг-фермы</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%"></div>
                         </div>
-
-                        <div class="fortune-wheel-controls">
-                            <button id="spinButton" class="spin-button">
-                                <span>Buy More</span>
-                                <div class="remaining">Осталось прокрутов: <span id="spinsCount">5</span></div>
-                            </button>
+                        <div class="construction-stats">
+                            <div class="stat-item">
+                                <i class="fas fa-code-branch"></i>
+                                <span>Версия 0.9.1</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-clock"></i>
+                                <span>До релиза: 14 дней</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -438,6 +433,5 @@
         </div>
     </div>
     <script src="script.js"></script>
-    <script src="mining.js"></script>
 </body>
 </html>

@@ -222,10 +222,14 @@ function createConfetti() {
     }
 }
 
-// Функция для вибрации устройства
-function vibrate(pattern = 50) {
-    if ('vibrate' in navigator && localStorage.getItem('vibrationEnabled') !== 'false') {
-        navigator.vibrate(pattern);
+// Функция для вибрации
+function vibrate(duration = 50) {
+    if ('vibrate' in navigator) {
+        // Для Android
+        navigator.vibrate(duration);
+    } else if ('webkitVibrate' in navigator) {
+        // Для старых версий
+        navigator.webkitVibrate(duration);
     }
 }
 
@@ -321,24 +325,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updateOfflineEnergy();
     updateEnergyDisplay();
     
-    const clickerButton = document.getElementById('clickerButton');
-    const clickerKoala = document.querySelector('.clicker-koala');
+  const clickerButton = document.getElementById('clickerButton');
   
     // Добавляем обработчики для мыши и тачскрина
-    clickerButton.addEventListener('click', handleClick);
+  clickerButton.addEventListener('click', handleClick);
     clickerButton.addEventListener('touchstart', handleClick);
-    
-    // Добавляем обработчик для клика по коале
-    if (clickerKoala) {
-        clickerKoala.addEventListener('click', (e) => {
-            vibrate(50);
-            handleClick(e);
-        });
-        clickerKoala.addEventListener('touchstart', (e) => {
-            vibrate(50);
-            handleClick(e);
-        });
-    }
 });
 
 // Обновляем интервал восстановления энергии
@@ -1697,3 +1688,39 @@ function updateLoadGraph() {
 
 // Обновляем график каждые 2 секунды
 setInterval(updateLoadGraph, 2000);
+
+// Добавить в секцию переменных
+let mining = {
+    hashRate: 0,
+    totalHashes: 0,
+    miners: [
+        { level: 1, count: 0, baseRate: 50, upgradeCost: 100 }
+    ]
+};
+
+// Обновить функцию рендеринга
+function updateMiningDisplay() {
+    document.getElementById('totalHashes').textContent = Math.floor(mining.totalHashes);
+    document.getElementById('hashRate').textContent = `${mining.hashRate} H/s`;
+}
+
+// Цикл майнинга
+setInterval(() => {
+    if(mining.hashRate > 0) {
+        mining.totalHashes += mining.hashRate;
+        updateMiningDisplay();
+    }
+}, 1000);
+
+// Обработчик улучшений
+function upgradeMiner(level) {
+    const miner = mining.miners.find(m => m.level === level);
+    if(coins >= miner.upgradeCost) {
+        coins -= miner.upgradeCost;
+        miner.count++;
+        miner.upgradeCost = Math.floor(miner.upgradeCost * 1.3);
+        mining.hashRate += miner.baseRate;
+        updateMiningDisplay();
+        updateBalanceDisplay();
+    }
+}
