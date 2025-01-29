@@ -59,10 +59,18 @@ function copyReferralLink() {
     const referralLink = `https://t.me/CoalaGame_Bot/play?startapp=u${userId}`;
     navigator.clipboard.writeText(referralLink).then(() => {
         const button = document.querySelector('.copy-link-button');
-        button.innerHTML = '<i class="fas fa-check"></i> Скопировано';
+        const buttonText = button.querySelector('span');
+        const buttonIcon = button.querySelector('i');
+        
+        buttonIcon.className = 'fas fa-check';
+        buttonText.textContent = 'Скопировано';
+        
         setTimeout(() => {
-            button.innerHTML = '<i class="fas fa-copy"></i> Копировать ссылку';
+            buttonIcon.className = 'fas fa-copy';
+            buttonText.textContent = 'Копировать';
         }, 2000);
+        
+        showNotification('Ссылка скопирована!', 'success');
     });
 }
 
@@ -70,16 +78,23 @@ function copyReferralLink() {
 function updateFriendList(friends) {
     const friendList = document.getElementById('friendList');
     const friendCount = document.getElementById('friendCount');
+    const friendCountBadge = document.getElementById('friendCountBadge');
     
     if (!friends || friends.length === 0) {
-        friendList.style.display = 'none';
+        friendList.innerHTML = `
+            <div class="empty-friends-message">
+                <i class="fas fa-user-plus"></i>
+                <p>Пригласите друзей, чтобы начать зарабатывать вместе</p>
+            </div>
+        `;
         friendCount.textContent = '0';
+        friendCountBadge.textContent = '0';
         return;
     }
 
-    friendList.style.display = 'block';
-    friendCount.textContent = friends.length;
     friendList.innerHTML = '';
+    friendCount.textContent = friends.length;
+    friendCountBadge.textContent = friends.length;
 
     friends.forEach(friend => {
         const friendItem = document.createElement('div');
@@ -420,48 +435,57 @@ function addFriend() {
 
 // Обновляем обработчик для вкладок
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => {
-      n.classList.remove('active');
-      n.style.color = '#888';
-    });
-    item.classList.add('active');
-    item.style.color = '#4CAF50';
-    const sectionId = item.getAttribute('data-section');
-    document.getElementById(sectionId).classList.add('active');
-    const energyBar = document.querySelector('.energy-bar');
-    const topPanel = document.querySelector('.top-panel');
+    item.addEventListener('click', () => {
+        // Удаляем активный класс у всех секций и пунктов навигации
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => {
+            n.classList.remove('active');
+            n.style.color = '#888';
+        });
+
+        // Добавляем активный класс к выбранному пункту
+        item.classList.add('active');
+        item.style.color = '#4CAF50';
+
+        // Получаем ID секции
+        const sectionId = item.getAttribute('data-section');
+        // Проверяем особый случай для frens
+        const targetSection = sectionId === 'frens' ? 'frensSection' : sectionId;
+        const section = document.getElementById(targetSection);
+
+        if (section) {
+            section.classList.add('active');
+        }
+
+        // Управляем видимостью панелей
+        const energyBar = document.querySelector('.energy-bar');
+        const topPanel = document.querySelector('.top-panel');
         const rewardSection = document.getElementById('reward');
         
-    if (sectionId === 'home') {
-      energyBar.classList.remove('hidden');
-      topPanel.classList.remove('hidden');
-            // Скрываем раздел заданий в главном разделе
+        if (sectionId === 'home') {
+            energyBar.classList.remove('hidden');
+            topPanel.classList.remove('hidden');
             if (rewardSection) {
                 rewardSection.style.display = 'none';
             }
         } else if (sectionId === 'reward') {
             energyBar.classList.add('hidden');
             topPanel.classList.add('hidden');
-            // Показываем раздел заданий
             if (rewardSection) {
                 rewardSection.style.display = 'block';
                 renderRewards();
             }
-            // Убираем отступ сверху у контента
             document.querySelector('.content').style.marginTop = '0';
-    } else {
-      energyBar.classList.add('hidden');
-      topPanel.classList.add('hidden');
-            // Возвращаем отступ для других разделов
+        } else {
+            energyBar.classList.add('hidden');
+            topPanel.classList.add('hidden');
             document.querySelector('.content').style.marginTop = '70px';
-    }
+        }
         
-    if (sectionId === 'cards') {
-      renderCards();
-    }
-  });
+        if (sectionId === 'cards') {
+            renderCards();
+        }
+    });
 });
 
 document.getElementById('userAvatar').addEventListener('click', showSettings);
@@ -1041,10 +1065,6 @@ function renderRewards() {
     
     rewardSection.innerHTML = `
         <div class="rewards-container">
-            <div class="tab-container">
-                <button id="ingameTab" class="tab-button active" onclick="switchRewardTab('ingame')">Игровые</button>
-                <button id="partnerTab" class="tab-button" onclick="switchRewardTab('partner')">Партнёрские</button>
-            </div>
             <div id="ingame-rewards"></div>
             <div id="partner-rewards" class="hidden">
                 <div class="text-center text-gray-500 mt-4">
@@ -1053,59 +1073,6 @@ function renderRewards() {
             </div>
         </div>
     `;
-
-    const ingameRewards = document.getElementById('ingame-rewards');
-    const inGameTasks = rewards.filter(r => r.type === 'ingame');
-
-    inGameTasks.forEach(reward => {
-        const rewardElement = document.createElement('div');
-        rewardElement.className = 'reward-item';
-        rewardElement.innerHTML = `
-            <div class="reward-info">
-                <img src="${reward.image}" alt="reward" class="w-12 h-12">
-                <div>
-                    <div class="text-white font-bold">${reward.title}</div>
-                    <div class="text-green-500">+${reward.amount} монет</div>
-                </div>
-            </div>
-            <button onclick="handleRewardClaim('${reward.channelLink}', ${reward.id})" 
-                    class="reward-button ${reward.isChecking ? 'checking' : ''} ${reward.isDone ? 'done' : ''}">
-                ${reward.isDone ? 
-                    '<span>✓ Выполнено</span>' : 
-                    (reward.isChecking ? 
-                        '<span>Проверить</span>' : 
-                        '<span>Начать</span>'
-                    )
-                }
-            </button>
-        </div>
-    `;
-        ingameRewards.appendChild(rewardElement);
-    });
-}
-
-// Функция переключения вкладок наград
-function switchRewardTab(tab) {
-    const ingameTab = document.getElementById('ingame-rewards');
-    const partnerTab = document.getElementById('partner-rewards');
-    const ingameButton = document.getElementById('ingameTab');
-    const partnerButton = document.getElementById('partnerTab');
-    
-    if (tab === 'ingame') {
-        ingameTab.classList.remove('hidden');
-        partnerTab.classList.add('hidden');
-        ingameButton.classList.add('bg-[#262626]');
-        ingameButton.classList.remove('opacity-50');
-        partnerButton.classList.remove('bg-[#262626]');
-        partnerButton.classList.add('opacity-50');
-  } else {
-        ingameTab.classList.add('hidden');
-        partnerTab.classList.remove('hidden');
-        partnerButton.classList.add('bg-[#262626]');
-        partnerButton.classList.remove('opacity-50');
-        ingameButton.classList.remove('bg-[#262626]');
-        ingameButton.classList.add('opacity-50');
-    }
 }
 
 // Обновляем функцию handleRewardClaim
@@ -1155,572 +1122,10 @@ async function handleRewardClaim(channelLink, rewardId) {
     }
 }
 
-// Админ-панель
-let adminPanelVisible = false;
-
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'o' || event.key === 'O') {
-        toggleAdminPanel();
-    }
-});
-
-function toggleAdminPanel() {
-    const existingPanel = document.getElementById('adminPanel');
-    if (existingPanel) {
-        existingPanel.remove();
-        adminPanelVisible = false;
-        return;
-    }
-
-    adminPanelVisible = true;
-    const adminPanel = document.createElement('div');
-    adminPanel.id = 'adminPanel';
-    adminPanel.className = 'fixed top-4 right-4 bg-[#1A1B1A] p-4 rounded-xl shadow-lg z-50';
-    adminPanel.innerHTML = `
-        <div class="flex flex-col gap-3">
-            <div class="text-white font-bold mb-2">Админ панель</div>
-            <div class="flex gap-2">
-                <input type="number" id="setCoins" placeholder="Монеты" class="bg-[#262626] text-white p-2 rounded">
-                <button onclick="setCoins()" class="bg-blue-500 text-white px-3 rounded">OK</button>
-            </div>
-            <div class="flex gap-2">
-                <input type="number" id="setEnergy" placeholder="Энергия" class="bg-[#262626] text-white p-2 rounded">
-                <button onclick="setEnergy()" class="bg-blue-500 text-white px-3 rounded">OK</button>
-            </div>
-            <button onclick="createConfetti()" class="bg-green-500 text-white p-2 rounded">Показать серпантин</button>
-            <button onclick="clearAllData()" class="bg-red-500 text-white p-2 rounded">Сбросить всё</button>
-        </div>
-    `;
-    document.body.appendChild(adminPanel);
-}
-
-function setCoins() {
-    const newCoins = parseInt(document.getElementById('setCoins').value);
-    if (!isNaN(newCoins)) {
-        coins = newCoins;
-        localStorage.setItem('coins', coins);
-        document.getElementById('balance').textContent = Math.floor(coins);
-        showNotification('Баланс обновлен!', 'success');
-    }
-}
-
-function setEnergy() {
-    const newEnergy = parseInt(document.getElementById('setEnergy').value);
-    if (!isNaN(newEnergy)) {
-        energy = Math.min(maxEnergy, newEnergy);
-        localStorage.setItem('energy', energy);
-        updateEnergyDisplay();
-        showNotification('Энергия обновлена!', 'success');
-    }
-}
-
-// Обновляем стили для кнопок
-const styles = `
-.reward-button {
-    padding: 0.5rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    background-color: #4CAF50;
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.reward-button:hover {
-    background-color: #45a049;
-}
-
-.reward-button.checking {
-    background-color: #3B82F6;
-}
-
-.reward-button.checking:hover {
-    background-color: #2563EB;
-}
-
-.reward-button img {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-}
-
-.reward-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #1A1B1A;
-    padding: 1rem;
-    border-radius: 1rem;
-    margin-bottom: 1rem;
-}
-
-.reward-info {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex: 1;
-}
-
-.mining-container {
-    width: 100%;
-    height: calc(100vh - 100px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    box-sizing: border-box;
-}
-
-.fortune-wheel-container {
-    width: 100%;
-    max-width: 1200px;
-    height: 400px;
-    position: relative;
-    overflow: hidden;
-    margin: 2rem auto;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 1rem;
-    padding: 1rem;
-}
-
-.fortune-wheel-viewport {
-    width: 1000px;
-    height: 400px;
-    overflow: hidden;
-    position: relative;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    margin: 0 auto;
-}
-
-.fortune-wheel-track {
-    display: flex;
-    gap: 15px;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 0 500px;
-}
-
-.prize-item {
-    min-width: 200px;
-    height: 300px;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 20px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
-}
-
-.prize-icon {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-}
-
-.prize-balance {
-    font-size: 2em;
-    font-weight: bold;
-    color: #4CAF50;
-}
-
-.prize-name {
-    font-size: 1.2em;
-    color: #ffffff;
-}
-
-.prize-value {
-    font-size: 1em;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.wheel-pointer {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-top: 25px solid #FFD700;
-    z-index: 10;
-}
-`;
-
-// Добавляем стили для графика
-const graphStyles = `
-.admin-load-graph {
-    width: 100%;
-    height: 70px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    padding: 10px;
-    margin: 10px 0;
-}
-
-.load-graph {
-    width: 100%;
-    height: 100%;
-}
-
-.graph-area {
-    transition: d 0.3s ease;
-}
-
-.graph-line {
-    transition: d 0.3s ease;
-}
-`;
-
-const adminStyles = `
-.admin-panel {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 15px;
-    padding: 20px;
-    margin: 20px;
-    color: white;
-}
-
-.admin-panel h2 {
-    font-size: 24px;
-    margin-bottom: 20px;
-    color: #FFA852;
-}
-
-.admin-section {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-.admin-section h3 {
-    font-size: 18px;
-    margin-bottom: 15px;
-    color: #FFA852;
-}
-
-.server-stats {
-    display: flex;
-    gap: 20px;
-    margin-top: 15px;
-}
-
-.stat-item {
-    background: rgba(0, 0, 0, 0.3);
-    padding: 10px 15px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.stat-label {
-    color: #FFA852;
-    font-weight: bold;
-}
-
-.stat-value {
-    color: white;
-}
-
-.admin-load-graph {
-    width: 100%;
-    height: 70px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-    padding: 10px;
-    margin: 10px 0;
-    position: relative;
-}
-
-.load-graph {
-    width: 100%;
-    height: 100%;
-}
-
-.graph-area {
-    transition: d 0.3s ease;
-}
-
-.graph-line {
-    transition: d 0.3s ease;
-}
-`;
-
-// Добавляем все стили на страницу
-const styleSheet = document.createElement('style');
-styleSheet.textContent = styles + graphStyles + adminStyles;
-document.head.appendChild(styleSheet);
-
-// Глобальные переменные рулетки
-window.SPIN_DURATION = 50000; // 50 секунд для более медленного вращения
-window.CONFETTI_DURATION = 3000;
-window.TOTAL_SPINS = 30;
-window.isSpinning = false;
-window.spinsLeft = parseInt(localStorage.getItem('spinsLeft')) || 5;
-
-// Призы рулетки
-window.PRIZES = [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000].map(value => ({
-    value: value.toString(),
-    name: 'PRIZE',
-    perHour: true
-}));
-
-// Инициализация рулетки
-function initializeWheel() {
-    updateSpinsDisplay();
-    const spinButton = document.getElementById('spinButton');
-    if (spinButton) {
-        spinButton.addEventListener('click', handleSpin);
-    }
-    createPrizeTrack();
-}
-
-// Создание дорожки с призами
-function createPrizeTrack() {
-    const track = document.querySelector('.fortune-wheel-track');
-    if (!track) return;
-
-    // Увеличиваем количество повторений для большей длины трека
-    let extendedPrizes = [];
-    for (let i = 0; i < 15; i++) { // Увеличили с 10 до 15 повторений
-        const shuffledPrizes = [...window.PRIZES].sort(() => Math.random() - 0.5);
-        extendedPrizes = extendedPrizes.concat(shuffledPrizes);
-    }
-    
-    track.innerHTML = extendedPrizes.map(prize => `
-        <div class="prize-item" data-prize="${prize.value}">
-            <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="leaf" class="prize-icon">
-            <div class="prize-balance">${prize.value}</div>
-            <div class="prize-name">${prize.name}</div>
-            <div class="prize-value">per hour</div>
-        </div>
-    `).join('');
-
-    // Центрируем ленту изначально
-    track.style.transform = 'translateX(-50%)';
-}
-
-// Обновление отображения оставшихся вращений
-function updateSpinsDisplay() {
-    const spinsDisplay = document.getElementById('spinsCount');
-    if (spinsDisplay) {
-        spinsDisplay.textContent = window.spinsLeft;
-    }
-}
-
-// Обработка вращения
-function handleSpin() {
-    if (window.isSpinning || window.spinsLeft <= 0) return;
-    
-    window.isSpinning = true;
-    window.spinsLeft--;
-    localStorage.setItem('spinsLeft', window.spinsLeft);
-    updateSpinsDisplay();
-
-    const prize = selectRandomPrize();
-    animateWheel(prize);
-}
-
-// Выбор случайного приза
-function selectRandomPrize() {
-    const randomIndex = Math.floor(Math.random() * window.PRIZES.length);
-    return window.PRIZES[randomIndex];
-}
-
-// Анимация вращения
-function animateWheel(selectedPrize) {
-    const track = document.querySelector('.fortune-wheel-track');
-    if (!track) return;
-
-    const itemWidth = 220;
-    const viewportWidth = window.innerWidth;
-    const centerOffset = viewportWidth / 2 - itemWidth / 2;
-    
-    const prizeElements = track.querySelectorAll('.prize-item');
-    const targetElement = Array.from(prizeElements).find(el => el.dataset.prize === selectedPrize.value);
-    
-    if (!targetElement) return;
-    
-    const targetRect = targetElement.getBoundingClientRect();
-    const currentPosition = targetRect.left;
-    const distanceToCenter = centerOffset - currentPosition;
-    
-    // Изменяем направление вращения на противоположное (вправо)
-    const fullSpinsDistance = -(window.PRIZES.length * itemWidth * window.TOTAL_SPINS);
-    const totalDistance = fullSpinsDistance - distanceToCenter;
-
-    // Используем более плавную кривую анимации
-    track.style.transition = `transform ${window.SPIN_DURATION}ms cubic-bezier(0.2, 0.1, 0.1, 1)`;
-    track.style.transform = `translateX(${totalDistance}px)`;
-
-    setTimeout(() => {
-        finishSpin(selectedPrize);
-    }, window.SPIN_DURATION);
-}
-
-// Завершение вращения
-function finishSpin(prize) {
-    if (!prize) return;
-    
-    const track = document.querySelector('.fortune-wheel-track');
-    if (!track) return;
-    
-    const items = track.querySelectorAll('.prize-item');
-    if (!items.length) return;
-    
-    const winningItem = Array.from(items).find(item => item.dataset.prize === prize.value);
-    
-    if (winningItem) {
-        items.forEach(item => item.classList.remove('selected'));
-        winningItem.classList.add('selected');
-        
-        // Показываем уведомление и эффекты только если нашли выигрышный элемент
-        showWinNotification(prize);
-        createConfetti();
-        vibrate([100, 50, 100]);
-    }
-    
-    window.isSpinning = false;
-}
-
-// Показ уведомления о выигрыше
-function showWinNotification(prize) {
-    const notification = document.createElement('div');
-    notification.className = 'win-notification';
-    notification.innerHTML = `
-        <div class="win-content">
-            <h3>Вы выиграли:</h3>
-            <div class="prize-name">${prize.value}</div>
-            <div class="prize-value">per hour</div>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
-}
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    initializeWheel();
-    createLoadGraph();
-});
-
-// Функция для создания графика нагрузки
-function createLoadGraph() {
-    const graphContainer = document.querySelector('.admin-load-graph');
-    if (!graphContainer) return;
-
-    const svg = `
-    <svg class="load-graph" width="914" height="70" viewBox="0 0 914 70" style="width: 100%; height: 100%;">
-        <defs>
-            <clipPath id="graph-clip">
-                <rect x="0" y="0" height="70" width="914"></rect>
-            </clipPath>
-            <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stop-color="#FFA852" stop-opacity="0.24"></stop>
-                <stop offset="95%" stop-color="#FFA852" stop-opacity="0.08"></stop>
-            </linearGradient>
-        </defs>
-        <g class="graph-layer">
-            <path 
-                stroke-width="2" 
-                fill="url(#graphGradient)" 
-                stroke="none" 
-                class="graph-area" 
-                d="M0,70L101.556,31.5L203.111,31.5L304.667,31.5L406.222,31.5L507.778,31.5L609.333,31.5L710.889,31.5L812.444,31.5L914,31.5L914,70L812.444,70L710.889,70L609.333,70L507.778,70L406.222,70L304.667,70L203.111,70L101.556,70L0,70Z">
-            </path>
-            <path 
-                stroke-width="2" 
-                stroke="#FFA852" 
-                fill="none" 
-                class="graph-line" 
-                d="M0,70L101.556,31.5L203.111,31.5L304.667,31.5L406.222,31.5L507.778,31.5L609.333,31.5L710.889,31.5L812.444,31.5L914,31.5">
-            </path>
-        </g>
-    </svg>
-    `;
-
-    graphContainer.innerHTML = svg;
-}
-
-// Функция для обновления графика
-function updateLoadGraph() {
-    const path = document.querySelector('.graph-area');
-    const line = document.querySelector('.graph-line');
-    if (!path || !line) return;
-
-    // Генерируем случайные значения для демонстрации
-    const points = [];
-    for (let i = 0; i < 10; i++) {
-        const y = Math.random() * 40 + 30; // Значения между 30 и 70
-        points.push([i * 101.556, y]);
-    }
-
-    // Создаем path для области
-    let areaPath = `M${points[0][0]},${points[0][1]}`;
-    points.slice(1).forEach(point => {
-        areaPath += `L${point[0]},${point[1]}`;
+// Обработчик для активных иконок в навигации
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
     });
-    areaPath += `L${points[points.length-1][0]},70`;
-    areaPath += `L${points[0][0]},70Z`;
-
-    // Создаем path для линии
-    let linePath = `M${points[0][0]},${points[0][1]}`;
-    points.slice(1).forEach(point => {
-        linePath += `L${point[0]},${point[1]}`;
-    });
-
-    path.setAttribute('d', areaPath);
-    line.setAttribute('d', linePath);
-}
-
-// Обновляем график каждые 2 секунды
-setInterval(updateLoadGraph, 2000);
-
-// Добавить в секцию переменных
-let mining = {
-    hashRate: 0,
-    totalHashes: 0,
-    miners: [
-        { level: 1, count: 0, baseRate: 50, upgradeCost: 100 }
-    ]
-};
-
-// Обновить функцию рендеринга
-function updateMiningDisplay() {
-    document.getElementById('totalHashes').textContent = Math.floor(mining.totalHashes);
-    document.getElementById('hashRate').textContent = `${mining.hashRate} H/s`;
-}
-
-// Цикл майнинга
-setInterval(() => {
-    if(mining.hashRate > 0) {
-        mining.totalHashes += mining.hashRate;
-        updateMiningDisplay();
-    }
-}, 1000);
-
-// Обработчик улучшений
-function upgradeMiner(level) {
-    const miner = mining.miners.find(m => m.level === level);
-    if(coins >= miner.upgradeCost) {
-        coins -= miner.upgradeCost;
-        miner.count++;
-        miner.upgradeCost = Math.floor(miner.upgradeCost * 1.3);
-        mining.hashRate += miner.baseRate;
-        updateMiningDisplay();
-        updateBalanceDisplay();
-    }
-}
+});
