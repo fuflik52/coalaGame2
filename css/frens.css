@@ -1,0 +1,204 @@
+.frens-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.frens-container::-webkit-scrollbar {
+    display: none;
+}
+
+.frens-header {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.frens-title {
+    text-align: center;
+}
+
+.frens-title h2 {
+    color: #4CAF50;
+    font-size: 24px;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.frens-title p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.frens-stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.stat-card {
+    background: #2b2b2b;
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-card i {
+    color: #4CAF50;
+    font-size: 24px;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.stat-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.referral-section {
+    margin-top: 10px;
+}
+
+.referral-card {
+    background: #2b2b2b;
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.referral-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.referral-info i {
+    color: #4CAF50;
+    font-size: 24px;
+}
+
+.referral-info h3 {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.referral-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.copy-link-button {
+    background: #4CAF50;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.copy-link-button:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.referral-info-card {
+    background: #2b2b2b;
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.info-icon i {
+    color: #4CAF50;
+    font-size: 24px;
+}
+
+.info-content h3 {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.info-content p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.friends-list-section {
+    margin-top: 10px;
+}
+
+.friends-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.friends-list-header h3 {
+    color: white;
+    font-size: 18px;
+}
+
+.friends-count {
+    background: #4CAF50;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.friends-list {
+    background: #2b2b2b;
+    border: 2px solid #4CAF50;
+    border-radius: 15px;
+    padding: 20px;
+    min-height: 150px;
+}
+
+.empty-friends-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    height: 100%;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+.empty-friends-message i {
+    font-size: 32px;
+    color: #4CAF50;
+}
+
+.empty-friends-message p {
+    font-size: 14px;
+} 

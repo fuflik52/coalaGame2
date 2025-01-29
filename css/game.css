@@ -1,0 +1,21 @@
+.energy-text {
+    min-width: 80px;
+    width: 80px;
+    text-align: right;
+    display: inline-block;
+    position: absolute;
+    right: 20px;
+}
+
+.energy-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    margin-bottom: 10px;
+    padding-right: 100px;
+}
+
+.energy-progress {
+    flex: 1;
+    margin-right: 10px;
+} 

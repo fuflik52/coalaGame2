@@ -1,0 +1,364 @@
+/* Основные стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #000;
+    color: #fff;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Контейнеры */
+.mobile-container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding-bottom: 70px;
+    z-index: 1;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    color: #ffffff;
+}
+
+/* Уведомления */
+.notification {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    border-radius: 4px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    width: 85%;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    animation: slideInTop 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+}
+
+.notification.success {
+    background-color: #4CAF50;
+    border-left: 2px solid #45a049;
+}
+
+.notification.error {
+    background-color: #f44336;
+    border-left: 2px solid #d32f2f;
+}
+
+.notification.info {
+    background-color: #2196F3;
+    border-left: 2px solid #1976D2;
+}
+
+/* Контейнер для уведомлений */
+.notifications-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+/* Обновленные анимации для уведомлений */
+@keyframes slideInTop {
+    from {
+        transform: translate(-50%, -150%);
+        opacity: 0;
+    }
+    to {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutTop {
+    from {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+    to {
+        transform: translate(-50%, -150%);
+        opacity: 0;
+    }
+}
+
+/* Скроллбар */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Общие стили для секций */
+.content-section {
+    display: none;
+    padding: 20px;
+    min-height: calc(100vh - 70px);
+}
+
+.content-section.active {
+    display: block;
+}
+
+/* Отключение выделения текста */
+.no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Стили для кнопок Home и Avatar */
+.home-button,
+.avatar-button,
+.news-button,
+.nav-item {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 10;
+    position: relative;
+}
+
+.home-button:active,
+.avatar-button:active,
+.news-button:active,
+.nav-item:active {
+    opacity: 0.7;
+}
+
+.home-button img,
+.avatar-button img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+}
+
+/* Стили для модального окна с изменениями */
+.changelog-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.changelog-content {
+    background-color: #1a1a1a;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    border-radius: 15px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.changelog-text {
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    max-height: calc(80vh - 60px);
+    padding-right: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.close-changelog {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background-color: #2196F3;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.close-changelog:hover {
+    background-color: #1976D2;
+}
+
+/* Стили для скроллбара в changelog */
+.changelog-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.changelog-text::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.changelog-text::-webkit-scrollbar-thumb {
+    background: #2196F3;
+    border-radius: 3px;
+}
+
+.changelog-text::-webkit-scrollbar-thumb:hover {
+    background: #1976D2;
+}
+
+/* Стили для модального окна новостей */
+.news-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.news-content {
+    background-color: #1a1a1a;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    border-radius: 15px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.news-content h2 {
+    color: #fff;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.news-text {
+    color: #fff;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    max-height: calc(80vh - 100px);
+    padding-right: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.close-news {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background-color: #2196F3;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.close-news:hover {
+    background-color: #1976D2;
+}
+
+/* Стили для скроллбара в новостях */
+.news-text::-webkit-scrollbar {
+    width: 6px;
+}
+
+.news-text::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.news-text::-webkit-scrollbar-thumb {
+    background: #2196F3;
+    border-radius: 3px;
+}
+
+.news-text::-webkit-scrollbar-thumb:hover {
+    background: #1976D2;
+}
+
+/* Удаляем все стили приветственного окна */
+.welcome-message,
+.welcome-features,
+.feature-item {
+    display: none !important;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.9);
+} 
