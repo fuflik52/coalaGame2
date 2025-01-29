@@ -1,42 +1,39 @@
 let lastClaimTime = 0;
 let currentDay = 1;
-let currentUserId = null;
+let currentTelegramId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Ждем инициализации базы данных
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Ждем инициализацию Telegram WebApp
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Получаем ID из Telegram или создаем нового пользователя
-        const telegramId = window.db.currentUser.id?.toString();
-        if (telegramId) {
-            // Пытаемся найти пользователя по Telegram ID
-            const existingUser = await window.db.getUserData(telegramId);
-            if (existingUser) {
-                currentUserId = existingUser.id;
-            } else {
-                // Создаем нового пользователя
-                const newUser = await window.db.createNewUser({});
-                if (newUser) {
-                    currentUserId = newUser.id;
-                }
-            }
-        }
-
-        if (!currentUserId) {
-            console.error('Не удалось получить или создать пользователя');
+        // Получаем Telegram ID
+        if (!window.db.currentUser.id) {
+            console.error('Нет данных пользователя Telegram');
             return;
         }
 
-        // Загружаем данные пользователя
-        const userData = await window.db.getUserData(currentUserId);
-        if (userData) {
-            lastClaimTime = userData.last_claim_time;
-            currentDay = userData.current_day;
-            // Обновляем баланс в интерфейсе
-            if (typeof updateBalanceDisplay === 'function') {
-                updateBalanceDisplay(userData.balance);
+        currentTelegramId = window.db.currentUser.id.toString();
+
+        // Пытаемся найти пользователя
+        let userData = await window.db.getUserData(currentTelegramId);
+        
+        // Если пользователь не найден, создаем нового
+        if (!userData) {
+            userData = await window.db.createNewUser();
+            if (!userData) {
+                console.error('Не удалось создать пользователя');
+                return;
             }
+        }
+
+        // Загружаем данные пользователя
+        lastClaimTime = userData.last_claim_time;
+        currentDay = userData.current_day;
+
+        // Обновляем баланс в интерфейсе
+        if (typeof updateBalanceDisplay === 'function') {
+            updateBalanceDisplay(userData.balance);
         }
 
         // Обновляем имя пользователя
@@ -188,7 +185,7 @@ function updateRewardStatus() {
 }
 
 async function claimReward(day, amount) {
-    if (day !== currentDay) return;
+    if (day !== currentDay || !currentTelegramId) return;
     
     const now = Date.now();
     const timePassedSinceLastClaim = now - lastClaimTime;
@@ -200,13 +197,13 @@ async function claimReward(day, amount) {
     }
     
     // Получаем текущий баланс из базы данных
-    const userData = await window.db.getUserData(currentUserId);
+    const userData = await window.db.getUserData(currentTelegramId);
     if (!userData) return;
 
     const newBalance = userData.balance + amount;
     
     // Обновляем баланс в базе данных
-    const success = await window.db.updateUserBalance(currentUserId, newBalance);
+    const success = await window.db.updateUserBalance(currentTelegramId, newBalance);
     if (!success) {
         showNotification('Произошла ошибка при получении награды', 'error');
         return;
@@ -217,7 +214,7 @@ async function claimReward(day, amount) {
     currentDay = Math.min(currentDay + 1, 8);
     
     // Сохраняем прогресс наград
-    await window.db.updateUserRewards(currentUserId, currentDay, lastClaimTime);
+    await window.db.updateUserRewards(currentTelegramId, currentDay, lastClaimTime);
     
     // Обновляем статус наград
     updateRewardStatus();

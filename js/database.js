@@ -6,20 +6,19 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Получаем данные из Telegram WebApp
-const tg = window.Telegram.WebApp;
-const initData = tg.initData || '';
-const initDataUnsafe = tg.initDataUnsafe || {};
+const tg = window.Telegram?.WebApp;
+const initDataUnsafe = tg?.initDataUnsafe || {};
 const currentUser = initDataUnsafe.user || {};
 
-// Функция для получения данных пользователя
-async function getUserData(userId) {
+// Функция для получения данных пользователя по Telegram ID
+async function getUserData(telegramId) {
     const { data, error } = await supabaseClient
         .from('users')
         .select('*')
-        .eq('id', userId)
+        .eq('telegram_id', telegramId)
         .single();
     
-    if (error) {
+    if (error && error.code !== 'PGRST116') { // Игнорируем ошибку "не найдено"
         console.error('Ошибка при получении данных:', error);
         return null;
     }
@@ -28,11 +27,11 @@ async function getUserData(userId) {
 }
 
 // Функция для обновления баланса
-async function updateUserBalance(userId, newBalance) {
+async function updateUserBalance(telegramId, newBalance) {
     const { data, error } = await supabaseClient
         .from('users')
         .update({ balance: newBalance })
-        .eq('id', userId);
+        .eq('telegram_id', telegramId);
     
     if (error) {
         console.error('Ошибка при обновлении баланса:', error);
@@ -43,14 +42,14 @@ async function updateUserBalance(userId, newBalance) {
 }
 
 // Функция для сохранения прогресса наград
-async function updateUserRewards(userId, currentDay, lastClaimTime) {
+async function updateUserRewards(telegramId, currentDay, lastClaimTime) {
     const { data, error } = await supabaseClient
         .from('users')
         .update({
             current_day: currentDay,
             last_claim_time: lastClaimTime
         })
-        .eq('id', userId);
+        .eq('telegram_id', telegramId);
     
     if (error) {
         console.error('Ошибка при обновлении наград:', error);
@@ -61,26 +60,23 @@ async function updateUserRewards(userId, currentDay, lastClaimTime) {
 }
 
 // Функция для создания нового пользователя
-async function createNewUser(userData) {
-    // Добавляем данные из Telegram
-    const telegramData = {
-        telegram_id: currentUser.id?.toString(),
+async function createNewUser() {
+    if (!currentUser.id) {
+        console.error('Нет данных пользователя Telegram');
+        return null;
+    }
+
+    const userData = {
+        telegram_id: currentUser.id.toString(),
         username: currentUser.username || 'Пользователь',
-        first_name: currentUser.first_name,
-        last_name: currentUser.last_name,
-        ...userData
+        balance: 0,
+        current_day: 1,
+        last_claim_time: Date.now()
     };
 
     const { data, error } = await supabaseClient
         .from('users')
-        .insert([
-            {
-                balance: 0,
-                current_day: 1,
-                last_claim_time: Date.now(),
-                ...telegramData
-            }
-        ])
+        .insert([userData])
         .select();
     
     if (error) {
@@ -94,8 +90,8 @@ async function createNewUser(userData) {
 // Функция для обновления имени пользователя в интерфейсе
 function updateUsername() {
     const usernameElement = document.querySelector('.username');
-    if (usernameElement) {
-        usernameElement.textContent = currentUser.username || 'Пользователь';
+    if (usernameElement && currentUser.username) {
+        usernameElement.textContent = currentUser.username;
     }
 }
 
