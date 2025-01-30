@@ -89,10 +89,20 @@ function switchSection(sectionId) {
 function updateLoadingStep(step) {
     const steps = document.querySelectorAll('.loader-step');
     steps.forEach((s, index) => {
-        if (index <= step) {
-            s.classList.add('active');
-        } else {
+        if (index < step) {
+            // Этап пройден
             s.classList.remove('active');
+            s.classList.add('completed');
+            setTimeout(() => {
+                s.style.display = 'none';
+            }, 500);
+        } else if (index === step) {
+            // Текущий этап
+            s.classList.add('active');
+            s.classList.remove('completed');
+        } else {
+            // Будущий этап
+            s.classList.remove('active', 'completed');
         }
     });
 }

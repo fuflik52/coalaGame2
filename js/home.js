@@ -8,6 +8,12 @@ let hourlyRate = 0; // Общая прибыль в час от всех кар�
 let isLocalMode = true; // Добавляем флаг локального режима
 const energyBar = document.getElementById('energyBar');
 
+// Инициализация переменных
+let clickCount = 0;
+let lastClickTime = 0;
+let clickMultiplier = 1;
+let isClicking = false;
+
 function updateEnergy() {
     energy = Math.min(maxEnergy, energy);
     energy = Math.max(0, energy);
@@ -33,17 +39,59 @@ function updateEnergyDisplay() {
 }
 
 function handleClick(event) {
-    const button = event.currentTarget;
-    const section = button.getAttribute('data-section');
+    event.preventDefault(); // Предотвращаем стандартное поведение
     
-    // Проверяем, существует ли элемент перед установкой textContent
-    const balanceElement = document.querySelector('.balance');
-    if (balanceElement) {
-        balanceElement.textContent = '0';
+    if (isClicking) return;
+    isClicking = true;
+
+    const clickerButton = document.querySelector('.clicker-button');
+    const koalaImage = clickerButton.querySelector('.clicker-koala');
+    
+    // Проверяем энергию
+    if (energy <= 0) {
+        showNotification('Недостаточно энергии!', 'error');
+        isClicking = false;
+        return;
+    }
+
+    // Уменьшаем энергию
+    energy--;
+    updateEnergy();
+    
+    // Добавляем анимацию нажатия
+    clickerButton.classList.add('clicked');
+    if (koalaImage) {
+        koalaImage.classList.add('clicked');
     }
     
-    // Переключаем секции
-    switchSection(section);
+    // Обновляем счетчик кликов
+    const currentTime = Date.now();
+    if (currentTime - lastClickTime < 300) {
+        clickCount++;
+        if (clickCount >= 10) {
+            clickMultiplier = 2;
+        }
+    } else {
+        clickCount = 1;
+        clickMultiplier = 1;
+    }
+    lastClickTime = currentTime;
+
+    // Обновляем баланс
+    const reward = 1 * clickMultiplier;
+    updateBalance(reward);
+    
+    // Показываем анимацию награды
+    showRewardAnimation(reward, event);
+    
+    // Убираем анимацию нажатия
+    setTimeout(() => {
+        clickerButton.classList.remove('clicked');
+        if (koalaImage) {
+            koalaImage.classList.remove('clicked');
+        }
+        isClicking = false;
+    }, 150);
 }
 
 function updateBalance(amount) {
@@ -284,4 +332,61 @@ document.addEventListener('DOMContentLoaded', () => {
             restoreEnergy();
         }
     });
+});
+
+// Инициализация обработчиков событий
+function initializeHomeSection() {
+    const clickerButton = document.querySelector('.clicker-button');
+    if (!clickerButton) return;
+    
+    // Добавляем обработчики для мобильных устройств
+    clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+    clickerButton.addEventListener('mousedown', handleClick);
+    
+    // Предотвращаем двойное срабатывание на мобильных
+    clickerButton.addEventListener('click', (e) => e.preventDefault());
+    
+    // Отключаем контекстное меню
+    clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+// Функция анимации награды
+function showRewardAnimation(reward, event) {
+    const rewardElement = document.createElement('div');
+    rewardElement.className = 'reward-animation';
+    rewardElement.textContent = `+${reward}`;
+    
+    // Позиционируем анимацию относительно клика
+    const x = event.type.includes('touch') ? event.touches[0].clientX : event.clientX;
+    const y = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+    
+    rewardElement.style.left = `${x}px`;
+    rewardElement.style.top = `${y}px`;
+    
+    document.body.appendChild(rewardElement);
+    
+    // Запускаем анимацию
+    requestAnimationFrame(() => {
+        rewardElement.style.transform = 'translateY(-50px) scale(1.2)';
+        rewardElement.style.opacity = '0';
+    });
+    
+    // Удаляем элемент после анимации
+    setTimeout(() => {
+        document.body.removeChild(rewardElement);
+    }, 1000);
+}
+
+// Запускаем инициализацию при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    initializeHomeSection();
+    restoreEnergy();
+    
+    // Восстановление энергии каждую секунду
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy++;
+            updateEnergy();
+        }
+    }, 1000);
 }); 
