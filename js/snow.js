@@ -15,7 +15,8 @@ class SnowAnimation {
         this.canvas.style.width = '100%';
         this.canvas.style.height = '100%';
         this.canvas.style.pointerEvents = 'none';
-        this.canvas.style.zIndex = '1000';
+        this.canvas.style.zIndex = '999';
+        this.canvas.style.opacity = '0.7';
         this.resize();
         window.addEventListener('resize', () => this.resize());
     }
@@ -23,17 +24,21 @@ class SnowAnimation {
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+        this.createSnowflakes();
     }
 
     createSnowflakes() {
-        const numberOfSnowflakes = Math.floor(window.innerWidth * window.innerHeight / 10000);
+        const numberOfSnowflakes = Math.floor(window.innerWidth * window.innerHeight / 8000);
+        this.snowflakes = [];
+        
         for (let i = 0; i < numberOfSnowflakes; i++) {
             this.snowflakes.push({
                 x: Math.random() * this.canvas.width,
                 y: Math.random() * this.canvas.height,
-                radius: Math.random() * 3 + 1,
-                speed: Math.random() * 1 + 0.5,
-                wind: Math.random() * 0.5 - 0.25
+                radius: Math.random() * 2 + 1,
+                speed: Math.random() * 0.8 + 0.2,
+                wind: Math.random() * 0.3 - 0.15,
+                opacity: Math.random() * 0.5 + 0.5
             });
         }
     }
@@ -42,10 +47,10 @@ class SnowAnimation {
         if (!this.isActive) return;
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
 
         this.snowflakes.forEach(snowflake => {
             this.ctx.beginPath();
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${snowflake.opacity})`;
             this.ctx.arc(snowflake.x, snowflake.y, snowflake.radius, 0, Math.PI * 2);
             this.ctx.fill();
 

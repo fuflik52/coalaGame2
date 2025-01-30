@@ -38,6 +38,19 @@ function updateEnergyDisplay() {
     }
 }
 
+// Функция для проверки поддержки вибрации
+function checkVibrationSupport() {
+    return 'vibrate' in navigator;
+}
+
+// Функция для вибрации
+function vibrate(duration = 50) {
+    const isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
+    if (isVibrationEnabled && checkVibrationSupport()) {
+        navigator.vibrate(duration);
+    }
+}
+
 function handleClick(event) {
     event.preventDefault(); // Предотвращаем стандартное поведение
     
@@ -53,6 +66,9 @@ function handleClick(event) {
         isClicking = false;
         return;
     }
+
+    // Вибрация при клике на мобильных устройствах
+    vibrate();
 
     // Уменьшаем энергию
     energy--;
@@ -70,6 +86,8 @@ function handleClick(event) {
         clickCount++;
         if (clickCount >= 10) {
             clickMultiplier = 2;
+            // Более длинная вибрация при достижении множителя
+            vibrate(100);
         }
     } else {
         clickCount = 1;

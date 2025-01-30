@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/loader.css">
     <link rel="stylesheet" href="css/development.css">
+    <script src="js/telegram-logger.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Подключаем CSS файлы -->
     <link rel="stylesheet" href="css/main.css">
@@ -333,23 +334,26 @@
             </div>
             <div class="settings-list">
                 <div class="setting-item">
-                    <span>Звук</span>
+                    <div class="setting-info">
+                        <span class="setting-name">Звук</span>
+                        <span class="dev-badge">в разработке</span>
+                    </div>
                     <label class="switch">
-                        <input type="checkbox" checked>
+                        <input type="checkbox" disabled>
                         <span class="slider"></span>
                     </label>
                 </div>
                 <div class="setting-item">
-                    <span>Вибрация</span>
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <span>Снег</span>
+                    <span class="setting-name">Вибрация</span>
                     <label class="switch">
                         <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <span class="setting-name">Снег</span>
+                    <label class="switch">
+                        <input type="checkbox" checked>
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -358,7 +362,6 @@
     </div>
 
     <!-- Подключаем JavaScript файлы -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="js/telegram-handler.js"></script>
     <script src="js/game.js"></script>
     <script src="js/main.js"></script>

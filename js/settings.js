@@ -39,16 +39,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const settings = {
         'soundEnabled': false,
         'vibrationEnabled': false,
-        'notificationsEnabled': true
+        'snowEnabled': true
     };
 
-    Object.entries(settings).forEach(([settingId, defaultValue]) => {
-        const setting = document.getElementById(settingId);
-        if (setting) {
-            const savedValue = localStorage.getItem(settingId);
-            setting.checked = savedValue === null ? defaultValue : savedValue === 'true';
-            if (savedValue === null) {
-                localStorage.setItem(settingId, defaultValue);
+    // Устанавливаем начальные значения, если они еще не установлены
+    Object.entries(settings).forEach(([setting, defaultValue]) => {
+        if (localStorage.getItem(setting) === null) {
+            localStorage.setItem(setting, defaultValue);
+        }
+    });
+
+    // Инициализируем переключатели
+    const soundToggle = document.querySelector('.setting-item:nth-child(1) input[type="checkbox"]');
+    const vibrationToggle = document.querySelector('.setting-item:nth-child(2) input[type="checkbox"]');
+    const snowToggle = document.querySelector('.setting-item:nth-child(3) input[type="checkbox"]');
+
+    if (soundToggle) {
+        soundToggle.checked = localStorage.getItem('soundEnabled') === 'true';
+    }
+    if (vibrationToggle) {
+        vibrationToggle.checked = localStorage.getItem('vibrationEnabled') === 'true';
+    }
+    if (snowToggle) {
+        const isSnowEnabled = localStorage.getItem('snowEnabled') === 'true';
+        snowToggle.checked = isSnowEnabled;
+        if (isSnowEnabled && window.snowAnimation) {
+            window.snowAnimation.start();
+        }
+    }
+
+    // Обработчики изменений
+    soundToggle?.addEventListener('change', (e) => {
+        localStorage.setItem('soundEnabled', e.target.checked);
+    });
+
+    vibrationToggle?.addEventListener('change', (e) => {
+        localStorage.setItem('vibrationEnabled', e.target.checked);
+    });
+
+    snowToggle?.addEventListener('change', (e) => {
+        if (window.snowAnimation) {
+            if (e.target.checked) {
+                window.snowAnimation.start();
+            } else {
+                window.snowAnimation.stop();
             }
         }
     });
@@ -183,20 +217,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (promoButton) {
         promoButton.onclick = usePromoCode;
     }
-
-    // Получаем элементы настроек
-    const snowToggle = settingsModal.querySelector('input[type="checkbox"]:nth-child(3)');
-
-    // Устанавливаем начальное состояние переключателя снега
-    if (snowToggle) {
-        snowToggle.checked = localStorage.getItem('snowEnabled') === 'true';
-    }
-
-    // Обработчик для переключателя снега
-    snowToggle?.addEventListener('change', (e) => {
-        if (window.snowAnimation) {
-            const isEnabled = window.snowAnimation.toggle();
-            e.target.checked = isEnabled;
-        }
-    });
 }); 
