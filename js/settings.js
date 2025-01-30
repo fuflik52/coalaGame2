@@ -183,4 +183,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (promoButton) {
         promoButton.onclick = usePromoCode;
     }
+
+    // Получаем элементы настроек
+    const snowToggle = settingsModal.querySelector('input[type="checkbox"]:nth-child(3)');
+
+    // Устанавливаем начальное состояние переключателя снега
+    if (snowToggle) {
+        snowToggle.checked = localStorage.getItem('snowEnabled') === 'true';
+    }
+
+    // Обработчик для переключателя снега
+    snowToggle?.addEventListener('change', (e) => {
+        if (window.snowAnimation) {
+            const isEnabled = window.snowAnimation.toggle();
+            e.target.checked = isEnabled;
+        }
+    });
 }); 

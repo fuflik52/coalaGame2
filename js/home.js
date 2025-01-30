@@ -79,7 +79,14 @@ function handleClick(event) {
 
     // Обновляем баланс
     const reward = 1 * clickMultiplier;
-    updateBalance(reward);
+    const currentBalance = parseInt(document.querySelector('.balance-value').textContent.replace(/\s/g, '')) || 0;
+    const newBalance = currentBalance + reward;
+    
+    // Обновляем отображение баланса
+    document.querySelector('.balance-value').textContent = newBalance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    
+    // Сохраняем в локальное хранилище
+    localStorage.setItem('balance', newBalance);
     
     // Показываем анимацию награды
     showRewardAnimation(reward, event);
@@ -336,18 +343,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Инициализация обработчиков событий
 function initializeHomeSection() {
-    const clickerButton = document.querySelector('.clicker-button');
-    if (!clickerButton) return;
+    const clickSection = document.querySelector('.click-section');
+    if (!clickSection) return;
     
     // Добавляем обработчики для мобильных устройств
-    clickerButton.addEventListener('touchstart', handleClick, { passive: false });
-    clickerButton.addEventListener('mousedown', handleClick);
+    clickSection.addEventListener('touchstart', handleClick, { passive: false });
+    clickSection.addEventListener('mousedown', handleClick);
     
     // Предотвращаем двойное срабатывание на мобильных
-    clickerButton.addEventListener('click', (e) => e.preventDefault());
+    clickSection.addEventListener('click', (e) => e.preventDefault());
     
     // Отключаем контекстное меню
-    clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
+    clickSection.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 // Функция анимации награды
