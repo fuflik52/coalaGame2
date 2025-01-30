@@ -6,6 +6,7 @@
     <title>Koala Game Demo</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/loader.css">
+    <link rel="stylesheet" href="css/development.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Подключаем CSS файлы -->
     <link rel="stylesheet" href="css/main.css">
@@ -76,14 +77,30 @@
                             </div>
                         </div>
                         <div class="click-section">
-                            <div class="clicker-button" id="clickerButton">
+                            <div class="clicker-button">
                                 <div class="clicker-gradient"></div>
                                 <div class="clicker-gradient-inner"></div>
                                 <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="clicker-koala">
                             </div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress" style="width: 100%;">100/100</div>
+                        <div class="energy-progress">
+                            <div class="energy-progress-bar" id="energyBar"></div>
+                            <div class="energy-stripes-overlay">
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                                <div class="stripe"></div>
+                            </div>
+                            <div class="energy-text" id="energyText">
+                                <img src="https://tapkoala.com/_next/image?url=%2Fimages%2Fpower.png&w=16&q=75" alt="Energy" class="energy-icon">
+                                <span>100/100</span>
+                            </div>
                         </div>
                     </section>
 
@@ -158,53 +175,35 @@
                     <section class="content-section" id="cardsSection">
                         <div class="cards-container">
                             <div class="cards-header">
-                                <h2>Коллекция карточек</h2>
+                                <h2>Карточки</h2>
                                 <p>Собирайте карточки и получайте пассивный доход</p>
                             </div>
                             <div class="cards-grid" id="cardsGrid">
-                                <!-- Карточки будут добавлены через JavaScript -->
+                                <!-- Карточки будут добавляться динамически через JavaScript -->
                             </div>
                         </div>
                     </section>
 
                     <!-- Секция Mining -->
                     <section class="content-section" id="miningSection">
-                        <div class="section-content mining-content">
-                            <div class="mining-header">
-                                <div class="mining-icon-container">
-                                    <img src="https://i.postimg.cc/jStPJsMg/image.png" alt="Mining" class="section-icon mining-icon">
-                                    <div class="mining-glow"></div>
+                        <div class="development-content">
+                            <div class="development-header">
+                                <div class="development-icon-container">
+                                    <img src="https://i.postimg.cc/jStPJsMg/image.png" alt="Mining" class="section-icon">
+                                    <div class="development-glow"></div>
                                 </div>
                                 <h2>Майнинг-ферма</h2>
                                 <p class="status">В разработке</p>
                             </div>
 
-                            <div class="mining-preview">
-                                <div class="preview-card">
-                                    <div class="card-icon">🏭</div>
-                                    <h3>Автоматический майнинг</h3>
-                                    <p>Создавайте и улучшайте свою майнинг-ферму</p>
-                                </div>
-                                <div class="preview-card">
-                                    <div class="card-icon">⚡</div>
-                                    <h3>Бустеры</h3>
-                                    <p>Ускоряйте добычу с помощью бустеров</p>
-                                </div>
-                                <div class="preview-card">
-                                    <div class="card-icon">📈</div>
-                                    <h3>Статистика</h3>
-                                    <p>Отслеживайте свой прогресс</p>
-                                </div>
-                            </div>
-
-                            <div class="mining-progress">
+                            <div class="development-progress">
                                 <div class="progress-header">
                                     <span class="version">Версия 0.0.1</span>
                                     <span class="release-date">До релиза: 14 дней</span>
                                 </div>
                                 <div class="progress-container">
                                     <div class="progress-track">
-                                        <div class="progress-fill"></div>
+                                        <div class="progress-fill" style="width: 75%"></div>
                                     </div>
                                     <div class="progress-steps">
                                         <div class="step completed">
@@ -226,53 +225,22 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="construction-animation">
-                                <div class="gear gear-1"></div>
-                                <div class="gear gear-2"></div>
-                                <div class="gear gear-3"></div>
-                                <div class="construction-beam"></div>
-                            </div>
                         </div>
                     </section>
 
                     <!-- Секция Reward -->
                     <section class="content-section" id="rewardSection">
-                        <div class="section-content mining-content">
-                            <div class="mining-header">
-                                <div class="mining-icon-container">
-                                    <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Reward" class="section-icon mining-icon">
-                                    <div class="mining-glow"></div>
+                        <div class="development-content">
+                            <div class="development-header">
+                                <div class="development-icon-container">
+                                    <img src="https://i.postimg.cc/Y2PdgmFX/image.png" alt="Reward" class="section-icon">
+                                    <div class="development-glow"></div>
                                 </div>
                                 <h2>Система наград</h2>
                                 <p class="status">В разработке</p>
                             </div>
 
-                            <div class="mining-preview">
-                                <div class="preview-card">
-                                    <div class="card-icon">
-                                        <i class="fas fa-trophy"></i>
-                                    </div>
-                                    <h3>Достижения</h3>
-                                    <p>Выполняйте задания и получайте награды</p>
-                                </div>
-                                <div class="preview-card">
-                                    <div class="card-icon">
-                                        <i class="fas fa-gift"></i>
-                                    </div>
-                                    <h3>Бонусы</h3>
-                                    <p>Ежедневные награды и подарки</p>
-                                </div>
-                                <div class="preview-card">
-                                    <div class="card-icon">
-                                        <i class="fas fa-chart-line"></i>
-                                    </div>
-                                    <h3>Рейтинг</h3>
-                                    <p>Соревнуйтесь с другими игроками</p>
-                                </div>
-                            </div>
-
-                            <div class="mining-progress">
+                            <div class="development-progress">
                                 <div class="progress-header">
                                     <span class="version">Версия 0.0.1</span>
                                     <span class="release-date">До релиза: 35 дней</span>
@@ -300,13 +268,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="construction-animation">
-                                <div class="gear gear-1"></div>
-                                <div class="gear gear-2"></div>
-                                <div class="gear gear-3"></div>
-                                <div class="construction-beam"></div>
                             </div>
                         </div>
                     </section>
@@ -378,6 +339,8 @@
     </div>
 
     <!-- Подключаем JavaScript файлы -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/telegram-handler.js"></script>
     <script src="js/game.js"></script>
     <script src="js/main.js"></script>
     <script src="js/home.js"></script>

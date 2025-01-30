@@ -27,6 +27,11 @@ const NEWS_TEXT = `🎮 Обновление Koala Game 1.0.1
    ✓ Добавлен скролл в разделе Frens
    ✓ Центрирование элементов интерфейса`;
 
+// Система энергии
+let energy = 100;
+const maxEnergy = 100;
+const energyBar = document.getElementById('energyBar');
+
 // Функция для показа уведомлений
 function showNotification(message, type = 'info') {
     if (!notificationShown) {
@@ -230,3 +235,60 @@ async function updateBalanceDisplay(balance) {
         }
     }
 }
+
+// Функция для обновления энергии
+function updateEnergy() {
+    energy = Math.min(maxEnergy, energy);
+    energy = Math.max(0, energy);
+    energyBar.style.width = `${energy}%`;
+    
+    // Обновляем текст энергии
+    const energyText = document.getElementById('energyText');
+    if (energyText) {
+        energyText.textContent = `${energy}/${maxEnergy}`;
+    }
+    
+    // Сохраняем текущее значение энергии
+    localStorage.setItem('energy', energy);
+    localStorage.setItem('lastEnergyUpdate', Date.now());
+}
+
+// Функция для восстановления энергии
+function restoreEnergy() {
+    const lastUpdate = parseInt(localStorage.getItem('lastEnergyUpdate')) || Date.now();
+    const currentTime = Date.now();
+    const secondsPassed = Math.floor((currentTime - lastUpdate) / 1000);
+    
+    // Добавляем по 1 единице энергии за каждую прошедшую секунду
+    energy = Math.min(maxEnergy, energy + secondsPassed);
+    updateEnergy();
+}
+
+// Загружаем сохраненное значение энергии при запуске
+energy = parseInt(localStorage.getItem('energy')) || maxEnergy;
+restoreEnergy();
+
+// Обработчик клика для траты энергии
+document.querySelector('.clicker-button').addEventListener('click', function() {
+    if (energy > 0) {
+        energy--;
+        updateEnergy();
+    } else {
+        showNotification('Недостаточно энергии!', 'error');
+    }
+});
+
+// Восстановление энергии каждую секунду
+setInterval(() => {
+    if (energy < maxEnergy) {
+        energy++;
+        updateEnergy();
+    }
+}, 1000);
+
+// Обновляем энергию при возвращении на вкладку
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        restoreEnergy();
+    }
+});

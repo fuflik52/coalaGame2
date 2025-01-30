@@ -1,38 +1,39 @@
+// Данные карточек
 const cardsData = [
     {
         id: 1,
-        image: "https://res.cloudinary.com/dib4woqge/image/upload/v1735300135/1000000472_wu48p4.png",
         title: "Начало пути",
         description: "Коала только начинает своё путешествие. Даёт 120 эвкалипта в час",
+        image: "https://res.cloudinary.com/dib4woqge/image/upload/v1735300135/1000000472_wu48p4.png",
         price: 10000,
-        perHour: 120,
-        isNew: true
+        income: 120,
+        isNew: false
     },
     {
         id: 2,
-        image: "https://i.postimg.cc/sxpJmh0S/image.png",
         title: "Первые деньги",
         description: "Коала заработала свои первые деньги. Продолжаем в том же духе. Добавляет 350 эвкалипта в час",
+        image: "https://i.postimg.cc/sxpJmh0S/image.png",
         price: 25000,
-        perHour: 350,
+        income: 350,
         isNew: false
     },
     {
         id: 3,
-        image: "https://i.postimg.cc/pVwWnFHC/image.png",
         title: "Коала на отдыхе",
         description: "После первых заработанных денег можно хорошенько отдохнуть. Добавляет 800 эвкалипта в час",
+        image: "https://i.postimg.cc/pVwWnFHC/image.png",
         price: 50000,
-        perHour: 800,
+        income: 800,
         isNew: false
     },
     {
         id: 4,
-        image: "https://i.postimg.cc/nLCgk3KD/image.png",
         title: "Снежные забавы",
         description: "Наступила зима, а значит можно хорошо порезвиться в снежки. Но не забываем про прибыль в 1800 эвкалипта в час",
+        image: "https://i.postimg.cc/nLCgk3KD/image.png",
         price: 100000,
-        perHour: 1800,
+        income: 1800,
         isNew: false
     },
     {
@@ -41,8 +42,8 @@ const cardsData = [
         title: "Коала-путешественник",
         description: "Наша коала отправляется в кругосветное путешествие, собирая эвкалипт по всему миру. Приносит 3500 эвкалипта в час",
         price: 200000,
-        perHour: 3500,
-        isNew: true
+        income: 3500,
+        isNew: false
     },
     {
         id: 6,
@@ -50,8 +51,8 @@ const cardsData = [
         title: "Бизнес-коала",
         description: "Пора открывать свой бизнес! Коала в деловом костюме управляет сетью эвкалиптовых плантаций. Добавляет 7000 эвкалипта в час",
         price: 500000,
-        perHour: 7000,
-        isNew: true
+        income: 7000,
+        isNew: false
     },
     {
         id: 7,
@@ -59,8 +60,8 @@ const cardsData = [
         title: "Космический исследователь",
         description: "Коала покоряет космос в поисках редких видов эвкалипта на других планетах. Приносит 12000 эвкалипта в час",
         price: 1000000,
-        perHour: 12000,
-        isNew: true
+        income: 12000,
+        isNew: false
     },
     {
         id: 8,
@@ -68,97 +69,93 @@ const cardsData = [
         title: "Коала-волшебник",
         description: "Магия и эвкалипт - отличное сочетание! Коала освоила древние заклинания приумножения эвкалипта. Добавляет 20000 эвкалипта в час",
         price: 5000000,
-        perHour: 20000,
-        isNew: true
+        income: 20000,
+        isNew: false
     }
 ];
 
-function renderCards() {
-    const cardsGrid = document.querySelector('.cards-grid');
+// Функция для инициализации секции карточек
+function initializeCardsSection() {
+    const cardsGrid = document.getElementById('cardsGrid');
     if (!cardsGrid) return;
 
-    cardsGrid.innerHTML = cardsData.map(card => `
-        <div class="card-item">
+    // Очищаем текущее содержимое
+    cardsGrid.innerHTML = '';
+
+    // Добавляем карточки
+    cardsData.forEach(card => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card-item';
+        cardElement.innerHTML = `
             <img src="${card.image}" alt="${card.title}" class="card-image">
             <div class="card-content">
                 <div class="card-title">
                     ${card.title}
-                    ${card.isNew ? '<span class="new-badge">NEW</span>' : ''}
+                    ${card.isNew ? '<span class="new-badge">New</span>' : ''}
                 </div>
-                <div class="card-description">${card.description}</div>
+                <p class="card-description">${card.description}</p>
                 <div class="card-stats">
-                    <div class="card-price" onclick="buyCard(${card.id})">
-                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Currency">
-                        ${card.price}
+                    <div class="card-price">
+                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins">
+                        ${card.price.toLocaleString()}
                     </div>
                     <div class="card-income">
-                        +<span>${card.perHour}</span>/час
+                        +<span>${card.income.toLocaleString()}</span>/час
                     </div>
                 </div>
             </div>
-        </div>
-    `).join('');
+        `;
+
+        // Добавляем обработчик клика для покупки
+        cardElement.addEventListener('click', () => tryBuyCard(card));
+
+        cardsGrid.appendChild(cardElement);
+    });
 }
 
-async function buyCard(cardId) {
+// Функция для попытки купить карточку
+async function tryBuyCard(card) {
     try {
-        const card = cardsData.find(c => c.id === cardId);
-        if (!card) {
-            console.error('Карта не найдена:', cardId);
-            return;
-        }
-
-        // Получаем ID пользователя
-        const currentTelegramId = window.tg?.initDataUnsafe?.user?.id?.toString();
-        if (!currentTelegramId) {
-            console.error('ID пользователя не найден');
+        const userId = window.tg?.initDataUnsafe?.user?.id?.toString();
+        if (!userId) {
             showNotification('Ошибка: не удалось определить пользователя', 'error');
             return;
         }
 
-        // Получаем актуальные данные пользователя из базы
-        const userData = await window.db.getUserData(currentTelegramId);
+        const userData = await window.db.getUserData(userId);
         if (!userData) {
-            console.error('Не удалось получить данные пользователя');
             showNotification('Ошибка: не удалось получить данные пользователя', 'error');
             return;
         }
 
-        // Проверяем достаточно ли средств
         if (userData.balance < card.price) {
-            showNotification('Недостаточно средств для покупки!', 'error');
+            showNotification('Недостаточно монет для покупки', 'error');
             return;
         }
 
-        // Вычитаем стоимость карты из баланса
+        // Обновляем баланс пользователя
         const newBalance = userData.balance - card.price;
-        
-        // Обновляем баланс в базе данных
-        const success = await window.db.updateUserBalance(currentTelegramId, newBalance);
-        if (!success) {
-            console.error('Ошибка при обновлении баланса');
-            showNotification('Ошибка при покупке карты', 'error');
-            return;
-        }
+        await window.db.updateUserBalance(userId, newBalance);
 
-        // Обновляем отображение баланса в интерфейсе
-        if (typeof updateBalanceDisplay === 'function') {
-            updateBalanceDisplay(newBalance);
-        }
+        // Обновляем отображение баланса
+        updateBalanceDisplay(newBalance);
 
         // Показываем уведомление об успешной покупке
-        showNotification(`Вы приобрели "${card.title}"!`, 'success');
-
-        // TODO: Добавить логику сохранения купленной карты в базе данных
-        // и обновления пассивного дохода пользователя
+        showNotification(`Вы успешно приобрели "${card.title}"!`, 'success');
 
     } catch (error) {
-        console.error('Ошибка при покупке карты:', error);
-        showNotification('Произошла ошибка при покупке карты', 'error');
+        console.error('Ошибка при покупке карточки:', error);
+        showNotification('Произошла ошибка при покупке', 'error');
     }
 }
 
-// Инициализация
+// Добавляем инициализацию карточек при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    renderCards();
+    // Добавляем обработчик для переключения на секцию карточек
+    const cardsNavItem = document.querySelector('.nav-item[data-section="cards"]');
+    if (cardsNavItem) {
+        cardsNavItem.addEventListener('click', () => {
+            initializeCardsSection();
+        });
+    }
 }); 
