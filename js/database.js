@@ -115,6 +115,32 @@ class Database {
             return false;
         }
     }
+
+    // Синхронизация локального баланса
+    async syncLocalBalance(userId) {
+        try {
+            const localBalance = parseInt(localStorage.getItem('balance')) || 0;
+            const userData = await this.getUserData(userId);
+            
+            if (userData && userData.balance !== undefined) {
+                // Если баланс в базе данных отличается от локального,
+                // обновляем локальный баланс
+                if (userData.balance !== localBalance) {
+                    localStorage.setItem('balance', userData.balance);
+                    // Обновляем отображение баланса
+                    const balanceElement = document.querySelector('.balance-value');
+                    if (balanceElement) {
+                        balanceElement.textContent = userData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+                    }
+                }
+                return userData.balance;
+            }
+            return localBalance;
+        } catch (error) {
+            console.error('Ошибка при синхронизации баланса:', error);
+            return parseInt(localStorage.getItem('balance')) || 0;
+        }
+    }
 }
 
 // Экспортируем инстанс базы данных
@@ -275,7 +301,7 @@ async function usePromoCode(telegramId, promoCode) {
         }
 
         // Начинаем транзакцию
-        const userData = await getUserData(telegramId);
+        const userData = await this.getUserData(telegramId);
         if (!userData) {
             return { success: false, message: 'Ошибка получения данных пользователя' };
         }
@@ -287,10 +313,10 @@ async function usePromoCode(telegramId, promoCode) {
         // Применяем награду
         if (promoData.reward_type === 'coins') {
             newBalance += promoData.reward_amount;
-            success = await updateUserBalance(telegramId, newBalance);
+            success = await this.updateUserBalance(telegramId, newBalance);
         } else if (promoData.reward_type === 'energy') {
             newEnergy = Math.min(userData.max_energy, userData.energy + promoData.reward_amount);
-            success = await updateUserEnergy(telegramId, newEnergy);
+            success = await this.updateUserEnergy(telegramId, newEnergy);
         }
 
         if (!success) {
@@ -331,37 +357,5 @@ async function usePromoCode(telegramId, promoCode) {
     } catch (error) {
         console.error('Ошибка при использовании промокода:', error);
         return { success: false, message: 'Произошла ошибка при использовании промокода' };
-    }
-}
-
-// Функция для синхронизации локального баланса с базой данных
-async function syncLocalBalance(telegramId) {
-    try {
-        // Получаем локальный баланс из localStorage, если он есть
-        const localBalance = parseInt(localStorage.getItem('balance') || '0');
-        
-        if (localBalance > 0) {
-            console.log('Найден локальный баланс:', localBalance);
-            
-            // Обновляем баланс в базе данных
-            const { error } = await supabaseClient
-                .from('users')
-                .update({ balance: localBalance })
-                .eq('telegram_id', telegramId);
-            
-            if (error) {
-                console.error('Ошибка при синхронизации баланса:', error);
-                return false;
-            }
-            
-            // Очищаем локальное хранилище
-            localStorage.removeItem('balance');
-            console.log('Локальный баланс успешно синхронизирован с базой данных');
-            return true;
-        }
-        return false;
-    } catch (error) {
-        console.error('Ошибка при синхронизации баланса:', error);
-        return false;
     }
 } 

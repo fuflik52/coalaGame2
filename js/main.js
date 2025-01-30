@@ -27,11 +27,6 @@ const NEWS_TEXT = `🎮 Обновление Koala Game 1.0.1
    ✓ Добавлен скролл в разделе Frens
    ✓ Центрирование элементов интерфейса`;
 
-// Система энергии
-let energy = 100;
-const maxEnergy = 100;
-const energyBar = document.getElementById('energyBar');
-
 // Функция для показа уведомлений
 function showNotification(message, type = 'info') {
     if (!notificationShown) {
@@ -193,30 +188,9 @@ function enableAllControls() {
     });
 }
 
-function createCard(data) {
-    return `
-        <div class="card" onclick="tryBuyCard(${data.price})">
-            <img src="${data.image}" alt="${data.title}">
-            <div class="card-content">
-                <h3>${data.title} ${data.isNew ? '<span class="new">NEW</span>' : ''}</h3>
-                <p>${data.description}</p>
-                <div class="card-footer">
-                    <div class="price">
-                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Монеты">
-                        <span class="card-price">${data.price}</span>
-                    </div>
-                    <div class="income">
-                        <span>+${data.income}/час</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
 // Функция для обновления отображения баланса
 async function updateBalanceDisplay(balance) {
-    const balanceElement = document.querySelector('.balance');
+    const balanceElement = document.querySelector('.balance-value');
     if (balanceElement) {
         // Если баланс передан как параметр, используем его
         if (typeof balance === 'number') {
@@ -235,60 +209,3 @@ async function updateBalanceDisplay(balance) {
         }
     }
 }
-
-// Функция для обновления энергии
-function updateEnergy() {
-    energy = Math.min(maxEnergy, energy);
-    energy = Math.max(0, energy);
-    energyBar.style.width = `${energy}%`;
-    
-    // Обновляем текст энергии
-    const energyText = document.getElementById('energyText');
-    if (energyText) {
-        energyText.textContent = `${energy}/${maxEnergy}`;
-    }
-    
-    // Сохраняем текущее значение энергии
-    localStorage.setItem('energy', energy);
-    localStorage.setItem('lastEnergyUpdate', Date.now());
-}
-
-// Функция для восстановления энергии
-function restoreEnergy() {
-    const lastUpdate = parseInt(localStorage.getItem('lastEnergyUpdate')) || Date.now();
-    const currentTime = Date.now();
-    const secondsPassed = Math.floor((currentTime - lastUpdate) / 1000);
-    
-    // Добавляем по 1 единице энергии за каждую прошедшую секунду
-    energy = Math.min(maxEnergy, energy + secondsPassed);
-    updateEnergy();
-}
-
-// Загружаем сохраненное значение энергии при запуске
-energy = parseInt(localStorage.getItem('energy')) || maxEnergy;
-restoreEnergy();
-
-// Обработчик клика для траты энергии
-document.querySelector('.clicker-button').addEventListener('click', function() {
-    if (energy > 0) {
-        energy--;
-        updateEnergy();
-    } else {
-        showNotification('Недостаточно энергии!', 'error');
-    }
-});
-
-// Восстановление энергии каждую секунду
-setInterval(() => {
-    if (energy < maxEnergy) {
-        energy++;
-        updateEnergy();
-    }
-}, 1000);
-
-// Обновляем энергию при возвращении на вкладку
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        restoreEnergy();
-    }
-});
