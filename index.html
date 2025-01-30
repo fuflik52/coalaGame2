@@ -46,16 +46,35 @@
     </div>
 
     <!-- Загрузочный экран -->
-    <div id="loaderScreen" class="loader-screen">
+    <div class="loader-screen" id="loaderScreen">
         <div class="loader-content">
-            <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="loader-logo">
-            <h1>Koala Game Demo</h1>
-            <p class="warning-text">Это демонстрационная версия игры для тестирования улучшений</p>
-            <p class="official-link">Официальная игра доступна здесь: <a href="https://t.me/TapTapKoala_bot">@TapTapKoala_bot</a></p>
-            <div class="loader-bar">
-                <div class="loader-progress"></div>
+            <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="loader-image">
+            <h1 class="loader-title">Koala Game Demo</h1>
+            <p class="loader-subtitle">Это демонстрационная версия игры для тестирования улучшений</p>
+            <a href="https://t.me/TapTapKoala_bot" class="loader-bot-link">Официальная игра доступна здесь: @TapTapKoala_bot</a>
+            
+            <div class="loader-progress">
+                <div class="loader-progress-bar"></div>
             </div>
-            <p class="loading-text">Загрузка...</p>
+            
+            <div class="loader-steps">
+                <div class="loader-step active">
+                    <div class="loader-step-dot"></div>
+                    <span class="loader-step-text">Подключение</span>
+                </div>
+                <div class="loader-step">
+                    <div class="loader-step-dot"></div>
+                    <span class="loader-step-text">Загрузка данных</span>
+                </div>
+                <div class="loader-step">
+                    <div class="loader-step-dot"></div>
+                    <span class="loader-step-text">Инициализация</span>
+                </div>
+                <div class="loader-step">
+                    <div class="loader-step-dot"></div>
+                    <span class="loader-step-text">Готово</span>
+                </div>
+            </div>
         </div>
     </div>
 

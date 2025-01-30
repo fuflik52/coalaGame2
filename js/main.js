@@ -85,27 +85,96 @@ function switchSection(sectionId) {
     });
 }
 
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', () => {
-    const mainContent = document.getElementById('mainContent');
-    const loaderScreen = document.getElementById('loaderScreen');
-    
-    // Удаляем приветственное сообщение, если оно существует
-    const welcomeMessage = document.querySelector('.welcome-message');
-    if (welcomeMessage) {
-        welcomeMessage.remove();
-    }
-    
-    // Показываем основной контент
-    setTimeout(() => {
-        loaderScreen.style.display = 'none';
-        mainContent.style.display = 'block';
-        initializeApp();
-    }, 2000);
+// Функция для управления этапами загрузки
+function updateLoadingStep(step) {
+    const steps = document.querySelectorAll('.loader-step');
+    steps.forEach((s, index) => {
+        if (index <= step) {
+            s.classList.add('active');
+        } else {
+            s.classList.remove('active');
+        }
+    });
+}
 
-    // Добавляем обработчики событий
-    setupEventListeners();
-});
+// Функция инициализации приложения
+async function initializeApp() {
+    try {
+        // Шаг 1: Подключение
+        updateLoadingStep(0);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Проверяем наличие Telegram WebApp
+        const isTelegramWebApp = window.Telegram?.WebApp != null;
+        let userData = null;
+
+        // Шаг 2: Загрузка данных
+        updateLoadingStep(1);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (isTelegramWebApp) {
+            // Если есть Telegram WebApp, используем его данные
+            const telegramId = window.Telegram.WebApp.initDataUnsafe?.user?.id?.toString();
+            if (telegramId) {
+                userData = await window.db.getUserData(telegramId);
+                if (!userData) {
+                    userData = await window.db.createNewUser(telegramId);
+                }
+            }
+        }
+
+        // Если нет данных Telegram или произошла ошибка, используем локальные данные
+        if (!userData) {
+            userData = {
+                balance: parseInt(localStorage.getItem('balance')) || 0,
+                energy: parseInt(localStorage.getItem('energy')) || 100,
+                max_energy: parseInt(localStorage.getItem('maxEnergy')) || 100,
+                username: localStorage.getItem('username') || 'Гость'
+            };
+        }
+
+        // Шаг 3: Инициализация
+        updateLoadingStep(2);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Инициализируем интерфейс
+        updateBalanceDisplay(userData.balance);
+        updateEnergyDisplay(userData.energy, userData.max_energy);
+        
+        // Показываем основной контент
+        const mainContent = document.getElementById('mainContent');
+        mainContent.style.display = 'block';
+        
+        // Активируем домашнюю секцию по умолчанию
+        switchSection('home');
+        
+        // Шаг 4: Готово
+        updateLoadingStep(3);
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Скрываем загрузочный экран
+        const loaderScreen = document.getElementById('loaderScreen');
+        loaderScreen.classList.add('fade-out');
+        setTimeout(() => {
+            loaderScreen.style.display = 'none';
+        }, 500);
+
+        // Инициализируем карточки
+        if (typeof initializeCardsSection === 'function') {
+            initializeCardsSection();
+        }
+
+        // Настраиваем обработчики событий
+        setupEventListeners();
+
+    } catch (error) {
+        console.error('Ошибка при инициализации:', error);
+        showNotification('Произошла ошибка при загрузке приложения', 'error');
+    }
+}
+
+// Запускаем инициализацию при загрузке страницы
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 // Настройка обработчиков событий
 function setupEventListeners() {
@@ -163,21 +232,6 @@ function showNews() {
             document.body.removeChild(newsModal);
         }, 300);
     });
-}
-
-// Функция инициализации приложения
-function initializeApp() {
-    const mainContent = document.getElementById('mainContent');
-    mainContent.style.display = 'block';
-    
-    // Активируем домашнюю секцию по умолчанию
-    switchSection('home');
-    
-    // Обновляем отображение баланса
-    updateBalanceDisplay();
-    
-    // Включаем все кнопки и элементы управления
-    enableAllControls();
 }
 
 // Функция включения всех элементов управления
