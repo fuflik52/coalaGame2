@@ -18,10 +18,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Если пользователь не найден, создаем нового
         if (!userData) {
-            userData = await window.db.createNewUser();
+            const username = window.tg?.initDataUnsafe?.user?.username || 'Пользователь';
+            userData = await window.db.createNewUser(currentTelegramId, username);
             if (!userData) {
                 console.error('Не удалось создать пользователя');
                 return;
+            }
+        } else {
+            // Обновляем имя пользователя, если оно изменилось
+            const username = window.tg?.initDataUnsafe?.user?.username;
+            if (username && username !== userData.username) {
+                await window.db.updateUsername(currentTelegramId, username);
             }
         }
 

@@ -14,6 +14,7 @@ const currentUser = window.tg?.initDataUnsafe?.user || {};
 class Database {
     constructor() {
         this.isLocalMode = true; // Флаг локального режима
+        this.supabase = supabaseClient;
     }
 
     async getUserData(telegramId) {
@@ -27,7 +28,7 @@ class Database {
 
         try {
             // Код для работы с Supabase
-            const { data, error } = await supabaseClient
+            const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
                 .eq('telegram_id', telegramId)
@@ -51,7 +52,7 @@ class Database {
         }
 
         try {
-            const { error } = await supabaseClient
+            const { error } = await this.supabase
                 .from('users')
                 .update({ energy })
                 .eq('telegram_id', telegramId);
@@ -73,7 +74,7 @@ class Database {
         }
 
         try {
-            const { error } = await supabaseClient
+            const { error } = await this.supabase
                 .from('users')
                 .update({ balance })
                 .eq('telegram_id', telegramId);
@@ -117,28 +118,88 @@ class Database {
     }
 
     // Синхронизация локального баланса
-    async syncLocalBalance(userId) {
+    async syncLocalBalance(telegramId) {
         try {
+            const userData = await this.getUserData(telegramId);
+            if (!userData) return false;
+
             const localBalance = parseInt(localStorage.getItem('balance')) || 0;
-            const userData = await this.getUserData(userId);
-            
-            if (userData && userData.balance !== undefined) {
-                // Если баланс в базе данных отличается от локального,
-                // обновляем локальный баланс
-                if (userData.balance !== localBalance) {
-                    localStorage.setItem('balance', userData.balance);
-                    // Обновляем отображение баланса
-                    const balanceElement = document.querySelector('.balance-value');
-                    if (balanceElement) {
-                        balanceElement.textContent = userData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                    }
+            if (localBalance !== userData.balance) {
+                localStorage.setItem('balance', userData.balance);
+                // Обновляем отображение баланса
+                const balanceElement = document.querySelector('.balance-value');
+                if (balanceElement) {
+                    balanceElement.textContent = userData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
                 }
-                return userData.balance;
             }
-            return localBalance;
+            return true;
         } catch (error) {
             console.error('Ошибка при синхронизации баланса:', error);
-            return parseInt(localStorage.getItem('balance')) || 0;
+            return false;
+        }
+    }
+
+    async createNewUser(telegramId, username = 'Пользователь') {
+        try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .insert([
+                    {
+                        telegram_id: telegramId,
+                        username: username,
+                        balance: 0,
+                        energy: 100,
+                        max_energy: 100,
+                        last_energy_update: Date.now(),
+                        current_day: 1,
+                        last_claim_time: 0
+                    }
+                ])
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Ошибка при создании пользователя:', error);
+            return null;
+        }
+    }
+
+    async updateUsername(telegramId, username) {
+        try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .update({ username: username })
+                .eq('telegram_id', telegramId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error('Ошибка при обновлении имени пользователя:', error);
+            return false;
+        }
+    }
+
+    async updateUserRewards(telegramId, newDay, claimTime) {
+        try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .update({
+                    current_day: newDay,
+                    last_claim_time: claimTime
+                })
+                .eq('telegram_id', telegramId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error('Ошибка при обновлении наград:', error);
+            return false;
         }
     }
 }
@@ -188,42 +249,6 @@ async function updateUserRewards(telegramId, currentDay, lastClaimTime) {
     } catch (error) {
         console.error('Ошибка при обновлении наград:', error);
         return false;
-    }
-}
-
-// Функция для создания нового пользователя
-async function createNewUser() {
-    try {
-        if (!currentUser.id) {
-            console.error('Нет данных пользователя Telegram');
-            return null;
-        }
-
-        const userData = {
-            telegram_id: currentUser.id.toString(),
-            username: currentUser.username || 'Пользователь',
-            balance: 0,
-            current_day: 1,
-            last_claim_time: Date.now(),
-            energy: 100,
-            max_energy: 100,
-            last_energy_update: Date.now()
-        };
-
-        const { data, error } = await supabaseClient
-            .from('users')
-            .upsert([userData])
-            .select();
-        
-        if (error) {
-            console.error('Ошибка при создании пользователя:', error);
-            return null;
-        }
-        
-        return data[0];
-    } catch (error) {
-        console.error('Ошибка при создании пользователя:', error);
-        return null;
     }
 }
 
