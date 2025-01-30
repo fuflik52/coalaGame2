@@ -49,9 +49,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateEnergyDisplay(userData.energy, userData.max_energy);
         }
 
-        // Обновляем имя пользователя
-        window.db.updateUsername();
-
         const rewardSection = document.getElementById('rewardSection');
         if (!rewardSection || !document.querySelector('.reward-section.active')) return;
 
