@@ -12,18 +12,18 @@
 
 .cards-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .cards-header h2 {
-    font-size: 24px;
-    margin-bottom: 8px;
+    font-size: 20px;
+    margin-bottom: 4px;
     color: #ffffff;
 }
 
 .cards-header p {
-    color: #888;
-    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
 }
 
 .cards-grid {
@@ -34,12 +34,11 @@
 }
 
 .card-item {
-    background: linear-gradient(180deg, rgba(35, 35, 35, 0.9) 0%, rgba(25, 25, 25, 0.98) 100%);
+    background: rgba(35, 35, 35, 0.95);
     border-radius: 12px;
     overflow: hidden;
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     cursor: pointer;
@@ -52,58 +51,47 @@
 
 .card-image {
     width: 100%;
-    height: 150px;
+    height: 120px;
     object-fit: cover;
 }
 
 .card-content {
-    padding: 12px;
+    padding: 8px;
     position: relative;
-    background: linear-gradient(180deg, rgba(35, 35, 35, 0.3) 0%, rgba(25, 25, 25, 0.9) 100%);
+    background: rgba(25, 25, 25, 0.95);
     flex: 1;
     display: flex;
     flex-direction: column;
 }
 
 .card-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     color: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.new-badge {
-    background: #4CAF50;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 8px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .card-description {
     color: rgba(255, 255, 255, 0.7);
     font-size: 12px;
-    margin-bottom: 12px;
-    line-height: 1.4;
+    margin-bottom: 8px;
+    line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
-    line-clamp: 2;
     -webkit-box-orient: vertical;
-    box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    height: 28px;
 }
 
 .card-stats {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 10px;
+    padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: auto;
 }
@@ -111,50 +99,35 @@
 .card-price {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     color: #4CAF50;
-    font-weight: bold;
+    font-weight: 600;
     font-size: 13px;
 }
 
 .card-price img {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
 }
 
 .card-income {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 13px;
-}
-
-.card-income span {
     color: #4CAF50;
-    font-weight: bold;
+    font-size: 12px;
 }
 
 /* Уникальные градиенты для разных карточек */
 .card-item:nth-child(4n+1) {
-    background: linear-gradient(135deg, rgba(147, 112, 219, 0.4) 0%, rgba(35, 35, 35, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(147, 112, 219, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
 }
 
 .card-item:nth-child(4n+2) {
-    background: linear-gradient(135deg, rgba(210, 180, 140, 0.4) 0%, rgba(35, 35, 35, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(210, 180, 140, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
 }
 
 .card-item:nth-child(4n+3) {
-    background: linear-gradient(135deg, rgba(255, 182, 193, 0.4) 0%, rgba(35, 35, 35, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
 }
 
 .card-item:nth-child(4n+4) {
-    background: linear-gradient(135deg, rgba(135, 206, 235, 0.4) 0%, rgba(35, 35, 35, 0.95) 100%);
-}
-
-@media (max-width: 480px) {
-    .cards-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .card-item {
-        margin-bottom: 8px;
-    }
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
 } 
