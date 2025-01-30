@@ -13,6 +13,7 @@ let clickCount = 0;
 let lastClickTime = 0;
 let clickMultiplier = 1;
 let isClicking = false;
+let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
 function updateEnergy() {
     energy = Math.min(maxEnergy, energy);
@@ -73,12 +74,11 @@ function handleClick(event) {
     }
 
     // Вибрация при клике на мобильных устройствах
-    const isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
-    if (isVibrationEnabled) {
-        if (clickMultiplier >= 2) {
-            vibrate(100); // Длинная вибрация при множителе
-        } else {
-            vibrate(50); // Обычная вибрация
+    if (isVibrationEnabled && checkVibrationSupport()) {
+        try {
+            window.navigator.vibrate(50);
+        } catch (error) {
+            console.log('Вибрация недоступна:', error);
         }
     }
 
@@ -109,16 +109,16 @@ function handleClick(event) {
     const reward = 1 * clickMultiplier;
     const currentBalance = parseInt(document.querySelector('.balance-value').textContent.replace(/\s/g, '')) || 0;
     const newBalance = currentBalance + reward;
-    
+
     // Обновляем отображение баланса
     document.querySelector('.balance-value').textContent = newBalance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    
+
     // Сохраняем в локальное хранилище
     localStorage.setItem('balance', newBalance);
-    
+
     // Показываем анимацию награды
     showRewardAnimation(reward, event);
-    
+
     // Убираем анимацию нажатия
     setTimeout(() => {
         clickerButton.classList.remove('clicked');
@@ -128,6 +128,83 @@ function handleClick(event) {
         isClicking = false;
     }, 150);
 }
+
+function showRewardAnimation(reward, event) {
+    const rewardElement = document.createElement('div');
+    rewardElement.className = 'reward-animation';
+    
+    // Создаем контейнер для текста и иконки
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.gap = '5px';
+    
+    // Добавляем текст
+    const text = document.createElement('span');
+    text.textContent = `+${reward}`;
+    
+    // Добавляем иконку
+    const icon = document.createElement('img');
+    icon.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
+    icon.style.width = '20px';
+    icon.style.height = '20px';
+    icon.style.objectFit = 'contain';
+    
+    // Сначала добавляем текст, потом иконку
+    container.appendChild(text);
+    container.appendChild(icon);
+    rewardElement.appendChild(container);
+    
+    // Позиционируем анимацию относительно клика
+    const x = event.type.includes('touch') ? event.touches[0].clientX : event.clientX;
+    const y = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
+    
+    rewardElement.style.left = `${x}px`;
+    rewardElement.style.top = `${y}px`;
+    
+    document.body.appendChild(rewardElement);
+    
+    // Запускаем анимацию
+    requestAnimationFrame(() => {
+        rewardElement.style.transform = 'translateY(-100px)';
+        rewardElement.style.opacity = '0';
+    });
+    
+    // Удаляем элемент после анимации
+    setTimeout(() => {
+        document.body.removeChild(rewardElement);
+    }, 2000);
+}
+
+// Инициализация обработчиков событий
+function initializeHomeSection() {
+    const clickerButton = document.querySelector('.clicker-button');
+    if (!clickerButton) return;
+    
+    // Добавляем обработчики для мобильных устройств
+    clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+    clickerButton.addEventListener('mousedown', handleClick);
+    
+    // Предотвращаем двойное срабатывание на мобильных
+    clickerButton.addEventListener('click', (e) => e.preventDefault());
+    
+    // Отключаем контекстное меню
+    clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+// Запускаем инициализацию при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    initializeHomeSection();
+    restoreEnergy();
+    
+    // Восстановление энергии каждую секунду
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy++;
+            updateEnergy();
+        }
+    }, 1000);
+});
 
 function updateBalance(amount) {
     balance += amount;
@@ -367,82 +444,4 @@ document.addEventListener('DOMContentLoaded', () => {
             restoreEnergy();
         }
     });
-});
-
-// Инициализация обработчиков событий
-function initializeHomeSection() {
-    const clickSection = document.querySelector('.click-section');
-    if (!clickSection) return;
-    
-    // Добавляем обработчики для мобильных устройств
-    clickSection.addEventListener('touchstart', handleClick, { passive: false });
-    clickSection.addEventListener('mousedown', handleClick);
-    
-    // Предотвращаем двойное срабатывание на мобильных
-    clickSection.addEventListener('click', (e) => e.preventDefault());
-    
-    // Отключаем контекстное меню
-    clickSection.addEventListener('contextmenu', (e) => e.preventDefault());
-}
-
-// Функция анимации награды
-function showRewardAnimation(reward, event) {
-    const rewardElement = document.createElement('div');
-    rewardElement.className = 'reward-animation';
-    
-    // Создаем контейнер для текста и иконки
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.gap = '5px';
-    
-    // Добавляем текст
-    const text = document.createElement('span');
-    text.textContent = `+${reward}`;
-    
-    // Добавляем иконку
-    const icon = document.createElement('img');
-    icon.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
-    icon.style.width = '20px';
-    icon.style.height = '20px';
-    icon.style.objectFit = 'contain';
-    
-    // Сначала добавляем текст, потом иконку
-    container.appendChild(text);
-    container.appendChild(icon);
-    rewardElement.appendChild(container);
-    
-    // Позиционируем анимацию относительно клика
-    const x = event.type.includes('touch') ? event.touches[0].clientX : event.clientX;
-    const y = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
-    
-    rewardElement.style.left = `${x}px`;
-    rewardElement.style.top = `${y}px`;
-    
-    document.body.appendChild(rewardElement);
-    
-    // Запускаем анимацию
-    requestAnimationFrame(() => {
-        rewardElement.style.transform = 'translateY(-100px) scale(1.2)';
-        rewardElement.style.opacity = '0';
-    });
-    
-    // Удаляем элемент после анимации
-    setTimeout(() => {
-        document.body.removeChild(rewardElement);
-    }, 2000);
-}
-
-// Запускаем инициализацию при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    initializeHomeSection();
-    restoreEnergy();
-    
-    // Восстановление энергии каждую секунду
-    setInterval(() => {
-        if (energy < maxEnergy) {
-            energy++;
-            updateEnergy();
-        }
-    }, 1000);
 }); 

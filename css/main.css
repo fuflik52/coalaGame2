@@ -97,29 +97,38 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: all 0.3s;
-    width: 20%;
+    justify-content: center;
+    padding: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-item span {
+    font-size: 12px;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
 }
 
 .nav-item.active {
-    opacity: 1;
+    color: #ffffff;
 }
 
-.nav-item.active img {
-    filter: invert(72%) sepia(41%) saturate(838%) hue-rotate(84deg) brightness(92%) contrast(89%);
+.nav-item.active span {
+    color: #ffffff;
 }
 
 .nav-icon {
     width: 24px;
     height: 24px;
-    transition: filter 0.3s;
+    opacity: 0.7;
+    transition: all 0.3s ease;
 }
 
-.nav-item span {
-    font-size: 12px;
+.nav-item.active .nav-icon {
+    opacity: 1;
 }
 
 /* Стили для уведомлений */
@@ -473,5 +482,38 @@ body {
     to {
         opacity: 0;
         visibility: hidden;
+    }
+}
+
+.new-feature {
+    position: relative;
+}
+
+.new-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: linear-gradient(45deg, #FF4B4B, #FF6B6B);
+    color: #ffffff;
+    font-size: 8px;
+    padding: 2px 4px;
+    border-radius: 8px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(255, 75, 75, 0.3);
+    animation: badgePulse 2s infinite;
+    z-index: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@keyframes badgePulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
     }
 } 
