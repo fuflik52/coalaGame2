@@ -33,30 +33,106 @@ function toggleSetting(settingId) {
     }
 }
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    // Загружаем сохраненные настройки или устанавливаем значения по умолчанию
-    const settings = {
-        'soundEnabled': false,
-        'vibrationEnabled': false,
-        'snowEnabled': true
-    };
+function showNews() {
+    // Создаем модальное окно для новостей, если его еще нет
+    let newsModal = document.querySelector('.news-modal');
+    if (!newsModal) {
+        newsModal = document.createElement('div');
+        newsModal.className = 'news-modal';
+        document.body.appendChild(newsModal);
+    }
 
-    // Устанавливаем начальные значения, если они еще не установлены
-    Object.entries(settings).forEach(([setting, defaultValue]) => {
-        if (localStorage.getItem(setting) === null) {
-            localStorage.setItem(setting, defaultValue);
-        }
+    // Наполняем контентом
+    newsModal.innerHTML = `
+        <div class="news-content">
+            <div class="news-header">
+                <button class="news-close-button">✕</button>
+                <h2 class="news-title">Новости и обновления</h2>
+            </div>
+            <div class="news-version">
+                <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Update">
+                Обновление Koala Game 1.0.1
+            </div>
+            <div class="news-changes">
+                <div class="news-category">
+                    <div class="news-category-title">
+                        <span>⚡ Основные изменения:</span>
+                    </div>
+                    <div class="news-category">
+                        <div class="news-category-title">1. Система покупок:</div>
+                        <div class="news-item">Исправлена проблема с покупкой карточек</div>
+                        <div class="news-item">Улучшено отображение баланса</div>
+                        <div class="news-item">Добавлена защита от случайных покупок</div>
+                    </div>
+                    <div class="news-category">
+                        <div class="news-category-title">2. Ежедневные награды:</div>
+                        <div class="news-item">Добавлены новые награды (250,000 на 6 день)</div>
+                        <div class="news-item">Увеличена награда за 7 день (500,000)</div>
+                        <div class="news-item">Добавлен 8 день с наградой 1,000,000</div>
+                        <div class="news-item">Сокращено время между получением наград до 1 минуты</div>
+                    </div>
+                    <div class="news-category">
+                        <div class="news-category-title">3. Промокоды:</div>
+                        <div class="news-item">Добавлена система промокодов</div>
+                        <div class="news-item">Промокод "bonus" даёт 500,000 монет</div>
+                        <div class="news-item">Добавлена защита от повторного использования</div>
+                    </div>
+                    <div class="news-category">
+                        <div class="news-category-title">4. Интерфейс:</div>
+                        <div class="news-item">Улучшен дизайн настроек</div>
+                        <div class="news-item">Добавлена анимация снега</div>
+                        <div class="news-item">Улучшена анимация кликов</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Показываем модальное окно
+    newsModal.style.display = 'block';
+    requestAnimationFrame(() => {
+        newsModal.style.opacity = '1';
     });
 
-    // Инициализируем переключатели
-    const soundToggle = document.querySelector('.setting-item:nth-child(1) input[type="checkbox"]');
+    // Добавляем обработчик закрытия
+    const closeButton = newsModal.querySelector('.news-close-button');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            newsModal.style.opacity = '0';
+            setTimeout(() => {
+                newsModal.style.display = 'none';
+            }, 300);
+        });
+    }
+
+    // Закрытие при клике вне контента
+    newsModal.addEventListener('click', (e) => {
+        if (e.target === newsModal) {
+            newsModal.style.opacity = '0';
+            setTimeout(() => {
+                newsModal.style.display = 'none';
+            }, 300);
+        }
+    });
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    // Получаем элементы
+    const settingsButton = document.getElementById('settingsButton');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeButton = settingsModal?.querySelector('.close-button');
+    const newsButton = settingsModal?.querySelector('.news-button');
     const vibrationToggle = document.querySelector('.setting-item:nth-child(2) input[type="checkbox"]');
     const snowToggle = document.querySelector('.setting-item:nth-child(3) input[type="checkbox"]');
 
-    if (soundToggle) {
-        soundToggle.checked = localStorage.getItem('soundEnabled') === 'true';
+    // Проверяем наличие элементов
+    if (!settingsButton || !settingsModal) {
+        console.error('Не найдены элементы настроек');
+        return;
     }
+
+    // Инициализация состояния переключателей
     if (vibrationToggle) {
         vibrationToggle.checked = localStorage.getItem('vibrationEnabled') === 'true';
     }
@@ -68,36 +144,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Обработчики изменений
-    soundToggle?.addEventListener('change', (e) => {
-        localStorage.setItem('soundEnabled', e.target.checked);
+    // Открытие модального окна
+    settingsButton.addEventListener('click', () => {
+        console.log('Клик по кнопке настроек');
+        settingsModal.style.display = 'block';
+        requestAnimationFrame(() => {
+            settingsModal.style.opacity = '1';
+        });
     });
 
-    vibrationToggle?.addEventListener('change', (e) => {
-        localStorage.setItem('vibrationEnabled', e.target.checked);
-    });
+    // Закрытие модального окна
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            settingsModal.style.opacity = '0';
+            setTimeout(() => {
+                settingsModal.style.display = 'none';
+            }, 300);
+        });
+    }
 
-    snowToggle?.addEventListener('change', (e) => {
-        if (window.snowAnimation) {
-            if (e.target.checked) {
-                window.snowAnimation.start();
-            } else {
-                window.snowAnimation.stop();
-            }
+    // Закрытие при клике вне модального окна
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.style.opacity = '0';
+            setTimeout(() => {
+                settingsModal.style.display = 'none';
+            }, 300);
         }
     });
 
-    const settingsButton = document.getElementById('settingsButton');
-    const settingsModal = document.getElementById('settingsModal');
-    const closeButton = settingsModal.querySelector('.close-button');
-    const newsButton = settingsModal.querySelector('.news-button');
-    const settingsList = settingsModal.querySelector('.settings-list');
-    
-    // Изначально скрываем модальное окно
-    if (settingsModal) {
-        settingsModal.style.display = 'none';
+    // Обработчики переключателей
+    if (vibrationToggle) {
+        vibrationToggle.addEventListener('change', (e) => {
+            localStorage.setItem('vibrationEnabled', e.target.checked);
+        });
     }
-    
+
+    if (snowToggle) {
+        snowToggle.addEventListener('change', (e) => {
+            localStorage.setItem('snowEnabled', e.target.checked);
+            if (window.snowAnimation) {
+                if (e.target.checked) {
+                    window.snowAnimation.start();
+                } else {
+                    window.snowAnimation.stop();
+                }
+            }
+        });
+    }
+
+    // Обработчик кнопки новостей
+    if (newsButton) {
+        newsButton.addEventListener('click', () => {
+            showNews();
+        });
+    }
+
     // Добавляем форму промокода в настройки
     const promoSection = document.createElement('div');
     promoSection.className = 'setting-item promo-section';
@@ -107,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button onclick="usePromoCode()">Активировать</button>
         </div>
     `;
-    settingsList.appendChild(promoSection);
+    settingsModal.querySelector('.settings-list').appendChild(promoSection);
 
     // Добавляем стили для формы промокода
     const style = document.createElement('style');
@@ -145,25 +247,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     `;
     document.head.appendChild(style);
-
-    settingsButton.addEventListener('click', () => {
-        settingsModal.style.display = 'block';
-    });
-
-    closeButton.addEventListener('click', () => {
-        settingsModal.style.display = 'none';
-    });
-
-    newsButton.addEventListener('click', () => {
-        showNews();
-    });
-
-    // Закрытие модального окна при клике вне его
-    window.addEventListener('click', (event) => {
-        if (event.target === settingsModal) {
-            settingsModal.style.display = 'none';
-        }
-    });
 
     // Добавляем функцию использования промокода
     async function usePromoCode() {

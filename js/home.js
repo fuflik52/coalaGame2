@@ -45,9 +45,14 @@ function checkVibrationSupport() {
 
 // Функция для вибрации
 function vibrate(duration = 50) {
-    const isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
-    if (isVibrationEnabled && checkVibrationSupport()) {
-        navigator.vibrate(duration);
+    try {
+        const isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
+        if (isVibrationEnabled && checkVibrationSupport()) {
+            navigator.vibrate(duration);
+            console.log('Вибрация активирована:', duration, 'мс');
+        }
+    } catch (error) {
+        console.error('Ошибка при вибрации:', error);
     }
 }
 
@@ -68,7 +73,14 @@ function handleClick(event) {
     }
 
     // Вибрация при клике на мобильных устройствах
-    vibrate();
+    const isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
+    if (isVibrationEnabled) {
+        if (clickMultiplier >= 2) {
+            vibrate(100); // Длинная вибрация при множителе
+        } else {
+            vibrate(50); // Обычная вибрация
+        }
+    }
 
     // Уменьшаем энергию
     energy--;
@@ -86,8 +98,6 @@ function handleClick(event) {
         clickCount++;
         if (clickCount >= 10) {
             clickMultiplier = 2;
-            // Более длинная вибрация при достижении множителя
-            vibrate(100);
         }
     } else {
         clickCount = 1;
@@ -379,7 +389,28 @@ function initializeHomeSection() {
 function showRewardAnimation(reward, event) {
     const rewardElement = document.createElement('div');
     rewardElement.className = 'reward-animation';
-    rewardElement.textContent = `+${reward}`;
+    
+    // Создаем контейнер для текста и иконки
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.gap = '5px';
+    
+    // Добавляем текст
+    const text = document.createElement('span');
+    text.textContent = `+${reward}`;
+    
+    // Добавляем иконку
+    const icon = document.createElement('img');
+    icon.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
+    icon.style.width = '20px';
+    icon.style.height = '20px';
+    icon.style.objectFit = 'contain';
+    
+    // Сначала добавляем текст, потом иконку
+    container.appendChild(text);
+    container.appendChild(icon);
+    rewardElement.appendChild(container);
     
     // Позиционируем анимацию относительно клика
     const x = event.type.includes('touch') ? event.touches[0].clientX : event.clientX;
@@ -392,14 +423,14 @@ function showRewardAnimation(reward, event) {
     
     // Запускаем анимацию
     requestAnimationFrame(() => {
-        rewardElement.style.transform = 'translateY(-50px) scale(1.2)';
+        rewardElement.style.transform = 'translateY(-100px) scale(1.2)';
         rewardElement.style.opacity = '0';
     });
     
     // Удаляем элемент после анимации
     setTimeout(() => {
         document.body.removeChild(rewardElement);
-    }, 1000);
+    }, 2000);
 }
 
 // Запускаем инициализацию при загрузке страницы

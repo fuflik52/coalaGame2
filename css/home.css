@@ -107,12 +107,13 @@
 
 .reward-animation {
     position: fixed;
-    color: #4CAF50;
-    font-size: 20px;
+    color: #ffffff;
+    font-size: 24px;
     font-weight: bold;
     pointer-events: none;
-    transition: all 1s ease;
+    transition: all 2s ease;
     z-index: 1000;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes gradientShift {
