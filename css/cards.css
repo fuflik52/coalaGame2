@@ -35,10 +35,9 @@
 
 .card-item {
     background: rgba(35, 35, 35, 0.95);
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
     cursor: pointer;
@@ -58,7 +57,7 @@
 .card-content {
     padding: 8px;
     position: relative;
-    background: rgba(25, 25, 25, 0.95);
+    background: rgba(0, 0, 0, 0.2);
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -115,19 +114,35 @@
     font-size: 12px;
 }
 
-/* Уникальные градиенты для разных карточек */
-.card-item:nth-child(4n+1) {
-    background: linear-gradient(135deg, rgba(147, 112, 219, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
+/* Уникальные фоны для карточек */
+.card-item:nth-child(1) {
+    background: linear-gradient(180deg, rgba(139, 69, 69, 0.95) 0%, rgba(76, 38, 38, 0.98) 100%);
 }
 
-.card-item:nth-child(4n+2) {
-    background: linear-gradient(135deg, rgba(210, 180, 140, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
+.card-item:nth-child(2) {
+    background: linear-gradient(180deg, rgba(21, 71, 52, 0.95) 0%, rgba(15, 48, 35, 0.98) 100%);
 }
 
-.card-item:nth-child(4n+3) {
-    background: linear-gradient(135deg, rgba(255, 182, 193, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
+.card-item:nth-child(3) {
+    background: linear-gradient(180deg, rgba(195, 177, 145, 0.95) 0%, rgba(139, 126, 103, 0.98) 100%);
 }
 
-.card-item:nth-child(4n+4) {
-    background: linear-gradient(135deg, rgba(135, 206, 235, 0.2) 0%, rgba(35, 35, 35, 0.95) 100%);
+.card-item:nth-child(4) {
+    background: linear-gradient(180deg, rgba(65, 105, 145, 0.95) 0%, rgba(45, 73, 101, 0.98) 100%);
+}
+
+.card-item:nth-child(5) {
+    background: linear-gradient(180deg, rgba(147, 112, 219, 0.95) 0%, rgba(104, 79, 155, 0.98) 100%);
+}
+
+.card-item:nth-child(6) {
+    background: linear-gradient(180deg, rgba(195, 177, 145, 0.95) 0%, rgba(139, 126, 103, 0.98) 100%);
+}
+
+.card-item:nth-child(7) {
+    background: linear-gradient(180deg, rgba(70, 130, 180, 0.95) 0%, rgba(49, 91, 126, 0.98) 100%);
+}
+
+.card-item:nth-child(8) {
+    background: linear-gradient(180deg, rgba(34, 139, 34, 0.95) 0%, rgba(24, 97, 24, 0.98) 100%);
 } 
