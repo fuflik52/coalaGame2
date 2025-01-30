@@ -92,35 +92,6 @@
     -webkit-user-drag: none;
 }
 
-.progress-bar {
-    width: 100%;
-    height: 30px;
-    background-color: #2d2d2d;
-    border-radius: 15px;
-    overflow: hidden;
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    max-width: 380px;
-    z-index: 99;
-}
-
-.progress {
-    height: 100%;
-    background: linear-gradient(90deg, #4CAF50, #45a049);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
-    border-radius: 15px;
-    transition: width 0.3s ease;
-    min-width: 80px;
-}
-
 @keyframes gradientShift {
     0% {
         background: linear-gradient(145deg, #4CAF50, #45a049);
