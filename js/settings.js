@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     promoSection.innerHTML = `
         <div class="promo-form">
             <input type="text" id="promoCodeInput" placeholder="Введите промокод" maxlength="20">
-            <button onclick="usePromoCode()">Активировать</button>
+            <button onclick="usePromoCode()">Прменить</button>
         </div>
     `;
     settingsModal.querySelector('.settings-list').appendChild(promoSection);

@@ -1,11 +1,10 @@
 class GameSettings {
     constructor() {
         this.settings = {
-            canHighlight: false, // Возможность выделения текста
-            darkMode: false,     // Темный режим
-            showHints: true      // Показывать подсказки
+            sound: false,      // Звук (в разработке)
+            vibration: false,  // Вибрация
+            snow: false        // Снег
         };
-        
         this.initializeSettings();
     }
 
@@ -13,94 +12,93 @@ class GameSettings {
         // Загружаем сохраненные настройки
         const savedSettings = localStorage.getItem('gameSettings');
         if (savedSettings) {
-            this.settings = JSON.parse(savedSettings);
+            this.settings = { ...this.settings, ...JSON.parse(savedSettings) };
         }
 
         // Добавляем настройки в интерфейс
         const settingsContainer = document.querySelector('.settings-list');
         if (settingsContainer) {
-            settingsContainer.insertAdjacentHTML('beforeend', `
+            settingsContainer.innerHTML = `
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-name">Выделение текста</span>
+                        <span class="setting-name">Звук</span>
+                        <span class="setting-badge">в разработке</span>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="highlightToggle" ${this.settings.canHighlight ? 'checked' : ''}>
+                        <input type="checkbox" id="soundToggle" ${this.settings.sound ? 'checked' : ''} disabled>
                         <span class="slider"></span>
                     </label>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-name">Темный режим</span>
+                        <span class="setting-name">Вибрация</span>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="darkModeToggle" ${this.settings.darkMode ? 'checked' : ''}>
+                        <input type="checkbox" id="vibrationToggle" ${this.settings.vibration ? 'checked' : ''}>
                         <span class="slider"></span>
                     </label>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info">
-                        <span class="setting-name">Подсказки</span>
+                        <span class="setting-name">Снег</span>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="hintsToggle" ${this.settings.showHints ? 'checked' : ''}>
+                        <input type="checkbox" id="snowToggle" ${this.settings.snow ? 'checked' : ''}>
                         <span class="slider"></span>
                     </label>
                 </div>
-            `);
-        }
+            `;
 
-        // Добавляем обработчики событий
-        this.addEventListeners();
-        this.applySettings();
+            // Добавляем обработчики событий
+            this.addEventListeners();
+        }
     }
 
     addEventListeners() {
-        const highlightToggle = document.getElementById('highlightToggle');
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const hintsToggle = document.getElementById('hintsToggle');
-
-        if (highlightToggle) {
-            highlightToggle.addEventListener('change', (e) => {
-                this.settings.canHighlight = e.target.checked;
+        // Обработчик для вибрации
+        const vibrationToggle = document.getElementById('vibrationToggle');
+        if (vibrationToggle) {
+            vibrationToggle.addEventListener('change', (e) => {
+                this.settings.vibration = e.target.checked;
                 this.saveSettings();
-                this.applySettings();
+                if (e.target.checked && window.navigator.vibrate) {
+                    window.navigator.vibrate(50); // Тестовая вибрация
+                }
             });
         }
 
-        if (darkModeToggle) {
-            darkModeToggle.addEventListener('change', (e) => {
-                this.settings.darkMode = e.target.checked;
+        // Обработчик для снега
+        const snowToggle = document.getElementById('snowToggle');
+        if (snowToggle) {
+            snowToggle.addEventListener('change', (e) => {
+                this.settings.snow = e.target.checked;
                 this.saveSettings();
-                this.applySettings();
-            });
-        }
-
-        if (hintsToggle) {
-            hintsToggle.addEventListener('change', (e) => {
-                this.settings.showHints = e.target.checked;
-                this.saveSettings();
-                this.applySettings();
+                this.toggleSnow(e.target.checked);
             });
         }
     }
 
-    applySettings() {
-        // Применяем настройку выделения текста
-        document.body.style.userSelect = this.settings.canHighlight ? 'text' : 'none';
-        
-        // Применяем темный режим
-        if (this.settings.darkMode) {
-            document.body.classList.add('dark-mode');
-        } else {
-            document.body.classList.remove('dark-mode');
+    toggleSnow(enabled) {
+        const snowContainer = document.querySelector('.snow-container');
+        if (enabled) {
+            if (!snowContainer) {
+                const container = document.createElement('div');
+                container.className = 'snow-container';
+                document.body.appendChild(container);
+                
+                // Создаем снежинки
+                for (let i = 0; i < 50; i++) {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.style.left = `${Math.random() * 100}%`;
+                    snowflake.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                    snowflake.style.animationDelay = `${Math.random() * 2}s`;
+                    container.appendChild(snowflake);
+                }
+            }
+        } else if (snowContainer) {
+            snowContainer.remove();
         }
-
-        // Применяем настройку подсказок
-        const hints = document.querySelectorAll('.game-hint');
-        hints.forEach(hint => {
-            hint.style.display = this.settings.showHints ? 'block' : 'none';
-        });
     }
 
     saveSettings() {

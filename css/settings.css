@@ -58,8 +58,8 @@
     align-items: center;
     padding: 15px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    transition: all 0.3s ease;
+    border-radius: 12px;
+    margin-bottom: 10px;
 }
 
 .setting-item:hover {
@@ -70,13 +70,20 @@
 .setting-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .setting-name {
+    color: #fff;
     font-size: 16px;
-    color: #ffffff;
-    font-weight: 500;
+}
+
+.setting-badge {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 12px;
 }
 
 .dev-badge {
@@ -96,8 +103,8 @@
 .switch {
     position: relative;
     display: inline-block;
-    width: 52px;
-    height: 28px;
+    width: 50px;
+    height: 26px;
 }
 
 .switch input {
@@ -123,19 +130,15 @@
     content: "";
     height: 20px;
     width: 20px;
-    left: 4px;
-    bottom: 4px;
+    left: 3px;
+    bottom: 3px;
     background-color: white;
     transition: .4s;
     border-radius: 50%;
 }
 
 input:checked + .slider {
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-}
-
-input:checked + .slider:before {
-    transform: translateX(24px);
+    background-color: #4CAF50;
 }
 
 input:disabled + .slider {
@@ -143,23 +146,33 @@ input:disabled + .slider {
     cursor: not-allowed;
 }
 
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
 /* Стили для промокода */
 .promo-section {
     margin-top: 25px;
     padding-top: 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    flex-wrap: nowrap;
+    min-width: 0;
 }
 
 .promo-input {
-    width: 100%;
+    flex: 1;
     padding: 12px 15px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     color: white;
     font-size: 16px;
-    margin-bottom: 10px;
     transition: all 0.3s ease;
+    min-width: 0;
+    width: 0; /* Важно для корректного сжатия */
 }
 
 .promo-input:focus {
@@ -169,8 +182,8 @@ input:disabled + .slider {
 }
 
 .promo-button {
-    width: 100%;
-    padding: 12px;
+    white-space: nowrap;
+    padding: 12px 15px; /* Уменьшил горизонтальные отступы */
     background: linear-gradient(45deg, #4CAF50, #45a049);
     border: none;
     border-radius: 12px;
@@ -179,6 +192,8 @@ input:disabled + .slider {
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
+    flex-shrink: 0;
+    max-width: 40%; /* Ограничиваем максимальную ширину кнопки */
 }
 
 .promo-button:hover {
@@ -391,5 +406,40 @@ input:disabled + .slider {
     }
     100% {
         opacity: 0.8;
+    }
+}
+
+/* Стили для снега */
+.snow-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.snowflake {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: snowfall linear infinite;
+}
+
+@keyframes snowfall {
+    0% {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+    20% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(100vh);
+        opacity: 0;
     }
 } 

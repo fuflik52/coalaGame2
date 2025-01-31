@@ -6,6 +6,11 @@ class NumberGame {
         this.moves = 0;
         this.attempts = 5;
         this.isPlaying = false;
+        this.energy = 100;
+        this.maxEnergy = 100;
+        this.lastEnergyUpdate = Date.now();
+        this.energyRegenerationInterval = null;
+        this.balance = 0;
         
         // Получаем элементы DOM
         this.gameBoard = document.querySelector('.game-board');
@@ -13,6 +18,9 @@ class NumberGame {
         this.scoreDisplay = document.querySelector('.score-value');
         this.movesDisplay = document.querySelector('.moves-value');
         this.attemptsDisplay = document.querySelector('.attempts-counter');
+        this.energyText = document.querySelector('#energyText span');
+        this.energyBar = document.querySelector('#energyBar');
+        this.balanceDisplay = document.querySelector('.balance-value');
         
         // Создаем модальное окно подтверждения
         this.createConfirmModal();
@@ -21,6 +29,9 @@ class NumberGame {
             console.error('Не найдены необходимые элементы игры');
             return;
         }
+        
+        // Добавляем обновление имени пользователя
+        this.updateUsername();
         
         this.initializeGame();
     }
@@ -129,25 +140,50 @@ class NumberGame {
                     earnedElement.textContent = earned + 1000;
                 }
 
-                // Удаляем класс active у game-board
+                // Завершаем игру и возвращаемся к основному контенту
+                this.isPlaying = false;
+                
+                // Показываем основной контент
+                const gameSection = document.querySelector('.game-section');
+                if (gameSection) {
+                    gameSection.classList.add('active');
+                    gameSection.classList.remove('game-active');
+                }
+
+                // Скрываем игровое поле
                 if (this.gameBoard) {
                     this.gameBoard.classList.remove('active');
                 }
 
-                // Закрываем модальное окно
-                const modal = button.closest('.game-modal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-
-                // Создаем серпантин
+                // Создаем эффект серпантина
                 this.createConfetti();
+
+                // Через 2 секунды закрываем модальное окно
+                setTimeout(() => {
+                    modal.classList.remove('active');
+                    setTimeout(() => {
+                        modal.remove();
+                    }, 300);
+                }, 2000);
             });
         });
+
+        // Добавляем обработчик для click-section
+        const clickSection = document.querySelector('.click-section');
+        if (clickSection) {
+            clickSection.addEventListener('click', () => this.handleClick());
+        }
+
+        // Загружаем сохраненные данные
+        this.loadUserData();
 
         // Добавляем в window для доступа из консоли
         window.showGameOver = () => this.showGameOverModal();
         window.showLoseModal = () => this.showGameOverModal();
+        window.game = this; // Добавляем ссылку на экземпляр игры
+
+        // Запускаем регенерацию энергии
+        this.startEnergyRegeneration();
     }
 
     initializeTouchEvents() {
@@ -427,7 +463,7 @@ class NumberGame {
 
     checkGameStatus() {
         // Проверяем достижение 15000 очков
-        if (this.score >= 15000) {
+        if (this.score >= 1) {
             // Проверяем, выполнено ли уже задание
             const missionContainer = document.querySelector('.mission-container');
             if (!missionContainer || !missionContainer.classList.contains('mission-completed')) {
@@ -529,14 +565,88 @@ class NumberGame {
             </div>
         `;
         document.body.appendChild(modal);
-        modal.style.display = 'flex';
+        
+        // Добавляем класс active после добавления в DOM
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 100);
 
-        // Создаем эффект серпантина
-        this.createConfetti();
+        // Добавляем обработчики для кнопок
+        const claimButton = modal.querySelector('.claim-reward');
+        const exitButton = modal.querySelector('.exit-button');
+
+        claimButton.addEventListener('click', () => {
+            if (window.addMoney) {
+                window.addMoney(1000);
+            }
+            claimButton.disabled = true;
+            claimButton.textContent = 'Награда получена';
+            
+            // Обновляем статистику
+            const completedElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
+            if (completedElement) {
+                const completed = parseInt(completedElement.textContent) || 0;
+                completedElement.textContent = completed + 1;
+            }
+            
+            const earnedElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
+            if (earnedElement) {
+                const earned = parseInt(earnedElement.textContent) || 0;
+                earnedElement.textContent = earned + 1000;
+            }
+
+            // Завершаем игру и возвращаемся к основному контенту
+            this.isPlaying = false;
+            
+            // Показываем основной контент
+            const gameSection = document.querySelector('.game-section');
+            if (gameSection) {
+                gameSection.classList.add('active');
+                gameSection.classList.remove('game-active');
+            }
+
+            // Скрываем игровое поле
+            if (this.gameBoard) {
+                this.gameBoard.classList.remove('active');
+            }
+
+            // Создаем эффект серпантина
+            this.createConfetti();
+
+            // Через 2 секунды закрываем модальное окно
+            setTimeout(() => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }, 2000);
+        });
+
+        exitButton.addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+            
+            // Завершаем игру и возвращаемся к основному контенту
+            this.isPlaying = false;
+            
+            // Показываем основной контент
+            const gameSection = document.querySelector('.game-section');
+            if (gameSection) {
+                gameSection.classList.add('active');
+                gameSection.classList.remove('game-active');
+            }
+
+            // Скрываем игровое поле
+            if (this.gameBoard) {
+                this.gameBoard.classList.remove('active');
+            }
+        });
     }
 
     async showGameOverModal() {
-        // Сохраняем результат в базе данных даже при проигрыше
+        // Сохраняем результат в базе данных
         if (window.tg?.initDataUnsafe?.user?.id) {
             await window.db.updateUserGameScore(window.tg.initDataUnsafe.user.id, this.score);
         }
@@ -563,7 +673,34 @@ class NumberGame {
             </div>
         `;
         document.body.appendChild(modal);
-        modal.style.display = 'flex';
+        
+        // Добавляем класс active после добавления в DOM
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 100);
+
+        // Добавляем обработчики для кнопок
+        const startButton = modal.querySelector('.start-button');
+        const exitButton = modal.querySelector('.exit-button');
+
+        startButton.addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+            this.startGame();
+        });
+
+        exitButton.addEventListener('click', () => {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+            this.isPlaying = false;
+            if (this.gameBoard) {
+                this.gameBoard.classList.remove('active');
+            }
+        });
     }
 
     createConfetti() {
@@ -595,6 +732,130 @@ class NumberGame {
             confetti.addEventListener('animationend', () => {
                 confetti.remove();
             });
+        }
+    }
+
+    // Метод для запуска регенерации энергии
+    startEnergyRegeneration() {
+        // Очищаем предыдущий интервал, если он был
+        if (this.energyRegenerationInterval) {
+            clearInterval(this.energyRegenerationInterval);
+        }
+
+        this.energyRegenerationInterval = setInterval(() => {
+            if (this.energy < this.maxEnergy) {
+                this.energy = Math.min(this.maxEnergy, this.energy + 1);
+                this.updateEnergyDisplay();
+                this.saveUserData();
+            }
+        }, 1000);
+    }
+
+    // Добавляем метод обновления имени пользователя
+    updateUsername() {
+        const usernameElement = document.querySelector('.username');
+        if (usernameElement && window.tg?.initDataUnsafe?.user) {
+            const user = window.tg.initDataUnsafe.user;
+            const username = user.username || user.first_name || 'Пользователь';
+            usernameElement.textContent = username;
+        }
+    }
+
+    // Обновляем метод загрузки данных пользователя
+    async loadUserData() {
+        try {
+            if (window.tg?.initDataUnsafe?.user?.id) {
+                const userData = await window.db.getUserData(window.tg.initDataUnsafe.user.id);
+                if (userData) {
+                    // Получаем сохраненные данные
+                    const lastUpdate = userData.lastEnergyUpdate || Date.now();
+                    this.energy = userData.energy || this.maxEnergy;
+                    this.balance = userData.balance || 0;
+
+                    // Обновляем имя пользователя
+                    this.updateUsername();
+
+                    // Вычисляем, сколько энергии должно было восстановиться
+                    const secondsPassed = Math.floor((Date.now() - lastUpdate) / 1000);
+                    const energyToAdd = Math.min(secondsPassed, this.maxEnergy - this.energy);
+                    this.energy = Math.min(this.maxEnergy, this.energy + energyToAdd);
+
+                    // Обновляем время последнего обновления
+                    this.lastEnergyUpdate = Date.now();
+                    
+                    // Обновляем отображение
+                    this.updateEnergyDisplay();
+                    this.updateBalanceDisplay();
+                    
+                    // Запускаем регенерацию энергии
+                    this.startEnergyRegeneration();
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке данных пользователя:', error);
+        }
+    }
+
+    // Обновляем метод сохранения данных пользователя
+    async saveUserData() {
+        try {
+            if (window.tg?.initDataUnsafe?.user?.id) {
+                await window.db.updateUserData(window.tg.initDataUnsafe.user.id, {
+                    energy: this.energy,
+                    balance: this.balance,
+                    lastEnergyUpdate: Date.now()
+                });
+            }
+        } catch (error) {
+            console.error('Ошибка при сохранении данных пользователя:', error);
+        }
+    }
+
+    // Обновляем метод обработки клика
+    handleClick() {
+        if (this.energy > 0) {
+            // Уменьшаем энергию
+            this.energy--;
+            // Увеличиваем баланс
+            this.balance++;
+            
+            // Обновляем отображение
+            this.updateEnergyDisplay();
+            this.updateBalanceDisplay();
+            
+            // Сохраняем данные
+            this.saveUserData();
+            
+            // Добавляем анимацию клика
+            const clickerButton = document.querySelector('.clicker-button');
+            if (clickerButton) {
+                clickerButton.classList.add('clicked');
+                setTimeout(() => {
+                    clickerButton.classList.remove('clicked');
+                }, 100);
+            }
+
+            // Запускаем регенерацию энергии, если она еще не запущена
+            if (!this.energyRegenerationInterval) {
+                this.startEnergyRegeneration();
+            }
+        }
+    }
+
+    // Метод обновления отображения энергии
+    updateEnergyDisplay() {
+        if (this.energyText) {
+            this.energyText.textContent = `${this.energy}/100`;
+        }
+        if (this.energyBar) {
+            this.energyBar.style.width = `${this.energy}%`;
+        }
+    }
+
+    // Метод обновления отображения баланса
+    updateBalanceDisplay() {
+        if (this.balanceDisplay) {
+            this.balanceDisplay.textContent = this.balance;
         }
     }
 }
