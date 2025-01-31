@@ -36,7 +36,7 @@ class Database {
                 .from('users')
                 .select('*')
                 .eq('telegram_id', telegramId)
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
             return data;
@@ -223,6 +223,34 @@ class Database {
             return false;
         } catch (error) {
             console.error('Ошибка при восстановлении энергии:', error);
+            return false;
+        }
+    }
+
+    async syncLocalBalance(telegramId) {
+        try {
+            const userData = await this.getUserData(telegramId);
+            if (!userData) return false;
+
+            // Обновляем локальный баланс
+            const localBalance = parseInt(localStorage.getItem('balance')) || 0;
+            const newBalance = userData.balance + localBalance;
+
+            if (localBalance > 0) {
+                const { error } = await this.supabase
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('telegram_id', telegramId);
+
+                if (error) throw error;
+
+                // Очищаем локальный баланс после синхронизации
+                localStorage.setItem('balance', '0');
+            }
+
+            return true;
+        } catch (error) {
+            console.error('Ошибка при синхронизации баланса:', error);
             return false;
         }
     }
