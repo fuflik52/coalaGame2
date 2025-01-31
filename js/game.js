@@ -1,762 +1,653 @@
-// Базовые функции для работы с балансом
-function getBalance() {
-    return parseInt(localStorage.getItem('balance') || '0');
-}
-
-function setBalance(amount) {
-    localStorage.setItem('balance', amount.toString());
-    updateBalanceDisplay();
-}
-
-function updateBalanceDisplay() {
-    const balanceElement = document.querySelector('.balance-value');
-    if (balanceElement) {
-        balanceElement.textContent = getBalance();
-    }
-}
-
-// Функция добавления денег к балансу
-function addMoney(amount) {
-    const currentBalance = getBalance();
-    const newBalance = currentBalance + parseInt(amount);
-    setBalance(newBalance);
-    console.log('Added money:', { amount, currentBalance, newBalance });
-}
-
-// Функция вычитания денег из баланса
-function removeMoney(amount) {
-    const currentBalance = getBalance();
-    const newBalance = currentBalance - parseInt(amount);
-    setBalance(newBalance);
-    console.log('Removed money:', { amount, currentBalance, newBalance });
-}
-
-// Проверка возможности покупки
-function canAfford(price) {
-    const balance = getBalance();
-    const cost = parseInt(price);
-    const canBuy = balance >= cost;
-    console.log('Check afford:', { balance, cost, canBuy });
-    return canBuy;
-}
-
-// Покупка улучшения
-function buyUpgrade(price) {
-    const cost = parseInt(price);
-    const balance = getBalance();
-    
-    console.log('Try buy:', { balance, cost });
-    
-    if (balance >= cost) {
-        removeMoney(cost);
-        console.log('Purchase success');
-        return true;
-    }
-    
-    console.log('Purchase failed');
-    showNotification('Недостаточно монет', 'error');
-    return false;
-}
-
-// Функция для отображения цены в карточках
-function displayCardPrice(price) {
-    return parseInt(price);
-}
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    updateBalanceDisplay();
-    
-    // Обновляем отображение цен в карточках
-    const priceElements = document.querySelectorAll('.card-price');
-    priceElements.forEach(element => {
-        const price = element.textContent;
-        element.textContent = displayCardPrice(price);
-    });
-});
-
-class Game2048 {
+class NumberGame {
     constructor() {
-        this.grid = Array(4).fill().map(() => Array(4).fill(0));
+        this.grid = Array(5).fill().map(() => Array(5).fill(0));
+        this.size = 5;
         this.score = 0;
-        this.displayScore = 0;
-        this.gameActive = false;
-        this.comboCount = 0;
-        this.lastMergeTime = Date.now();
-        this.missions = [
-            { score: 500, completed: false, reward: 100 },
-            { score: 1000, completed: false, reward: 200 },
-            { score: 1500, completed: false, reward: 300 }
-        ];
-        this.hasInteracted = false;
-        this.attempts = parseInt(localStorage.getItem('game2048_attempts')) || 5;
-        this.init();
-        this.initModals();
-    }
-
-    init() {
-        this.loadGame();
-        this.setupEventListeners();
-        this.updateMissions();
-        this.renderMissions();
-        this.updateAttemptsDisplay();
-    }
-
-    initModals() {
-        // Создаем модальное окно для проигрыша
-        const gameOverModal = document.createElement('div');
-        gameOverModal.className = 'game-over-modal';
-        gameOverModal.innerHTML = `
-            <div class="game-over-title">Игра окончена!</div>
-            <div class="game-over-score">Счёт: <span class="final-score">0</span></div>
-            <div class="attempts-left">Осталось попыток: <span class="attempts-count">5</span></div>
-            <div class="game-over-buttons">
-                <button class="retry-button">Начать заново</button>
-                <button class="exit-button">Выйти</button>
-            </div>
-        `;
-        document.body.appendChild(gameOverModal);
-
+        this.moves = 0;
+        this.attempts = 5;
+        this.isPlaying = false;
+        
+        // Получаем элементы DOM
+        this.gameBoard = document.querySelector('.game-board');
+        this.gridContainer = document.querySelector('.grid-container');
+        this.scoreDisplay = document.querySelector('.score-value');
+        this.movesDisplay = document.querySelector('.moves-value');
+        this.attemptsDisplay = document.querySelector('.attempts-counter');
+        
         // Создаем модальное окно подтверждения
-        const confirmRetryModal = document.createElement('div');
-        confirmRetryModal.className = 'confirm-retry-modal';
-        confirmRetryModal.innerHTML = `
-            <div class="confirm-retry-text">
-                Начать игру заново? <br>
-                Будет потрачена 1 попытка
-            </div>
-            <div class="confirm-retry-buttons">
-                <button class="confirm-button">Подтвердить</button>
-                <button class="cancel-button">Отмена</button>
+        this.createConfirmModal();
+        
+        if (!this.gameBoard || !this.gridContainer) {
+            console.error('Не найдены необходимые элементы игры');
+            return;
+        }
+        
+        this.initializeGame();
+    }
+
+    createConfirmModal() {
+        const modal = document.createElement('div');
+        modal.className = 'confirm-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-title">Подтвердите действие</div>
+                <div class="modal-text">Вы уверены, что хотите выйти? Прогресс игры не будет сохранен.</div>
+                <div class="modal-buttons">
+                    <button class="cancel-button">Отмена</button>
+                    <button class="confirm-button">OK</button>
+                </div>
             </div>
         `;
-        document.body.appendChild(confirmRetryModal);
+        document.body.appendChild(modal);
 
         // Добавляем обработчики для кнопок
-        const retryButton = gameOverModal.querySelector('.retry-button');
-        const confirmButton = confirmRetryModal.querySelector('.confirm-button');
-        const cancelButton = confirmRetryModal.querySelector('.cancel-button');
-
-        retryButton.addEventListener('click', () => {
-            if (this.attempts > 0) {
-                confirmRetryModal.classList.add('active');
-            }
-        });
+        const confirmButton = modal.querySelector('.confirm-button');
+        const cancelButton = modal.querySelector('.cancel-button');
+        const modalContent = modal.querySelector('.modal-content');
 
         confirmButton.addEventListener('click', () => {
-            this.attempts--;
-            localStorage.setItem('game2048_attempts', this.attempts);
-            this.resetGame();
-            confirmRetryModal.classList.remove('active');
-            gameOverModal.classList.remove('active');
+            modal.style.display = 'none';
+            this.confirmExit();
         });
 
         cancelButton.addEventListener('click', () => {
-            confirmRetryModal.classList.remove('active');
+            modal.style.display = 'none';
         });
 
-        gameOverModal.querySelector('.exit-button').addEventListener('click', () => {
-            this.exitGame();
-            gameOverModal.classList.remove('active');
+        // Закрытие по клику вне модального окна
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
         });
+
+        this.confirmModal = modal;
     }
 
-    loadGame() {
-        const savedState = localStorage.getItem('game2048State');
-        if (savedState) {
-            try {
-                const state = JSON.parse(savedState);
-                if (state.grid && state.score !== undefined) {
-                    this.grid = state.grid;
-                    this.score = state.score;
-                    this.displayScore = state.score;
-                    this.missions = state.missions || this.missions;
-                } else {
-                    this.resetGame();
-                }
-            } catch (e) {
-                console.error('Error loading game state:', e);
-                this.resetGame();
+    initializeGame() {
+        // Создаем сетку
+        this.gridContainer.innerHTML = '';
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.setAttribute('data-row', i);
+                cell.setAttribute('data-col', j);
+                this.gridContainer.appendChild(cell);
             }
         }
-    }
 
-    saveGame() {
-        const state = {
-            grid: this.grid,
-            score: this.score,
-            missions: this.missions,
-            attempts: this.attempts
-        };
-        localStorage.setItem('game2048State', JSON.stringify(state));
-        localStorage.setItem('game2048_attempts', this.attempts);
-    }
+        // Добавляем обработчики событий
+        document.addEventListener('keydown', this.handleKeyPress.bind(this));
+        this.initializeTouchEvents();
 
-    setupEventListeners() {
-        // Добавляем обработчик для активации вибрации при любом взаимодействии
-        const activateInteraction = () => {
-            if (!this.hasInteracted) {
-                this.hasInteracted = true;
-                document.body.classList.add('user-interacted');
-            }
-        };
-
-        document.addEventListener('click', activateInteraction, { once: true });
-        document.addEventListener('touchstart', activateInteraction, { once: true });
-        document.addEventListener('keydown', activateInteraction, { once: true });
-
-        // Кнопка старта игры
-        const startButton = document.querySelector('.game-start');
-        if (startButton) {
-            startButton.addEventListener('click', () => {
-                document.querySelector('.rules-modal').classList.add('active');
-                activateInteraction();
-            });
-        }
-
-        // Кнопка в правилах для начала игры
-        const startGameButton = document.querySelector('.start-game-button');
-        if (startGameButton) {
-            startGameButton.addEventListener('click', () => {
-                this.startGame();
-            });
-        }
-
-        // Кнопка выхода
+        // Добавляем обработчики для кнопок
+        const startButtons = document.querySelectorAll('.start-button');
         const exitButtons = document.querySelectorAll('.exit-button');
+        const claimButtons = document.querySelectorAll('.claim-reward');
+        
+        startButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (!this.isPlaying) {
+                    const modal = button.closest('.game-modal');
+                    if (modal) {
+                        modal.style.display = 'none';
+                    }
+                    this.startGame();
+                }
+            });
+        });
+        
         exitButtons.forEach(button => {
             button.addEventListener('click', () => {
-                this.exitGame();
-                document.querySelector('.game-over-modal')?.classList.remove('active');
-                document.querySelector('.confirm-retry-modal')?.classList.remove('active');
-            });
-        });
-
-        // Блокировка навигации во время игры
-        const navItems = document.querySelectorAll('.nav-item');
-        const bottomNav = document.querySelector('.bottom-nav');
-        
-        const blockNavigation = (e) => {
-            if (this.gameActive) {
-                e.preventDefault();
-                e.stopPropagation();
-                showNotification('Сначала завершите текущую игру', 'warning');
-                return false;
-            }
-        };
-
-        // Блокируем клики по навигации
-        navItems.forEach(item => {
-            item.addEventListener('click', blockNavigation, true);
-        });
-
-        // Блокируем свайпы для навигации
-        if (bottomNav) {
-            bottomNav.addEventListener('touchstart', blockNavigation, true);
-            bottomNav.addEventListener('touchmove', blockNavigation, true);
-            bottomNav.addEventListener('touchend', blockNavigation, true);
-        }
-
-        // Кнопка перезапуска
-        const restartButton = document.querySelector('.restart-button');
-        if (restartButton) {
-            restartButton.addEventListener('click', () => {
-                if (this.attempts > 0) {
-                    const confirmModal = document.querySelector('.confirm-retry-modal');
-                    if (confirmModal) confirmModal.classList.add('active');
-                } else {
-                    showNotification('У вас закончились попытки', 'error');
+                const modal = button.closest('.game-modal');
+                if (modal) {
+                    modal.style.display = 'none';
                 }
+                this.exitGame();
             });
-        }
-
-        // Кнопки в модальном окне подтверждения
-        const confirmButton = document.querySelector('.confirm-button');
-        const cancelButton = document.querySelector('.cancel-button');
-        const confirmModal = document.querySelector('.confirm-retry-modal');
-
-        if (confirmButton && cancelButton && confirmModal) {
-            confirmButton.addEventListener('click', () => {
-                this.attempts--;
-                localStorage.setItem('game2048_attempts', this.attempts);
-                this.resetGame();
-                confirmModal.classList.remove('active');
-                document.querySelector('.game-over-modal')?.classList.remove('active');
-                this.updateAttemptsDisplay();
-            });
-
-            cancelButton.addEventListener('click', () => {
-                confirmModal.classList.remove('active');
-            });
-        }
-
-        // Обработка клавиатуры
-        document.addEventListener('keydown', (e) => {
-            if (!this.gameActive) return;
-            
-            switch(e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    this.move('up');
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    this.move('down');
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    this.move('left');
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    this.move('right');
-                    break;
-            }
         });
 
-        // Обработка свайпов
+        claimButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (window.addMoney) {
+                    window.addMoney(1000);
+                }
+                button.disabled = true;
+                button.textContent = 'Награда получена';
+                
+                // Обновляем статистику
+                const completedElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
+                if (completedElement) {
+                    const completed = parseInt(completedElement.textContent) || 0;
+                    completedElement.textContent = completed + 1;
+                }
+                
+                const earnedElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
+                if (earnedElement) {
+                    const earned = parseInt(earnedElement.textContent) || 0;
+                    earnedElement.textContent = earned + 1000;
+                }
+
+                // Удаляем класс active у game-board
+                if (this.gameBoard) {
+                    this.gameBoard.classList.remove('active');
+                }
+
+                // Закрываем модальное окно
+                const modal = button.closest('.game-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+
+                // Создаем серпантин
+                this.createConfetti();
+            });
+        });
+
+        // Добавляем в window для доступа из консоли
+        window.showGameOver = () => this.showGameOverModal();
+        window.showLoseModal = () => this.showGameOverModal();
+    }
+
+    initializeTouchEvents() {
         let touchStartX = 0;
         let touchStartY = 0;
 
-        document.addEventListener('touchstart', (e) => {
-            if (!this.gameActive) return;
+        this.gameBoard.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        }, { passive: true });
+        });
 
-        document.addEventListener('touchend', (e) => {
-            if (!this.gameActive) return;
-
+        this.gameBoard.addEventListener('touchend', (e) => {
+            if (!this.isPlaying) return;
+            
             const touchEndX = e.changedTouches[0].clientX;
             const touchEndY = e.changedTouches[0].clientY;
             
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
             
-            const minSwipeDistance = 30; // Минимальное расстояние для свайпа
-            
-            if (Math.abs(deltaX) < minSwipeDistance && Math.abs(deltaY) < minSwipeDistance) {
-                return; // Игнорируем короткие свайпы
-            }
+            const minSwipeDistance = 50;
             
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                if (deltaX > 0) this.move('right');
-                else this.move('left');
+                if (Math.abs(deltaX) > minSwipeDistance) {
+                    if (deltaX > 0) {
+                        this.move('right');
+                    } else {
+                        this.move('left');
+                    }
+                }
             } else {
-                if (deltaY > 0) this.move('down');
-                else this.move('up');
+                if (Math.abs(deltaY) > minSwipeDistance) {
+                    if (deltaY > 0) {
+                        this.move('down');
+                    } else {
+                        this.move('up');
+                    }
+                }
             }
-        }, { passive: true });
+        });
     }
 
-    tryVibrate() {
-        if (this.hasInteracted && 'vibrate' in navigator) {
-            try {
-                navigator.vibrate(50);
-            } catch (e) {
-                console.log('Vibration failed:', e);
-            }
+    handleKeyPress(event) {
+        if (!this.isPlaying) return;
+
+        switch(event.key) {
+            case 'ArrowUp':
+                event.preventDefault();
+                this.move('up');
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                this.move('down');
+                break;
+            case 'ArrowLeft':
+                event.preventDefault();
+                this.move('left');
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                this.move('right');
+                break;
         }
     }
 
     startGame() {
-        this.showCountdown().then(() => {
-            this.gameActive = true;
-            document.querySelector('.rules-modal').classList.remove('active');
-            document.querySelector('.game-board').classList.add('active');
-            document.querySelector('.game-section').classList.add('game-active');
-            if (this.grid.every(row => row.every(cell => cell === 0))) {
-                this.addNewTile();
-                this.addNewTile();
-            }
-            this.updateBoard();
-            this.updateAttemptsDisplay();
-        });
-    }
+        // Проверяем, выполнено ли задание
+        const missionContainer = document.querySelector('.mission-container');
+        if (missionContainer && missionContainer.classList.contains('mission-completed')) {
+            this.attempts = Infinity; // Бесконечные попытки после выполнения
+        } else if (this.attempts <= 0) {
+            alert('У вас закончились попыток!');
+            return;
+        }
 
-    showCountdown() {
-        return new Promise((resolve) => {
-            const numbers = [3, 2, 1];
-            let index = 0;
-
-            const countdownElement = document.createElement('div');
-            countdownElement.className = 'countdown';
-            document.body.appendChild(countdownElement);
-
-            const showNumber = () => {
-                if (index < numbers.length) {
-                    countdownElement.textContent = numbers[index];
-                    index++;
-                    setTimeout(showNumber, 1000);
-                } else {
-                    countdownElement.remove();
-                    resolve();
-                }
-            };
-
-            showNumber();
-        });
+        this.isPlaying = true;
+        this.score = 0;
+        this.moves = 0;
+        this.grid = Array(5).fill().map(() => Array(5).fill(0));
+        
+        // Показываем игровое поле и скрываем остальные элементы
+        const gameSection = document.querySelector('.game-section');
+        if (gameSection) {
+            gameSection.classList.add('game-active');
+        }
+        if (this.gameBoard) {
+            this.gameBoard.classList.add('active');
+        }
+        
+        // Добавляем начальные плитки
+        this.addNewTile();
+        this.addNewTile();
+        
+        // Обновляем счетчики только если задание не выполнено
+        if (!missionContainer || !missionContainer.classList.contains('mission-completed')) {
+            this.attempts--;
+        }
+        this.updateDisplay();
+        
+        // Управляем видимостью кнопок
+        const startButton = document.querySelector('.start-button');
+        if (startButton) {
+            startButton.style.display = 'none';
+        }
     }
 
     exitGame() {
-        this.gameActive = false;
-        this.saveGame();
+        // Если игра активна, показываем модальное окно подтверждения
+        if (this.isPlaying) {
+            this.confirmModal.style.display = 'flex';
+            return;
+        }
+        this.confirmExit();
+    }
+
+    confirmExit() {
+        // Обновляем лучший счет перед выходом
+        this.updateBestScore();
         
-        // Удаляем классы активности
-        const gameBoard = document.querySelector('.game-board');
+        this.isPlaying = false;
+        
+        // Показываем все элементы и скрываем игровое поле
         const gameSection = document.querySelector('.game-section');
-        if (gameBoard) gameBoard.classList.remove('active');
-        if (gameSection) gameSection.classList.remove('game-active');
+        if (gameSection) {
+            gameSection.classList.remove('game-active');
+        }
+        if (this.gameBoard) {
+            this.gameBoard.classList.remove('active');
+        }
         
-        // Показываем нижнюю навигацию
-        const bottomNav = document.querySelector('.bottom-nav');
-        if (bottomNav) bottomNav.style.display = '';
+        // Очищаем сетку
+        this.grid = Array(5).fill().map(() => Array(5).fill(0));
         
-        // Переключаемся на домашнюю секцию
-        const sections = document.querySelectorAll('.content-section');
-        sections.forEach(section => section.style.display = 'none');
-        document.querySelector('#homeSection').style.display = 'block';
+        // Управляем видимостью кнопок
+        const startButton = document.querySelector('.start-button');
+        if (startButton) {
+            // Если задание выполнено, показываем кнопку "Играть"
+            const missionContainer = document.querySelector('.mission-container');
+            if (missionContainer && missionContainer.classList.contains('mission-completed')) {
+                startButton.textContent = 'Играть';
+                startButton.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+            } else {
+                startButton.textContent = 'Начать попытку';
+            }
+            startButton.style.display = 'block';
+        }
         
-        // Обновляем активный элемент навигации
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => item.classList.remove('active'));
-        document.querySelector('.nav-item[data-section="home"]').classList.add('active');
-        
-        this.renderMissions();
-        this.updateBoard();
+        this.updateDisplay();
     }
 
     addNewTile() {
         const emptyCells = [];
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
                 if (this.grid[i][j] === 0) {
                     emptyCells.push({x: i, y: j});
                 }
             }
         }
+
         if (emptyCells.length > 0) {
-            const {x, y} = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-            this.grid[x][y] = Math.random() < 0.9 ? 2 : 4;
+            const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            this.grid[randomCell.x][randomCell.y] = Math.random() < 0.9 ? 2 : 4;
+            const cell = document.querySelector(`[data-row="${randomCell.x}"][data-col="${randomCell.y}"]`);
+            cell.classList.add('new');
+            setTimeout(() => cell.classList.remove('new'), 200);
         }
     }
 
     move(direction) {
-        if (!this.gameActive) return;
+        if (!this.isPlaying) return;
 
-        const oldGrid = JSON.stringify(this.grid);
-        const oldScore = this.score;
-        const mergedCells = new Set();
+        const previousGrid = JSON.stringify(this.grid);
         
         switch(direction) {
             case 'up':
-                this.moveUp(mergedCells);
+                this.moveVertical(true);
                 break;
             case 'down':
-                this.moveDown(mergedCells);
+                this.moveVertical(false);
                 break;
             case 'left':
-                this.moveLeft(mergedCells);
+                this.moveHorizontal(true);
                 break;
             case 'right':
-                this.moveRight(mergedCells);
+                this.moveHorizontal(false);
                 break;
         }
 
-        if (oldGrid !== JSON.stringify(this.grid)) {
+        if (previousGrid !== JSON.stringify(this.grid)) {
+            this.moves++;
             this.addNewTile();
-            
-            if (oldScore !== this.score) {
-                this.tryVibrate();
-
-                const cells = document.querySelectorAll('.grid-cell[data-value]');
-                cells.forEach((cell, index) => {
-                    if (mergedCells.has(index)) {
-                        cell.classList.add('merging');
-                        cell.addEventListener('animationend', () => {
-                            cell.classList.remove('merging');
-                        }, { once: true });
-                    }
-                });
-
-                const currentTime = Date.now();
-                if (currentTime - this.lastMergeTime < 1000) {
-                    this.comboCount++;
-                    if (this.comboCount > 1) {
-                        this.showCombo(Math.floor((this.score - oldScore) / 2.5));
-                    }
-                } else {
-                    this.comboCount = 1;
-                }
-                this.lastMergeTime = currentTime;
-            }
-            
-            this.updateScore(Math.floor(this.score / 2.5));
-            this.updateMissions();
-            this.saveGame();
-            this.updateBoard();
-
-            if (this.checkGameOver()) {
-                this.gameActive = false;
-                this.showGameOver();
-            }
+            this.updateDisplay();
+            this.checkGameStatus();
         }
     }
 
-    moveLeft(mergedCells) {
-        for (let i = 0; i < 4; i++) {
-            let row = this.grid[i].filter(x => x !== 0);
+    moveHorizontal(toLeft) {
+        for (let i = 0; i < this.size; i++) {
+            let row = this.grid[i].filter(cell => cell !== 0);
+            
+            // Объединяем одинаковые числа
             for (let j = 0; j < row.length - 1; j++) {
                 if (row[j] === row[j + 1]) {
                     row[j] *= 2;
-                    this.score += Math.floor(row[j] / 2.5);
+                    this.score += row[j];
                     row.splice(j + 1, 1);
-                    mergedCells.add(i * 4 + j);
-                    mergedCells.add(i * 4 + j + 1);
                 }
             }
-            while (row.length < 4) row.push(0);
+            
+            // Добавляем нули до нужной длины
+            while (row.length < this.size) {
+                toLeft ? row.push(0) : row.unshift(0);
+            }
+            
             this.grid[i] = row;
         }
     }
 
-    moveRight(mergedCells) {
-        for (let i = 0; i < 4; i++) {
-            let row = this.grid[i].filter(x => x !== 0);
-            for (let j = row.length - 1; j > 0; j--) {
-                if (row[j] === row[j - 1]) {
-                    row[j] *= 2;
-                    this.score += Math.floor(row[j] / 2.5);
-                    row.splice(j - 1, 1);
-                    j--;
-                    mergedCells.add(i * 4 + j);
-                    mergedCells.add(i * 4 + j - 1);
-                }
+    moveVertical(toTop) {
+        for (let j = 0; j < this.size; j++) {
+            let column = [];
+            for (let i = 0; i < this.size; i++) {
+                column.push(this.grid[i][j]);
             }
-            while (row.length < 4) row.unshift(0);
-            this.grid[i] = row;
-        }
-    }
-
-    moveUp(mergedCells) {
-        for (let j = 0; j < 4; j++) {
-            let column = this.grid.map(row => row[j]).filter(x => x !== 0);
+            
+            column = column.filter(cell => cell !== 0);
+            
+            // Объединяем одинаковые числа
             for (let i = 0; i < column.length - 1; i++) {
                 if (column[i] === column[i + 1]) {
                     column[i] *= 2;
-                    this.score += Math.floor(column[i] / 2.5);
+                    this.score += column[i];
                     column.splice(i + 1, 1);
-                    mergedCells.add(i * 4 + j);
-                    mergedCells.add((i + 1) * 4 + j);
                 }
             }
-            while (column.length < 4) column.push(0);
-            for (let i = 0; i < 4; i++) {
+            
+            // Добавляем нули до нужной длины
+            while (column.length < this.size) {
+                toTop ? column.push(0) : column.unshift(0);
+            }
+            
+            // Обновляем сетку
+            for (let i = 0; i < this.size; i++) {
                 this.grid[i][j] = column[i];
             }
         }
     }
 
-    moveDown(mergedCells) {
-        for (let j = 0; j < 4; j++) {
-            let column = this.grid.map(row => row[j]).filter(x => x !== 0);
-            for (let i = column.length - 1; i > 0; i--) {
-                if (column[i] === column[i - 1]) {
-                    column[i] *= 2;
-                    this.score += Math.floor(column[i] / 2.5);
-                    column.splice(i - 1, 1);
-                    i--;
-                    mergedCells.add(i * 4 + j);
-                    mergedCells.add((i - 1) * 4 + j);
-                }
-            }
-            while (column.length < 4) column.unshift(0);
-            for (let i = 0; i < 4; i++) {
-                this.grid[i][j] = column[i];
-            }
-        }
-    }
-
-    updateBoard() {
-        const boardGrid = document.querySelector('.board-grid');
-        if (!boardGrid) return;
-
-        boardGrid.innerHTML = '';
-        
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell';
-                const value = this.grid[i][j];
-                if (value !== 0) {
-                    cell.textContent = value;
+    updateDisplay() {
+        // Обновляем отображение плиток
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                const cell = document.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                if (cell) {
+                    const value = this.grid[i][j];
+                    cell.textContent = value || '';
                     cell.setAttribute('data-value', value);
                 }
-                boardGrid.appendChild(cell);
             }
         }
 
-        // Обновляем все элементы со счетом
-        const scoreElements = document.querySelectorAll('.game-score');
-        scoreElements.forEach(element => {
-            element.textContent = `Счёт: ${this.displayScore}`;
-        });
-    }
-
-    updateMissions() {
-        let rewardAdded = false;
-        this.missions.forEach(mission => {
-            if (!mission.completed && this.score >= mission.score) {
-                mission.completed = true;
-                const currentBalance = parseInt(localStorage.getItem('balance')) || 0;
-                const newBalance = currentBalance + mission.reward;
-                localStorage.setItem('balance', newBalance.toString());
-                rewardAdded = true;
-                
-                // Обновляем отображение баланса, если есть функция
-                if (typeof updateBalanceDisplay === 'function') {
-                    updateBalanceDisplay();
-                }
-                
-                showNotification(`Миссия выполнена! +${mission.reward} монет`, 'success');
-            }
-        });
-        if (rewardAdded) {
-            // Дополнительно вызываем обновление баланса
-            document.dispatchEvent(new CustomEvent('balanceUpdated'));
+        // Обновляем счет и ходы
+        if (this.scoreDisplay) {
+            this.scoreDisplay.textContent = this.score;
         }
-        this.renderMissions();
-    }
-
-    renderMissions() {
-        const missionsContainer = document.querySelector('.game-missions');
-        missionsContainer.innerHTML = '';
-
-        this.missions.forEach(mission => {
-            const missionCard = document.createElement('div');
-            missionCard.className = `mission-card ${mission.completed ? 'completed' : ''}`;
-            
-            missionCard.innerHTML = `
-                <div class="mission-info">
-                    <div class="mission-title">Набрать ${mission.score} очков</div>
-                    <div class="mission-progress">${Math.min(this.score, mission.score)}/${mission.score}</div>
-                </div>
-                <div class="mission-reward">
-                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Reward" style="width: 20px; height: 20px;">
-                    ${mission.reward}
-                </div>
-            `;
-            
-            missionsContainer.appendChild(missionCard);
-        });
-    }
-
-    showCombo(value) {
-        const comboElement = document.createElement('div');
-        comboElement.className = 'combo-notification';
-        comboElement.textContent = `КОМБО x${this.comboCount}! +${value}`;
-        document.body.appendChild(comboElement);
+        if (this.movesDisplay) {
+            this.movesDisplay.textContent = this.moves;
+        }
         
-        setTimeout(() => {
-            comboElement.remove();
-        }, 800);
+        // Обновляем счетчик попыток только если задание не выполнено
+        const missionContainer = document.querySelector('.mission-container');
+        if (this.attemptsDisplay && (!missionContainer || !missionContainer.classList.contains('mission-completed'))) {
+            this.attemptsDisplay.textContent = `Осталось попыток: ${this.attempts}`;
+        }
     }
 
-    updateScore(newScore) {
-        const diff = newScore - this.displayScore;
-        if (diff <= 0) {
-            this.displayScore = newScore;
-            this.updateScoreDisplay();
+    checkGameStatus() {
+        // Проверяем достижение 15000 очков
+        if (this.score >= 15000) {
+            // Проверяем, выполнено ли уже задание
+            const missionContainer = document.querySelector('.mission-container');
+            if (!missionContainer || !missionContainer.classList.contains('mission-completed')) {
+                this.showVictoryModal();
+                // Отмечаем задание как выполненное
+                if (missionContainer) {
+                    missionContainer.classList.add('mission-completed');
+                    const attemptsCounter = missionContainer.querySelector('.attempts-counter');
+                    if (attemptsCounter) {
+                        const missionStatus = document.createElement('div');
+                        missionStatus.className = 'mission-status';
+                        missionStatus.textContent = 'Выполнено';
+                        attemptsCounter.parentNode.replaceChild(missionStatus, attemptsCounter);
+                    }
+                }
+            }
             return;
         }
 
-        const step = Math.max(1, Math.floor(diff / 10));
-        const animate = () => {
-            if (this.displayScore < newScore) {
-                this.displayScore = Math.min(newScore, this.displayScore + step);
-                this.updateScoreDisplay();
-                requestAnimationFrame(animate);
-            }
-        };
-        animate();
-    }
-
-    updateScoreDisplay() {
-        const scoreElements = document.querySelectorAll('.game-score');
-        scoreElements.forEach(element => {
-            element.textContent = `Счёт: ${this.displayScore}`;
-            element.classList.remove('score-change');
-            void element.offsetWidth; // Форсируем перерисовку
-            element.classList.add('score-change');
-        });
-    }
-
-    updateAttemptsDisplay() {
-        const attemptsCounter = document.querySelector('.attempts-counter');
-        if (attemptsCounter) {
-            attemptsCounter.textContent = `Попыток: ${this.attempts}`;
+        // Проверяем возможность ходов
+        if (!this.hasValidMoves()) {
+            this.updateBestScore();
+            this.showGameOverModal();
         }
     }
 
-    resetGame() {
-        this.grid = Array(4).fill().map(() => Array(4).fill(0));
-        this.score = 0;
-        this.displayScore = 0;
-        this.gameActive = true;
-        this.comboCount = 0;
-        this.addNewTile();
-        this.addNewTile();
-        this.updateBoard();
-        this.updateAttemptsDisplay();
+    updateBestScore() {
+        const bestScoreElement = document.querySelector('.stat-card:nth-child(1) .stat-value');
+        if (bestScoreElement) {
+            const bestScore = parseInt(bestScoreElement.textContent) || 0;
+            if (this.score > bestScore) {
+                bestScoreElement.textContent = this.score;
+            }
+        }
     }
 
-    checkGameOver() {
+    hasValidMoves() {
         // Проверяем наличие пустых ячеек
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
-                if (this.grid[i][j] === 0) return false;
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
+                if (this.grid[i][j] === 0) return true;
             }
         }
 
         // Проверяем возможность объединения по горизонтали
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 3; j++) {
-                if (this.grid[i][j] === this.grid[i][j + 1]) return false;
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size - 1; j++) {
+                if (this.grid[i][j] === this.grid[i][j + 1]) return true;
             }
         }
 
         // Проверяем возможность объединения по вертикали
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < 4; j++) {
-                if (this.grid[i][j] === this.grid[i + 1][j]) return false;
+        for (let i = 0; i < this.size - 1; i++) {
+            for (let j = 0; j < this.size; j++) {
+                if (this.grid[i][j] === this.grid[i + 1][j]) return true;
             }
         }
 
-        return true;
+        return false;
     }
 
-    showGameOver() {
-        const gameOverModal = document.querySelector('.game-over-modal');
-        const finalScoreElement = gameOverModal.querySelector('.final-score');
-        const attemptsElement = gameOverModal.querySelector('.attempts-count');
-        const retryButton = gameOverModal.querySelector('.retry-button');
+    showVictoryModal() {
+        this.isPlaying = false;
+        // Обновляем лучший счет при победе
+        this.updateBestScore();
 
-        finalScoreElement.textContent = this.score;
-        attemptsElement.textContent = this.attempts;
-
-        if (this.attempts <= 0) {
-            retryButton.disabled = true;
-            retryButton.textContent = 'Попытки закончились';
-        } else {
-            retryButton.disabled = false;
-            retryButton.textContent = 'Начать заново';
+        const gameSection = document.querySelector('.game-section');
+        if (gameSection) {
+            gameSection.classList.remove('game-active');
+        }
+        // Убираем класс active у игрового поля
+        if (this.gameBoard) {
+            this.gameBoard.classList.remove('active');
         }
 
-        gameOverModal.classList.add('active');
+        const victoryModal = document.querySelector('.game-modal.victory-modal');
+        if (victoryModal) {
+            victoryModal.style.display = 'flex';
+            const content = victoryModal.querySelector('.modal-content');
+            content.innerHTML = `
+                <div class="modal-title">Победа!</div>
+                <div class="modal-text">Поздравляем! Вы успешно выполнили задание!</div>
+                <div class="reward-text">
+                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="монеты">
+                    +1000 монет
+                </div>
+                <div class="modal-buttons">
+                    <button class="control-button claim-reward">Получить награду</button>
+                </div>
+            `;
+
+            // Добавляем обработчик для кнопки награды
+            const claimButton = content.querySelector('.claim-reward');
+            if (claimButton) {
+                claimButton.addEventListener('click', () => {
+                    // Обновляем баланс (прибавляем, а не заменяем)
+                    if (window.addMoney) {
+                        window.addMoney(1000);
+                    }
+                    const balanceElement = document.querySelector('.balance-value');
+                    if (balanceElement) {
+                        const currentBalance = parseInt(balanceElement.textContent) || 0;
+                        balanceElement.textContent = (currentBalance + 1000).toString();
+                    }
+
+                    // Обновляем статистику
+                    const completedElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
+                    if (completedElement) {
+                        const completed = parseInt(completedElement.textContent) || 0;
+                        completedElement.textContent = (completed + 1).toString();
+                    }
+                    
+                    const earnedElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
+                    if (earnedElement) {
+                        const earned = parseInt(earnedElement.textContent) || 0;
+                        earnedElement.textContent = (earned + 1000).toString();
+                    }
+
+                    // Отключаем кнопку и меняем текст
+                    claimButton.disabled = true;
+                    claimButton.textContent = 'Награда получена';
+
+                    // Закрываем модальное окно
+                    victoryModal.style.display = 'none';
+
+                    // Создаем серпантин
+                    this.createConfetti();
+                });
+            }
+        }
+
+        // Отмечаем задание как выполненное и обновляем кнопку
+        const missionContainer = document.querySelector('.mission-container');
+        if (missionContainer) {
+            missionContainer.classList.add('mission-completed');
+            const attemptsCounter = missionContainer.querySelector('.attempts-counter');
+            if (attemptsCounter) {
+                const missionStatus = document.createElement('div');
+                missionStatus.className = 'mission-status';
+                missionStatus.textContent = 'Выполнено';
+                attemptsCounter.parentNode.replaceChild(missionStatus, attemptsCounter);
+            }
+        }
+
+        // Обновляем кнопку на главном экране и делаем её видимой
+        const startButton = document.querySelector('.start-button');
+        if (startButton) {
+            startButton.textContent = 'Играть';
+            startButton.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+            startButton.style.pointerEvents = 'auto';
+            startButton.style.display = 'block';
+        }
+    }
+
+    showGameOverModal() {
+        this.isPlaying = false;
+        // Обновляем лучший счет при проигрыше
+        this.updateBestScore();
+
+        const gameSection = document.querySelector('.game-section');
+        if (gameSection) {
+            gameSection.classList.remove('game-active');
+        }
+        const gameOverModal = document.querySelector('.game-modal.game-over-modal');
+        if (gameOverModal) {
+            gameOverModal.style.display = 'flex';
+            const content = gameOverModal.querySelector('.modal-content');
+            content.innerHTML = `
+                <div class="modal-title">Игра окончена 😢</div>
+                <div class="modal-text">К сожалению, не удалось выполнить задание. Осталось попыток: ${this.attempts}</div>
+                <div class="modal-buttons">
+                    <button class="control-button retry-button">ПОПРОБОВАТЬ СНОВА</button>
+                </div>
+            `;
+
+            // Добавляем обработчик для кнопки "Попробовать снова"
+            const retryButton = content.querySelector('.retry-button');
+            if (retryButton) {
+                retryButton.addEventListener('click', () => {
+                    gameOverModal.style.display = 'none';
+                    this.startGame();
+                });
+            }
+        }
+    }
+
+    createConfetti() {
+        const confettiCount = 100;
+        const container = document.querySelector('.game-section');
+        
+        for (let i = 0; i < confettiCount; i++) {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            
+            // Случайный цвет
+            const colors = ['#4CAF50', '#FFC107', '#2196F3', '#E91E63', '#9C27B0'];
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Случайная начальная позиция
+            confetti.style.left = Math.random() * 100 + '%';
+            
+            // Случайный размер
+            const size = Math.random() * 10 + 5;
+            confetti.style.width = size + 'px';
+            confetti.style.height = size + 'px';
+            
+            // Случайная задержка
+            confetti.style.animationDelay = Math.random() * 3 + 's';
+            
+            container.appendChild(confetti);
+            
+            // Удаляем конфетти после анимации
+            confetti.addEventListener('animationend', () => {
+                confetti.remove();
+            });
+        }
     }
 }
 
-// Инициализация игры при загрузке страницы
+// Инициализация игры
 document.addEventListener('DOMContentLoaded', () => {
-    const game = new Game2048();
+    const game = new NumberGame();
 }); 

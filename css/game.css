@@ -25,8 +25,7 @@
     flex-direction: column;
     height: 100%;
     background: #1a1a1a;
-    padding: 20px;
-    position: relative;
+    padding: 15px;
 }
 
 .game-section.game-active {
@@ -37,6 +36,16 @@
 .game-section.game-active .game-start,
 .game-section.game-active .game-header {
     display: none;
+}
+
+.game-section.game-active .mission-container,
+.game-section.game-active .leaderboard,
+.game-section.game-active .player-stats {
+    display: none;
+}
+
+.game-section.game-active .game-board {
+    margin-top: 0;
 }
 
 .game-header {
@@ -143,170 +152,158 @@
 .game-board {
     display: none;
     flex-direction: column;
-    gap: 20px;
-    height: 100%;
+    gap: 15px;
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
 }
 
 .game-board.active {
     display: flex;
-    animation: fadeIn 0.3s ease;
-    height: 100%;
 }
 
 .board-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    z-index: 100;
+    margin-bottom: 15px;
 }
 
-.board-controls {
+.score-container {
     display: flex;
-    gap: 15px;
-    align-items: center;
-    margin-bottom: 20px;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
 }
 
-.attempts-counter {
-    font-size: 16px;
-    color: #ffffff;
-    margin-right: 10px;
-    background: rgba(255, 59, 48, 0.2);
-    padding: 8px 15px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 59, 48, 0.4);
-}
-
-.restart-button, .retry-button {
-    background: linear-gradient(145deg, #4CAF50, #45a049);
-    color: white;
-    border: none;
-    padding: 10px 20px;
+.score-value, .moves-value {
+    background: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+    padding: 8px 16px;
     border-radius: 12px;
     font-size: 16px;
     font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+    min-width: 80px;
+    text-align: center;
 }
 
-.restart-button:hover, .retry-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+.score-value::before {
+    content: 'Счёт: ';
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: normal;
 }
 
-.restart-button:active, .retry-button:active {
-    transform: translateY(0);
+.moves-value::before {
+    content: 'Ходов: ';
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: normal;
 }
 
-.restart-button:disabled, .retry-button:disabled {
-    background: #666;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-    opacity: 0.7;
-}
-
-.nav-item.active {
-    background: transparent;
-    border-color: transparent;
-}
-
-.nav-item.active img {
-    filter: brightness(0) saturate(100%) invert(68%) sepia(74%) saturate(385%) hue-rotate(84deg) brightness(89%) contrast(92%);
-}
-
-.nav-item.active span {
-    color: #4CAF50;
-}
-
-.board-grid {
+.grid-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
     padding: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    aspect-ratio: 1;
-    margin: auto;
-    max-width: 100%;
-    width: 100%;
-    max-height: calc(100vh - 150px);
+    border-radius: 8px;
 }
 
 .grid-cell {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    aspect-ratio: 1;
+    background: rgba(238, 228, 218, 0.35);
+    border-radius: 6px;
     display: flex;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
     font-size: 24px;
     font-weight: bold;
-    color: white;
+    color: #ffffff;
     transition: all 0.15s ease;
 }
 
 .grid-cell[data-value="2"] { background: #eee4da; color: #776e65; }
 .grid-cell[data-value="4"] { background: #ede0c8; color: #776e65; }
-.grid-cell[data-value="8"] { background: #f2b179; }
-.grid-cell[data-value="16"] { background: #f59563; }
-.grid-cell[data-value="32"] { background: #f67c5f; }
-.grid-cell[data-value="64"] { background: #f65e3b; }
-.grid-cell[data-value="128"] { background: #edcf72; }
-.grid-cell[data-value="256"] { background: #edcc61; }
-.grid-cell[data-value="512"] { background: #edc850; }
-.grid-cell[data-value="1024"] { background: #edc53f; }
-.grid-cell[data-value="2048"] { background: #edc22e; }
+.grid-cell[data-value="8"] { background: #f2b179; color: #f9f6f2; }
+.grid-cell[data-value="16"] { background: #f59563; color: #f9f6f2; }
+.grid-cell[data-value="32"] { background: #f67c5f; color: #f9f6f2; }
+.grid-cell[data-value="64"] { background: #f65e3b; color: #f9f6f2; }
+.grid-cell[data-value="128"] { background: #edcf72; color: #f9f6f2; font-size: 20px; }
+.grid-cell[data-value="256"] { background: #edcc61; color: #f9f6f2; font-size: 20px; }
+.grid-cell[data-value="512"] { background: #edc850; color: #f9f6f2; font-size: 20px; }
+.grid-cell[data-value="1024"] { background: #edc53f; color: #f9f6f2; font-size: 18px; }
+.grid-cell[data-value="2048"] { background: #edc22e; color: #f9f6f2; font-size: 18px; }
+
+/* Анимации для плиток */
+@keyframes appear {
+    0% { opacity: 0; transform: scale(0); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes merge {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.grid-cell.new {
+    animation: appear 0.2s ease;
+}
+
+.grid-cell.merged {
+    animation: merge 0.2s ease;
+}
 
 .game-controls {
     display: flex;
-    justify-content: space-between;
     gap: 10px;
+    margin: 15px 0;
+    padding: 0 10px;
 }
 
 .control-button {
     flex: 1;
-    padding: 15px;
+    padding: 12px;
     border: none;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.control-button:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-.exit-button {
-    background: linear-gradient(145deg, #ff3b30, #ff4b4b);
-    color: white;
-    border: none;
-    padding: 10px 20px;
     border-radius: 12px;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(255, 59, 48, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.exit-button:hover {
+.start-button {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.start-button:hover {
+    background: linear-gradient(45deg, #45a049, #3d8b40);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 59, 48, 0.3);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
-.exit-button:active {
+.exit-button {
+    display: none;
+}
+
+.game-section.game-active .exit-button {
+    display: block;
+}
+
+.control-button:active {
     transform: translateY(0);
+    box-shadow: none;
+}
+
+.control-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Модальное окно с правилами */
@@ -363,28 +360,6 @@
 .start-game-button:hover {
     background: #45a049;
     transform: translateY(-2px);
-}
-
-/* Анимация для объединения ячеек */
-@keyframes mergeCells {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.2);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-.grid-cell.merged {
-    animation: none;
-}
-
-.grid-cell.merging {
-    animation: mergeCells 0.3s ease;
-    z-index: 2;
 }
 
 /* Анимация для отсчета */
@@ -493,108 +468,367 @@
     }
 }
 
-.game-over-modal {
+/* Модальные окна */
+.game-modal {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.95);
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 90%;
-    width: 400px;
-    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
     display: none;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+}
+
+.game-modal.victory-modal,
+.game-modal.game-over-modal {
+    display: none;
+}
+
+.game-modal.victory-modal.active,
+.game-modal.game-over-modal.active {
+    display: flex;
+}
+
+.game-modal .modal-content {
+    background: linear-gradient(145deg, #232323, #2d2d2d);
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 320px;
     text-align: center;
+    animation: popIn 0.3s ease;
+    position: relative;
+    z-index: 1002;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-.game-over-modal.active {
-    display: block;
-    animation: modalFadeIn 0.3s ease;
+/* Стили для окна победы */
+.victory-modal .modal-content {
+    border: 2px solid #4CAF50;
+    background: linear-gradient(145deg, #1a2e1a, #2d4d2d);
 }
 
-.game-over-title {
+.victory-modal .modal-title {
     font-size: 32px;
-    color: #ff3b30;
+    color: #4CAF50;
     margin-bottom: 20px;
     font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.game-over-score {
-    font-size: 24px;
+.victory-modal .modal-text {
     color: #4CAF50;
-    margin-bottom: 15px;
-}
-
-.attempts-left {
     font-size: 18px;
-    color: #fff;
-    margin-bottom: 25px;
-}
-
-.game-over-buttons {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-}
-
-.retry-button:disabled {
-    background: #666;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.confirm-retry-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.95);
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 90%;
-    width: 400px;
-    z-index: 1001;
-    display: none;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    text-align: center;
-}
-
-.confirm-retry-modal.active {
-    display: block;
-    animation: modalFadeIn 0.3s ease;
-}
-
-.confirm-retry-text {
-    font-size: 18px;
-    color: #fff;
     margin-bottom: 25px;
     line-height: 1.5;
 }
 
-.confirm-retry-buttons {
+.victory-modal .reward-text {
     display: flex;
-    gap: 15px;
+    align-items: center;
     justify-content: center;
+    gap: 8px;
+    color: #4CAF50;
+    font-size: 24px;
+    margin-bottom: 25px;
+    font-weight: bold;
 }
 
-.confirm-button {
+.victory-modal .reward-text img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Стили для окна проигрыша */
+.game-over-modal .modal-content {
+    border: 2px solid #ff3b30;
+    background: linear-gradient(145deg, #2e1a1a, #4d2d2d);
+}
+
+.game-over-modal .modal-title {
+    font-size: 32px;
+    color: #ff3b30;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.game-over-modal .modal-text {
+    color: #ff3b30;
+    font-size: 18px;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* Стили для кнопки награды */
+.control-button.claim-reward {
     background: linear-gradient(45deg, #4CAF50, #45a049);
     color: white;
-    border: none;
     padding: 12px 25px;
     border-radius: 15px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    width: 100%;
 }
 
-.cancel-button {
+.control-button.claim-reward:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.control-button.claim-reward:disabled {
+    background: linear-gradient(45deg, #666, #888);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Таблица лидеров */
+.leaderboard {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.leaderboard-title {
+    font-size: 18px;
+    color: #ffffff;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard-rank {
+    width: 30px;
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.leaderboard-name {
+    flex: 1;
+    color: #ffffff;
+}
+
+.leaderboard-score {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Стили для серпантина */
+.confetti {
+    position: fixed;
+    top: -10px;
+    z-index: 1000;
+    border-radius: 50%;
+    animation: confettiFall 3s linear forwards;
+}
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Стили для текущего задания */
+.mission-container {
+    background: linear-gradient(145deg, #232323, #2d2d2d);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.mission-header {
+    color: #4CAF50;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mission-header img {
+    width: 24px;
+    height: 24px;
+}
+
+.mission-description {
+    color: #ffffff;
+    font-size: 16px;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.mission-reward {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4CAF50;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.mission-reward img {
+    width: 20px;
+    height: 20px;
+}
+
+.attempts-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.attempts-counter {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ffffff;
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+/* Статистика игрока */
+.player-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+    padding: 0 10px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-value {
+    font-size: 20px;
+    color: #4CAF50;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+}
+
+/* Стили для выполненного задания */
+.mission-completed .attempts-counter {
+    display: none;
+}
+
+.mission-completed .start-button {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.mission-completed .start-button:hover {
+    background: linear-gradient(45deg, #45a049, #3d8b40);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.mission-completed .mission-status {
+    display: inline-block;
+    padding: 8px 15px;
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+/* Анимации */
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideIn {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Стили для модального окна подтверждения */
+.confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1002;
+}
+
+.confirm-modal .modal-content {
+    background: linear-gradient(145deg, #232323, #2d2d2d);
+    border-radius: 20px;
+    padding: 25px;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+    animation: popIn 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-modal .modal-title {
+    font-size: 24px;
+    color: #ffffff;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.confirm-modal .modal-text {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 16px;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+
+.confirm-modal .modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.confirm-modal .confirm-button {
     background: linear-gradient(45deg, #ff3b30, #ff4b4b);
     color: white;
     border: none;
@@ -606,177 +840,20 @@
     transition: all 0.3s ease;
 }
 
-.confirm-button:hover,
-.cancel-button:hover {
+.confirm-modal .cancel-button {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.confirm-modal .confirm-button:hover,
+.confirm-modal .cancel-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.game-section.development-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
-    background: #1a1a1a;
-    position: relative;
-    overflow: hidden;
-}
-
-.development-content {
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 20px;
-    padding: 30px 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.development-icon {
-    width: 80px;
-    height: 80px;
-    margin-bottom: 20px;
-    object-fit: contain;
-    filter: drop-shadow(0 2px 8px rgba(76, 175, 80, 0.2));
-}
-
-.development-title {
-    font-size: 24px;
-    color: #ffffff;
-    margin-bottom: 10px;
-}
-
-.development-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    background: rgba(76, 175, 80, 0.15);
-    color: #4CAF50;
-    border-radius: 20px;
-    font-size: 14px;
-    margin-bottom: 30px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.progress-container {
-    margin: 20px 0;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
-}
-
-.progress-info {
-    display: flex;
-    justify-content: space-between;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.progress-bar {
-    height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: #4CAF50;
-    border-radius: 2px;
-    width: 35%;
-    animation: progressPulse 2s infinite;
-}
-
-.development-steps {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 30px;
-    position: relative;
-    padding: 0 10px;
-}
-
-.development-steps::before {
-    content: '';
-    position: absolute;
-    top: 15px;
-    left: 30px;
-    right: 30px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    z-index: 1;
-}
-
-.step-dot {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #1a1a1a;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    margin-bottom: 8px;
-    position: relative;
-}
-
-.step.completed .step-dot {
-    background: #4CAF50;
-    border-color: #4CAF50;
-}
-
-.step.active .step-dot {
-    border-color: #4CAF50;
-    animation: dotPulse 2s infinite;
-}
-
-.step-label {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-@keyframes progressPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
-}
-
-@keyframes dotPulse {
-    0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
-}
-
-.construction-animation {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.construction-beam {
-    position: absolute;
-    width: 2px;
-    height: 100px;
-    background: linear-gradient(to bottom, rgba(76, 175, 80, 0.5), transparent);
-    animation: beamMove 4s infinite;
-}
-
-@keyframes beamMove {
-    0% {
-        transform: translateX(-100%) rotate(45deg);
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateX(200%) rotate(45deg);
-        opacity: 0;
-    }
 } 
