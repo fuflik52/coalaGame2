@@ -25,10 +25,10 @@ BEGIN
         ALTER TABLE users ADD COLUMN exp_next_level INTEGER DEFAULT 100;
     END IF;
 
-    -- Изменяем тип колонки last_energy_update на TIMESTAMP
+    -- Изменяем тип колонки last_energy_update на BIGINT
     ALTER TABLE users 
-    ALTER COLUMN last_energy_update TYPE TIMESTAMP WITH TIME ZONE 
-    USING to_timestamp(last_energy_update);
+    ALTER COLUMN last_energy_update TYPE BIGINT 
+    USING EXTRACT(EPOCH FROM last_energy_update::timestamp) * 1000;
 
     -- Добавляем weekly_score, если не существует
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns 

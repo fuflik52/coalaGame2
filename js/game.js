@@ -816,13 +816,13 @@ class NumberGame {
                     this.updateUsername();
 
                     // Вычисляем, сколько энергии должно было восстановиться
-                    const lastUpdate = userData.last_energy_update ? new Date(userData.last_energy_update) : new Date();
-                    const secondsPassed = Math.floor((Date.now() - lastUpdate.getTime()) / 1000);
+                    const lastUpdate = userData.last_energy_update || Date.now();
+                    const secondsPassed = Math.floor((Date.now() - lastUpdate) / 1000);
                     const energyToAdd = Math.min(secondsPassed * this.energyRegenRate, this.maxEnergy - this.energy);
                     this.energy = Math.min(this.maxEnergy, this.energy + energyToAdd);
 
                     // Обновляем время последнего обновления
-                    this.lastEnergyUpdate = new Date();
+                    this.lastEnergyUpdate = Date.now();
                     
                     // Обновляем отображение
                     this.updateEnergyDisplay();

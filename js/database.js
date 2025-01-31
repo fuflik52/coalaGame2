@@ -88,7 +88,7 @@ class Database {
                 .from('users')
                 .update({ 
                     energy: Math.min(Math.max(0, newEnergy), maxEnergy),
-                    last_energy_update: new Date().toISOString()
+                    last_energy_update: Date.now()
                 })
                 .eq('telegram_id', String(telegramId))
                 .select();
@@ -215,7 +215,7 @@ class Database {
                     .update({
                         username: username,
                         avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
-                        last_seen: new Date().toISOString()
+                        last_seen: Date.now()
                     })
                     .eq('telegram_id', telegramIdStr)
                     .select();
@@ -239,8 +239,8 @@ class Database {
                         rating: 0,
                         game_score: 0,
                         weekly_score: 0,
-                        last_energy_update: new Date().toISOString(),
-                        last_seen: new Date().toISOString()
+                        last_energy_update: Date.now(),
+                        last_seen: Date.now()
                     }])
                     .select();
 
@@ -346,8 +346,8 @@ class Database {
                 level: Math.min(Math.max(1, Math.floor(userData.level)), 2147483647),
                 exp: Math.min(Math.max(0, Math.floor(userData.exp)), 2147483647),
                 exp_next_level: Math.min(Math.max(1, Math.floor(userData.exp_next_level)), 2147483647),
-                last_energy_update: new Date().toISOString(),
-                last_seen: new Date().toISOString()
+                last_energy_update: Date.now(),
+                last_seen: Date.now()
             };
 
             const { data, error } = await this.supabase
