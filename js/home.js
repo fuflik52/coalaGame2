@@ -15,6 +15,15 @@ let clickMultiplier = 1;
 let isClicking = false;
 let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
+// Инициализация Telegram ID из URL
+function initializeTelegramId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    window.telegramId = urlParams.get('id');
+    if (!window.telegramId) {
+        console.error('Telegram ID не найден в URL');
+    }
+}
+
 function updateEnergy() {
     energy = Math.min(maxEnergy, energy);
     energy = Math.max(0, energy);
@@ -31,11 +40,19 @@ function updateEnergy() {
     localStorage.setItem('lastEnergyUpdate', Date.now());
 }
 
-function updateEnergyDisplay() {
-    const progressBar = document.querySelector('.progress');
-    if (progressBar) {
-        progressBar.style.width = `${(energy / maxEnergy) * 100}%`;
-        progressBar.textContent = `${energy}/${maxEnergy}`;
+function updateEnergyDisplay(currentEnergy, maxEnergy) {
+    const energyBar = document.getElementById('energyBar');
+    const energyText = document.getElementById('energyText');
+    
+    if (energyBar) {
+        energyBar.style.width = `${(currentEnergy / maxEnergy) * 100}%`;
+    }
+    
+    if (energyText) {
+        const energySpan = energyText.querySelector('span');
+        if (energySpan) {
+            energySpan.textContent = `${currentEnergy}/${maxEnergy}`;
+        }
     }
 }
 
@@ -57,76 +74,79 @@ function vibrate(duration = 50) {
     }
 }
 
-function handleClick(event) {
-    event.preventDefault(); // Предотвращаем стандартное поведение
+async function handleClick(event) {
+    event.preventDefault();
     
     if (isClicking) return;
     isClicking = true;
 
-    const clickerButton = document.querySelector('.clicker-button');
-    const koalaImage = clickerButton.querySelector('.clicker-koala');
-    
-    // Проверяем энергию
-    if (energy <= 0) {
-        showNotification('Недостаточно энергии!', 'error');
+    try {
+        // Получаем текущие данные пользователя
+        const userData = await window.db.getUserData(window.telegramId);
+        if (!userData) {
+            showNotification('Ошибка получения данных пользователя', 'error');
+            return;
+        }
+
+        // Синхронизируем локальное значение энергии с базой данных
+        energy = userData.energy;
+        maxEnergy = userData.max_energy;
+        updateEnergy();
+
+        if (energy <= 0) {
+            showNotification('Недостаточно энергии!', 'error');
+            return;
+        }
+
+        // Тратим энергию
+        energy--;
+        updateEnergy();
+        await window.db.spendEnergy(window.telegramId);
+
+        // Добавляем анимацию нажатия
+        const clickerButton = document.querySelector('.clicker-button');
+        const koalaImage = clickerButton?.querySelector('.clicker-koala');
+        
+        if (clickerButton) clickerButton.classList.add('clicked');
+        if (koalaImage) koalaImage.classList.add('clicked');
+
+        // Вибрация при клике
+        if (isVibrationEnabled && checkVibrationSupport()) {
+            vibrate(50);
+        }
+
+        // Обновляем счетчик кликов и множитель
+        const currentTime = Date.now();
+        if (currentTime - lastClickTime < 300) {
+            clickCount++;
+            if (clickCount >= 10) {
+                clickMultiplier = 2;
+            }
+        } else {
+            clickCount = 1;
+            clickMultiplier = 1;
+        }
+        lastClickTime = currentTime;
+
+        // Обновляем баланс
+        const reward = 1 * clickMultiplier;
+        await window.db.updateUserBalance(window.telegramId, userData.balance + reward);
+
+        // Показываем анимацию награды
+        showRewardAnimation(reward, event);
+
+        // Убираем анимацию нажатия
+        setTimeout(() => {
+            if (clickerButton) clickerButton.classList.remove('clicked');
+            if (koalaImage) koalaImage.classList.remove('clicked');
+        }, 100);
+
+    } catch (error) {
+        console.error('Ошибка при обработке клика:', error);
+        showNotification('Произошла ошибка!', 'error');
+    } finally {
         isClicking = false;
-        return;
     }
-
-    // Вибрация при клике на мобильных устройствах
-    if (isVibrationEnabled && checkVibrationSupport()) {
-        try {
-            window.navigator.vibrate(50);
-        } catch (error) {
-            console.log('Вибрация недоступна:', error);
-        }
-    }
-
-    // Уменьшаем энергию
-    energy--;
-    updateEnergy();
-    
-    // Добавляем анимацию нажатия
-    clickerButton.classList.add('clicked');
-    if (koalaImage) {
-        koalaImage.classList.add('clicked');
-    }
-    
-    // Обновляем счетчик кликов
-    const currentTime = Date.now();
-    if (currentTime - lastClickTime < 300) {
-        clickCount++;
-        if (clickCount >= 10) {
-            clickMultiplier = 2;
-        }
-    } else {
-        clickCount = 1;
-        clickMultiplier = 1;
-    }
-    lastClickTime = currentTime;
-
-    // Обновляем баланс
-    const reward = 1 * clickMultiplier;
-    const currentBalance = parseInt(document.querySelector('.balance-value').textContent.replace(/\s/g, '')) || 0;
-    const newBalance = currentBalance + reward;
-
-    // Обновляем отображение баланса
-    document.querySelector('.balance-value').textContent = newBalance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-
-    // Сохраняем в локальное хранилище
-    localStorage.setItem('balance', newBalance);
-
-    // Показываем анимацию награды
-    showRewardAnimation(reward, event);
-
-    // Убираем анимацию нажатия
-    setTimeout(() => {
-        clickerButton.classList.remove('clicked');
-        if (koalaImage) {
-            koalaImage.classList.remove('clicked');
-        }
-        isClicking = false;
-    }, 150);
 }
 
 function showRewardAnimation(reward, event) {
@@ -181,19 +201,19 @@ function initializeHomeSection() {
     const clickerButton = document.querySelector('.clicker-button');
     if (!clickerButton) return;
     
-    // Добавляем обработчики для мобильных устройств
-    clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+    // Добавляем обработчики для всех типов устройств
     clickerButton.addEventListener('mousedown', handleClick);
+    clickerButton.addEventListener('touchstart', handleClick, { passive: false });
     
-    // Предотвращаем двойное срабатывание на мобильных
+    // Предотвращаем стандартные действия браузера
     clickerButton.addEventListener('click', (e) => e.preventDefault());
-    
-    // Отключаем контекстное меню
     clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
+    clickerButton.addEventListener('touchend', (e) => e.preventDefault());
 }
 
 // Запускаем инициализацию при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+    initializeTelegramId();
     initializeHomeSection();
     restoreEnergy();
     

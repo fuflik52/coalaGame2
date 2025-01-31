@@ -141,25 +141,62 @@ class Database {
 
     async usePromoCode(telegramId, promoCode) {
         try {
-            const { data: userData } = await this.getUserData(telegramId);
+            const userData = await this.getUserData(telegramId);
+            if (!userData) {
+                return { success: false, message: 'Пользователь не найден' };
+            }
+
             const usedPromocodes = userData.used_promocodes || [];
             
             if (usedPromocodes.includes(promoCode)) {
                 return { success: false, message: 'Промокод уже использован' };
             }
-            
+
+            // Получаем информацию о промокоде
+            const { data: promoData, error: promoError } = await this.supabase
+                .from('promo_codes')
+                .select('*')
+                .eq('code', promoCode)
+                .single();
+
+            if (promoError || !promoData) {
+                return { success: false, message: 'Промокод не найден' };
+            }
+
+            if (promoData.uses_left <= 0) {
+                return { success: false, message: 'Промокод больше недоступен' };
+            }
+
+            // Применяем награду
+            if (promoData.reward_type === 'coins') {
+                await this.updateUserBalance(telegramId, userData.balance + promoData.reward_amount);
+            } else if (promoData.reward_type === 'energy') {
+                const newEnergy = Math.min(userData.max_energy, userData.energy + promoData.reward_amount);
+                await this.updateUserEnergy(telegramId, newEnergy);
+            }
+
+            // Обновляем список использованных промокодов
             usedPromocodes.push(promoCode);
-            
-            const { error } = await this.supabase
+            const { error: updateError } = await this.supabase
                 .from('users')
                 .update({ used_promocodes: usedPromocodes })
                 .eq('telegram_id', telegramId);
 
-            if (error) throw error;
-            return { success: true, message: 'Промокод успешно активирован' };
+            if (updateError) throw updateError;
+
+            // Уменьшаем количество доступных использований
+            await this.supabase
+                .from('promo_codes')
+                .update({ uses_left: promoData.uses_left - 1 })
+                .eq('code', promoCode);
+
+            return {
+                success: true,
+                message: `Вы получили ${promoData.reward_amount} ${promoData.reward_type === 'coins' ? 'монет' : 'энергии'}!`
+            };
         } catch (error) {
             console.error('Ошибка при использовании промокода:', error);
-            return { success: false, message: 'Ошибка при активации промокода' };
+            return { success: false, message: 'Произошла ошибка при использовании промокода' };
         }
     }
 
@@ -171,7 +208,7 @@ class Database {
                     {
                         telegram_id: telegramId,
                         username: username,
-                        avatar_url: avatarUrl,
+                        avatar_url: 'https://i.postimg.cc/vBBWGZjL/image.png',
                         balance: 0,
                         energy: 100,
                         max_energy: 100,
@@ -251,6 +288,29 @@ class Database {
             return true;
         } catch (error) {
             console.error('Ошибка при синхронизации баланса:', error);
+            return false;
+        }
+    }
+
+    async spendEnergy(telegramId, amount = 1) {
+        try {
+            const userData = await this.getUserData(telegramId);
+            if (!userData || userData.energy < amount) return false;
+
+            const newEnergy = Math.max(0, userData.energy - amount);
+            
+            const { error } = await this.supabase
+                .from('users')
+                .update({ 
+                    energy: newEnergy,
+                    last_energy_update: Date.now()
+                })
+                .eq('telegram_id', telegramId);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error('Ошибка при трате энергии:', error);
             return false;
         }
     }
@@ -338,101 +398,5 @@ async function updateUserEnergy(telegramId, newEnergy, newMaxEnergy = null) {
     } catch (error) {
         console.error('Ошибка при обновлении энергии:', error);
         return false;
-    }
-}
-
-// Функция для проверки и использования промокода
-async function usePromoCode(telegramId, promoCode) {
-    try {
-        // Получаем информацию о промокоде
-        const { data: promoData, error: promoError } = await supabaseClient
-            .from('promo_codes')
-            .select('*')
-            .eq('code', promoCode)
-            .single();
-
-        if (promoError || !promoData) {
-            return { success: false, message: 'Промокод не найден' };
-        }
-
-        // Проверяем срок действия
-        if (promoData.expires_at && new Date(promoData.expires_at) < new Date()) {
-            return { success: false, message: 'Промокод истек' };
-        }
-
-        // Проверяем количество использований
-        if (promoData.uses_left <= 0) {
-            return { success: false, message: 'Промокод больше не действителен' };
-        }
-
-        // Проверяем, использовал ли пользователь этот промокод
-        const { data: usedPromo, error: usedError } = await supabaseClient
-            .from('used_promo_codes')
-            .select('*')
-            .eq('user_telegram_id', telegramId)
-            .eq('promo_code_id', promoData.id)
-            .single();
-
-        if (usedPromo) {
-            return { success: false, message: 'Вы уже использовали этот промокод' };
-        }
-
-        // Начинаем транзакцию
-        const userData = await this.getUserData(telegramId);
-        if (!userData) {
-            return { success: false, message: 'Ошибка получения данных пользователя' };
-        }
-
-        let success = true;
-        let newBalance = userData.balance;
-        let newEnergy = userData.energy;
-
-        // Применяем награду
-        if (promoData.reward_type === 'coins') {
-            newBalance += promoData.reward_amount;
-            success = await this.updateUserBalance(telegramId, newBalance);
-        } else if (promoData.reward_type === 'energy') {
-            newEnergy = Math.min(userData.max_energy, userData.energy + promoData.reward_amount);
-            success = await this.updateUserEnergy(telegramId, newEnergy);
-        }
-
-        if (!success) {
-            return { success: false, message: 'Ошибка при начислении награды' };
-        }
-
-        // Записываем использование промокода
-        const { error: usageError } = await supabaseClient
-            .from('used_promo_codes')
-            .insert([{
-                user_telegram_id: telegramId,
-                promo_code_id: promoData.id
-            }]);
-
-        if (usageError) {
-            console.error('Ошибка при записи использования промокода:', usageError);
-            return { success: false, message: 'Ошибка при использовании промокода' };
-        }
-
-        // Уменьшаем количество доступных использований
-        const { error: updateError } = await supabaseClient
-            .from('promo_codes')
-            .update({ uses_left: promoData.uses_left - 1 })
-            .eq('id', promoData.id);
-
-        if (updateError) {
-            console.error('Ошибка при обновлении промокода:', updateError);
-        }
-
-        return {
-            success: true,
-            message: `Вы получили ${promoData.reward_amount} ${promoData.reward_type === 'coins' ? 'монет' : 'энергии'}!`,
-            reward: {
-                type: promoData.reward_type,
-                amount: promoData.reward_amount
-            }
-        };
-    } catch (error) {
-        console.error('Ошибка при использовании промокода:', error);
-        return { success: false, message: 'Произошла ошибка при использовании промокода' };
     }
 } 

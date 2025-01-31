@@ -300,4 +300,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (promoButton) {
         promoButton.onclick = usePromoCode;
     }
-}); 
+});
+
+// Создаем HTML для настроек
+function createSettingsHTML() {
+    return `
+        <div class="settings-container">
+            <div class="settings-header">
+                <h2>Настройки</h2>
+                <button class="close-settings">✕</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h3>Игра</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="vibrationToggle" ${isVibrationEnabled ? 'checked' : ''}>
+                            <span>Вибрация</span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="soundToggle" ${isSoundEnabled ? 'checked' : ''}>
+                            <span>Звук</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Промокод</h3>
+                    <div class="promo-code-input">
+                        <input type="text" id="promoCodeInput" placeholder="Введите промокод">
+                        <button id="applyPromoCode">Применить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+} 

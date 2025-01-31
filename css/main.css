@@ -270,7 +270,7 @@ body {
 
 .energy-progress {
     position: fixed;
-    bottom: 80px;
+    bottom: 100px;
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 32px);
@@ -533,4 +533,24 @@ body {
     100% {
         transform: scale(1);
     }
+}
+
+.game-section {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+}
+
+.leaderboard-container {
+    margin: 20px auto;
+    max-width: 400px;
+    width: 100%;
+    padding: 0 15px;
 } 
