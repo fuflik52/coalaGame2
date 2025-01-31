@@ -498,15 +498,45 @@ class NumberGame {
 
     async updateBestScore() {
         if (this.score > (this.bestScore || 0)) {
+            const previousBestScore = this.bestScore || 0;
             this.bestScore = this.score;
+            
+            // Обновляем отображение лучшего счета
             const bestScoreDisplay = document.querySelector('.best-score-value');
             if (bestScoreDisplay) {
-                bestScoreDisplay.textContent = this.bestScore;
+                // Анимация обновления счета
+                bestScoreDisplay.style.transition = 'transform 0.3s, opacity 0.3s';
+                bestScoreDisplay.style.transform = 'scale(0.8)';
+                bestScoreDisplay.style.opacity = '0';
+                
+                setTimeout(() => {
+                    bestScoreDisplay.textContent = this.bestScore;
+                    bestScoreDisplay.style.transform = 'scale(1.2)';
+                    bestScoreDisplay.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        bestScoreDisplay.style.transform = 'scale(1)';
+                    }, 150);
+                }, 150);
             }
 
             // Сохраняем лучший результат в базе данных
             if (window.tg?.initDataUnsafe?.user?.id) {
-                await window.db.updateUserGameScore(window.tg.initDataUnsafe.user.id, this.score);
+                try {
+                    await window.db.updateUserGameScore(window.tg.initDataUnsafe.user.id, this.score);
+                    this.showNotification({
+                        title: 'Новый рекорд!',
+                        message: `Поздравляем! Вы побили свой предыдущий рекорд (${previousBestScore})`,
+                        type: 'success'
+                    });
+                } catch (error) {
+                    console.error('Ошибка при обновлении счета:', error);
+                    this.showNotification({
+                        title: 'Ошибка',
+                        message: 'Не удалось сохранить рекорд',
+                        type: 'error'
+                    });
+                }
             }
         }
     }
@@ -883,29 +913,85 @@ class NumberGame {
         const link = this.generateReferralLink();
         try {
             await navigator.clipboard.writeText(link);
-            // Показываем уведомление об успешном копировании
-            this.showNotification('Ссылка скопирована!');
+            this.showNotification({
+                title: 'Успешно!',
+                message: 'Реферальная ссылка скопирована в буфер обмена',
+                type: 'success'
+            });
         } catch (err) {
             console.error('Ошибка при копировании:', err);
-            this.showNotification('Ошибка при копировании ссылки');
+            this.showNotification({
+                title: 'Ошибка',
+                message: 'Не удалось скопировать ссылку',
+                type: 'error'
+            });
         }
     }
 
-    showNotification(message) {
+    showNotification({ title, message, type = 'info' }) {
+        // Удаляем предыдущее уведомление, если оно есть
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
         const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.textContent = message;
-        document.body.appendChild(notification);
+        notification.className = `notification ${type}`;
         
-        setTimeout(() => {
+        notification.innerHTML = `
+            <div class="notification-content">
+                ${title ? `<div class="notification-title">${title}</div>` : ''}
+                <div class="notification-message">${message}</div>
+            </div>
+            <div class="progress-bar"></div>
+        `;
+        
+        document.body.appendChild(notification);
+
+        // Принудительный рендеринг
+        notification.offsetHeight;
+
+        // Показываем уведомление
+        requestAnimationFrame(() => {
             notification.classList.add('show');
+        });
+
+        // Удаляем уведомление через 5 секунд
+        const hideTimeout = setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }, 5000);
+
+        // Останавливаем таймер при наведении
+        notification.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+        });
+
+        // Запускаем новый таймер при уходе курсора
+        notification.addEventListener('mouseleave', () => {
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
-                    notification.remove();
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
                 }, 300);
             }, 2000);
-        }, 100);
+        });
+
+        // Добавляем возможность закрыть по клику
+        notification.addEventListener('click', () => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        });
     }
 
     initializeFriendsSection() {

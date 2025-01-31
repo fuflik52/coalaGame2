@@ -17,11 +17,12 @@ let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
 // Инициализация Telegram ID из URL
 function initializeTelegramId() {
-    const urlParams = new URLSearchParams(window.location.search);
-    window.telegramId = urlParams.get('id');
-    if (!window.telegramId) {
-        console.error('Telegram ID не найден в URL');
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+        window.currentTelegramId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
+        return true;
     }
+    console.error('Telegram ID не найден');
+    return false;
 }
 
 function updateEnergy() {
@@ -213,17 +214,10 @@ function initializeHomeSection() {
 
 // Запускаем инициализацию при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    initializeTelegramId();
-    initializeHomeSection();
-    restoreEnergy();
-    
-    // Восстановление энергии каждую секунду
-    setInterval(() => {
-        if (energy < maxEnergy) {
-            energy++;
-            updateEnergy();
-        }
-    }, 1000);
+    if (initializeTelegramId()) {
+        // Продолжаем инициализацию только если получили Telegram ID
+        initializeHome();
+    }
 });
 
 function updateBalance(amount) {

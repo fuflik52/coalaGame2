@@ -44,20 +44,42 @@ class TelegramHandler {
 
     async initUser() {
         try {
+            const telegramIdStr = String(this.userId);
             const { data, error } = await window.db.supabase
                 .from('users')
-                .upsert([
-                    {
-                        telegram_id: this.userId,
-                        username: this.username,
-                        first_name: this.firstName,
-                        last_name: this.lastName,
-                        photo_url: this.photoUrl,
-                        last_seen: new Date().toISOString()
-                    }
-                ]);
+                .select('*')
+                .eq('telegram_id', telegramIdStr)
+                .single();
 
-            if (error) throw error;
+            if (error && error.code === 'PGRST116') {
+                // Пользователь не найден, создаем нового
+                const { error: insertError } = await window.db.supabase
+                    .from('users')
+                    .insert([{
+                        telegram_id: telegramIdStr,
+                        username: this.username,
+                        photo_url: this.photoUrl,
+                        energy: 100,
+                        balance: 0,
+                        max_energy: 100,
+                        last_energy_update: new Date().toISOString(),
+                        last_seen: new Date().toISOString()
+                    }]);
+
+                if (insertError) throw insertError;
+            } else if (!error) {
+                // Пользователь найден, обновляем last_seen
+                const { error: updateError } = await window.db.supabase
+                    .from('users')
+                    .update({
+                        last_seen: new Date().toISOString(),
+                        username: this.username,
+                        photo_url: this.photoUrl
+                    })
+                    .eq('telegram_id', telegramIdStr);
+
+                if (updateError) throw updateError;
+            }
         } catch (error) {
             console.error('Ошибка при инициализации пользователя:', error);
         }

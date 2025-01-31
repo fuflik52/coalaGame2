@@ -524,18 +524,101 @@ input:checked + .slider:before {
     position: fixed;
     top: 20px;
     left: 50%;
-    transform: translateX(-50%) translateY(-100px);
-    background: rgba(76, 175, 80, 0.9);
+    transform: translateX(-50%) translateY(0);
+    background: rgba(17, 24, 39, 0.98);
     color: white;
-    padding: 12px 24px;
-    border-radius: 12px;
+    padding: 16px 24px;
+    border-radius: 16px;
     font-size: 16px;
-    z-index: 1000;
-    transition: transform 0.3s ease;
+    font-weight: 500;
+    z-index: 9999;
+    transition: all 0.3s ease;
     backdrop-filter: blur(10px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    text-align: left;
+    min-width: 300px;
+    pointer-events: all;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    margin-top: -100px;
 }
 
 .notification.show {
-    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+    margin-top: 0;
+}
+
+.notification::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.notification.success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.98), rgba(5, 150, 105, 0.98));
+    border-left: 4px solid #10B981;
+}
+
+.notification.error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.98), rgba(220, 38, 38, 0.98));
+    border-left: 4px solid #EF4444;
+}
+
+.notification.info {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.98), rgba(37, 99, 235, 0.98));
+    border-left: 4px solid #3B82F6;
+}
+
+.notification .notification-content {
+    flex: 1;
+}
+
+.notification .notification-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+    color: white;
+}
+
+.notification .notification-message {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.notification .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 0 0 16px 16px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.notification .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    transform-origin: left;
+    animation: progress 5s linear forwards;
+}
+
+@keyframes progress {
+    0% {
+        transform: scaleX(1);
+    }
+    100% {
+        transform: scaleX(0);
+    }
 } 
