@@ -10,32 +10,81 @@ console.log = function() {
 // Инициализация Telegram WebApp
 class TelegramHandler {
     constructor() {
-        this.tg = window.Telegram?.WebApp;
-        this.initTelegram();
+        this.tg = window.Telegram.WebApp;
+        this.initApp();
     }
 
-    initTelegram() {
-        if (!this.tg) return;
+    initApp() {
+        try {
+            // Инициализируем Telegram WebApp
+            this.tg.ready();
+            
+            // Получаем данные пользователя
+            const user = this.tg.initDataUnsafe?.user;
+            if (user) {
+                this.userId = user.id;
+                this.username = user.username;
+                this.firstName = user.first_name;
+                this.lastName = user.last_name;
+                this.photoUrl = user.photo_url;
 
-        // Устанавливаем цвета и тему без логирования
-        this.tg.setHeaderColor('bg_color');
-        this.tg.setBackgroundColor('#ffffff');
-        this.tg.ready();
+                // Проверяем параметр startapp для рефералов
+                const startParam = new URLSearchParams(window.location.search).get('startapp');
+                if (startParam && startParam.startsWith('ref_')) {
+                    this.handleReferral(startParam.substring(4));
+                }
 
-        // Получаем ID пользователя
-        const userId = this.tg?.initDataUnsafe?.user?.id;
-        if (userId) {
-            window.currentTelegramId = userId.toString();
+                // Инициализируем пользователя в базе данных
+                this.initUser();
+            }
+        } catch (error) {
+            console.error('Ошибка при инициализации Telegram WebApp:', error);
         }
     }
 
-    static getInstance() {
-        if (!this.instance) {
-            this.instance = new TelegramHandler();
+    async initUser() {
+        try {
+            const { data, error } = await window.db.supabase
+                .from('users')
+                .upsert([
+                    {
+                        telegram_id: this.userId,
+                        username: this.username,
+                        first_name: this.firstName,
+                        last_name: this.lastName,
+                        photo_url: this.photoUrl,
+                        last_seen: new Date().toISOString()
+                    }
+                ]);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Ошибка при инициализации пользователя:', error);
         }
-        return this.instance;
+    }
+
+    async handleReferral(encodedData) {
+        try {
+            // Декодируем данные реферала
+            const referralData = JSON.parse(atob(encodedData));
+            
+            // Проверяем валидность данных
+            if (referralData.ref && referralData.timestamp) {
+                // Проверяем, не истекла ли ссылка (например, 24 часа)
+                const linkAge = Date.now() - referralData.timestamp;
+                if (linkAge > 24 * 60 * 60 * 1000) {
+                    console.log('Реферальная ссылка истекла');
+                    return;
+                }
+
+                // Добавляем реферала
+                await window.db.addReferral(referralData.ref, this.userId);
+            }
+        } catch (error) {
+            console.error('Ошибка при обработке реферальной ссылки:', error);
+        }
     }
 }
 
-// Экспортируем инстанс
-window.telegramHandler = TelegramHandler.getInstance(); 
+// Создаем экземпляр обработчика Telegram
+window.telegramHandler = new TelegramHandler(); 

@@ -12,6 +12,12 @@ class NumberGame {
         this.energyRegenerationInterval = null;
         this.balance = 0;
         
+        // Инициализация Telegram данных
+        if (window.telegramHandler) {
+            this.telegramUserId = window.telegramHandler.userId;
+            this.botUsername = 'TapTapKoala_bot'; // Замените на ваше имя бота
+        }
+        
         // Получаем элементы DOM
         this.gameBoard = document.querySelector('.game-board');
         this.gridContainer = document.querySelector('.grid-container');
@@ -463,7 +469,7 @@ class NumberGame {
 
     checkGameStatus() {
         // Проверяем достижение 15000 очков
-        if (this.score >= 1) {
+        if (this.score >= 15000) {
             // Проверяем, выполнено ли уже задание
             const missionContainer = document.querySelector('.mission-container');
             if (!missionContainer || !missionContainer.classList.contains('mission-completed')) {
@@ -857,6 +863,106 @@ class NumberGame {
         if (this.balanceDisplay) {
             this.balanceDisplay.textContent = this.balance;
         }
+    }
+
+    generateReferralLink() {
+        // Создаем уникальный идентификатор для текущего пользователя
+        const userId = this.telegramUserId;
+        // Шифруем данные пользователя
+        const encodedData = btoa(JSON.stringify({
+            ref: userId,
+            timestamp: Date.now()
+        }));
+        
+        // Формируем ссылку на web app с зашифрованными параметрами
+        const webAppUrl = `https://t.me/${this.botUsername}/app?startapp=ref_${encodedData}`;
+        return webAppUrl;
+    }
+
+    async copyReferralLink() {
+        const link = this.generateReferralLink();
+        try {
+            await navigator.clipboard.writeText(link);
+            // Показываем уведомление об успешном копировании
+            this.showNotification('Ссылка скопирована!');
+        } catch (err) {
+            console.error('Ошибка при копировании:', err);
+            this.showNotification('Ошибка при копировании ссылки');
+        }
+    }
+
+    showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 2000);
+        }, 100);
+    }
+
+    initializeFriendsSection() {
+        const copyButton = document.querySelector('.copy-referral-button');
+        if (copyButton) {
+            copyButton.addEventListener('click', () => this.copyReferralLink());
+        }
+        
+        // Загружаем список рефералов
+        this.loadReferrals();
+    }
+
+    async loadReferrals() {
+        try {
+            const response = await fetch('/api/referrals', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'User-ID': this.telegramUserId
+                }
+            });
+            
+            if (response.ok) {
+                const referrals = await response.json();
+                this.updateReferralsList(referrals);
+            }
+        } catch (err) {
+            console.error('Ошибка при загрузке рефералов:', err);
+        }
+    }
+
+    updateReferralsList(referrals) {
+        const referralsList = document.querySelector('.referrals-list');
+        if (!referralsList) return;
+        
+        referralsList.innerHTML = '';
+        
+        if (referrals.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'empty-referrals';
+            emptyMessage.textContent = 'У вас пока нет рефералов';
+            referralsList.appendChild(emptyMessage);
+            return;
+        }
+        
+        referrals.forEach(referral => {
+            const referralItem = document.createElement('div');
+            referralItem.className = 'referral-item';
+            referralItem.innerHTML = `
+                <img src="${referral.photo_url || 'img/default-avatar.png'}" class="referral-avatar">
+                <div class="referral-info">
+                    <div class="referral-name">${referral.username || 'Пользователь'}</div>
+                    <div class="referral-date">Присоединился: ${new Date(referral.join_date).toLocaleDateString()}</div>
+                </div>
+            `;
+            referralsList.appendChild(referralItem);
+        });
     }
 }
 

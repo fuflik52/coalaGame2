@@ -64,23 +64,21 @@ class Database {
 
     async updateUserGameScore(telegramId, score) {
         try {
-            const { data: userData } = await this.getUserData(telegramId);
-            const newWeeklyScore = (userData?.weekly_score || 0) + score;
-            const newTotalScore = (userData?.game_score || 0) + score;
-
+            const telegramIdStr = String(telegramId);
             const { error } = await this.supabase
-                .from('users')
-                .update({
-                    game_score: newTotalScore,
-                    weekly_score: newWeeklyScore
-                })
-                .eq('telegram_id', telegramId);
+                .from('game_scores')
+                .insert([
+                    {
+                        telegram_id: telegramIdStr,
+                        score: score,
+                        timestamp: new Date().toISOString()
+                    }
+                ]);
 
             if (error) throw error;
-            return true;
         } catch (error) {
-            console.error('Ошибка при обновлении счета игры:', error);
-            return false;
+            console.error('Ошибка при обновлении игрового счета:', error);
+            throw error;
         }
     }
 
@@ -202,33 +200,53 @@ class Database {
 
     async createNewUser(telegramId, username = 'Пользователь', avatarUrl = null) {
         try {
-            const { data, error } = await this.supabase
+            // Преобразуем telegramId в строку
+            const telegramIdStr = String(telegramId);
+            
+            // Проверяем, существует ли пользователь
+            const { data: existingUser } = await this.supabase
                 .from('users')
-                .insert([
-                    {
-                        telegram_id: telegramId,
-                        username: username,
-                        avatar_url: 'https://i.postimg.cc/vBBWGZjL/image.png',
-                        balance: 0,
-                        energy: 100,
-                        max_energy: 100,
-                        rating: 0,
-                        game_score: 0,
-                        weekly_score: 0,
-                        last_energy_update: Date.now(),
-                        current_day: 1,
-                        last_claim_time: 0,
-                        purchased_cards: [],
-                        used_promocodes: []
-                    }
-                ])
-                .select()
+                .select('telegram_id')
+                .eq('telegram_id', telegramIdStr)
                 .single();
 
-            if (error) throw error;
-            return data;
+            if (existingUser) {
+                // Если пользователь существует, обновляем его данные
+                const { data, error } = await this.supabase
+                    .from('users')
+                    .update({
+                        username: username,
+                        photo_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
+                        last_seen: new Date().toISOString()
+                    })
+                    .eq('telegram_id', telegramIdStr)
+                    .select();
+
+                if (error) throw error;
+                return data;
+            } else {
+                // Если пользователь не существует, создаем нового
+                const { data, error } = await this.supabase
+                    .from('users')
+                    .insert([
+                        {
+                            telegram_id: telegramIdStr,
+                            username: username,
+                            photo_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
+                            balance: 0,
+                            energy: 100,
+                            max_energy: 100,
+                            last_energy_update: new Date().toISOString(),
+                            last_seen: new Date().toISOString()
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+                return data;
+            }
         } catch (error) {
-            console.error('Ошибка при создании пользователя:', error);
+            console.error('Ошибка при создании/обновлении пользователя:', error);
             return null;
         }
     }
@@ -312,6 +330,67 @@ class Database {
         } catch (error) {
             console.error('Ошибка при трате энергии:', error);
             return false;
+        }
+    }
+
+    async updateUserData(userId, data) {
+        try {
+            const { error } = await this.supabase
+                .from('users')
+                .upsert([
+                    {
+                        telegram_id: userId,
+                        energy: data.energy,
+                        balance: data.balance,
+                        last_energy_update: data.lastEnergyUpdate
+                    }
+                ]);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Ошибка при обновлении данных пользователя:', error);
+            throw error;
+        }
+    }
+
+    async addReferral(referrerId, referralId) {
+        try {
+            const { error } = await this.supabase
+                .from('referrals')
+                .insert([
+                    {
+                        referrer_id: referrerId,
+                        referral_id: referralId,
+                        join_date: new Date().toISOString()
+                    }
+                ]);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Ошибка при добавлении реферала:', error);
+            throw error;
+        }
+    }
+
+    async getReferrals(userId) {
+        try {
+            const { data, error } = await this.supabase
+                .from('referrals')
+                .select(`
+                    referral_id,
+                    join_date,
+                    users:referral_id (
+                        username,
+                        photo_url
+                    )
+                `)
+                .eq('referrer_id', userId);
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Ошибка при получении списка рефералов:', error);
+            return [];
         }
     }
 }
