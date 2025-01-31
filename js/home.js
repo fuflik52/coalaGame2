@@ -458,4 +458,15 @@ document.addEventListener('DOMContentLoaded', () => {
             restoreEnergy();
         }
     });
-}); 
+});
+
+function initializeHome() {
+    // Инициализация основных компонентов
+    const game = new NumberGame();
+    
+    // Инициализируем раздел друзей
+    game.initializeFriendsSection();
+    
+    // Добавляем в window для отладки
+    window.game = game;
+} 

@@ -804,7 +804,7 @@ class NumberGame {
                 const userData = await window.db.getUserData(window.tg.initDataUnsafe.user.id);
                 if (userData) {
                     // Получаем сохраненные данные
-                    const lastUpdate = userData.lastEnergyUpdate || Date.now();
+                    const lastUpdate = userData.last_energy_update || Math.floor(Date.now() / 1000);
                     this.energy = userData.energy || this.maxEnergy;
                     this.balance = userData.balance || 0;
 
@@ -812,7 +812,7 @@ class NumberGame {
                     this.updateUsername();
 
                     // Вычисляем, сколько энергии должно было восстановиться
-                    const secondsPassed = Math.floor((Date.now() - lastUpdate) / 1000);
+                    const secondsPassed = Math.floor((Date.now() - lastUpdate * 1000) / 1000);
                     const energyToAdd = Math.min(secondsPassed, this.maxEnergy - this.energy);
                     this.energy = Math.min(this.maxEnergy, this.energy + energyToAdd);
 
@@ -839,7 +839,7 @@ class NumberGame {
                 await window.db.updateUserData(window.tg.initDataUnsafe.user.id, {
                     energy: this.energy,
                     balance: this.balance,
-                    lastEnergyUpdate: Date.now()
+                    last_energy_update: Math.floor(Date.now() / 1000) // Конвертируем в Unix timestamp
                 });
             }
         } catch (error) {
@@ -912,20 +912,154 @@ class NumberGame {
     async copyReferralLink() {
         const link = this.generateReferralLink();
         try {
-            await navigator.clipboard.writeText(link);
-            this.showNotification({
-                title: 'Успешно!',
-                message: 'Реферальная ссылка скопирована в буфер обмена',
-                type: 'success'
-            });
+            // Создаем временный input элемент
+            const tempInput = document.createElement('input');
+            tempInput.style.position = 'absolute';
+            tempInput.style.left = '-9999px';
+            tempInput.value = link;
+            document.body.appendChild(tempInput);
+
+            // Выделяем текст
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+
+            try {
+                // Пробуем использовать современный API
+                await navigator.clipboard.writeText(link);
+                this.showNotification({
+                    title: 'Успешно!',
+                    message: 'Реферальная ссылка скопирована в буфер обмена',
+                    type: 'success'
+                });
+            } catch (err) {
+                // Если современный API недоступен, используем устаревший метод
+                document.execCommand('copy');
+                this.showNotification({
+                    title: 'Успешно!',
+                    message: 'Реферальная ссылка скопирована в буфер обмена',
+                    type: 'success'
+                });
+            }
+
+            // Удаляем временный элемент
+            document.body.removeChild(tempInput);
         } catch (err) {
             console.error('Ошибка при копировании:', err);
+            // Показываем ссылку пользователю, если копирование не удалось
             this.showNotification({
-                title: 'Ошибка',
-                message: 'Не удалось скопировать ссылку',
-                type: 'error'
+                title: 'Внимание',
+                message: 'Не удалось скопировать автоматически. Нажмите и удерживайте ссылку для копирования.',
+                type: 'info'
+            });
+            
+            // Показываем ссылку в модальном окне
+            const modal = document.createElement('div');
+            modal.className = 'referral-modal';
+            modal.innerHTML = `
+                <div class="referral-modal-content">
+                    <h3>Ваша реферальная ссылка:</h3>
+                    <div class="referral-link-container">
+                        <input type="text" value="${link}" readonly class="referral-link-input" />
+                    </div>
+                    <div class="referral-modal-footer">
+                        <button class="close-modal-button">Закрыть</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            // Добавляем стили для модального окна
+            const style = document.createElement('style');
+            style.textContent = `
+                .referral-modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                }
+                .referral-modal-content {
+                    background: #1a1a1a;
+                    padding: 20px;
+                    border-radius: 16px;
+                    max-width: 90%;
+                    width: 400px;
+                }
+                .referral-link-container {
+                    margin: 15px 0;
+                }
+                .referral-link-input {
+                    width: 100%;
+                    padding: 12px;
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 8px;
+                    color: white;
+                    font-size: 14px;
+                }
+                .close-modal-button {
+                    width: 100%;
+                    padding: 12px;
+                    background: #4CAF50;
+                    border: none;
+                    border-radius: 8px;
+                    color: white;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: background 0.3s;
+                }
+                .close-modal-button:hover {
+                    background: #45a049;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Добавляем обработчик для закрытия
+            const closeButton = modal.querySelector('.close-modal-button');
+            closeButton.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+
+            // Добавляем обработчик для клика вне модального окна
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                }
             });
         }
+    }
+
+    // Метод для тестирования уведомлений
+    testNotifications() {
+        // Успешное уведомление
+        this.showNotification({
+            title: 'Успешно!',
+            message: 'Это уведомление об успешном действии',
+            type: 'success'
+        });
+
+        // Через 2 секунды показываем уведомление об ошибке
+        setTimeout(() => {
+            this.showNotification({
+                title: 'Ошибка!',
+                message: 'Это уведомление об ошибке',
+                type: 'error'
+            });
+        }, 2000);
+
+        // Через 4 секунды показываем информационное уведомление
+        setTimeout(() => {
+            this.showNotification({
+                title: 'Информация',
+                message: 'Это информационное уведомление',
+                type: 'info'
+            });
+        }, 4000);
     }
 
     showNotification({ title, message, type = 'info' }) {
@@ -997,7 +1131,12 @@ class NumberGame {
     initializeFriendsSection() {
         const copyButton = document.querySelector('.copy-referral-button');
         if (copyButton) {
-            copyButton.addEventListener('click', () => this.copyReferralLink());
+            copyButton.addEventListener('click', () => {
+                console.log('Кнопка копирования нажата'); // Добавляем лог
+                this.copyReferralLink();
+            });
+        } else {
+            console.error('Кнопка копирования не найдена'); // Добавляем лог ошибки
         }
         
         // Загружаем список рефералов
@@ -1006,18 +1145,8 @@ class NumberGame {
 
     async loadReferrals() {
         try {
-            const response = await fetch('/api/referrals', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'User-ID': this.telegramUserId
-                }
-            });
-            
-            if (response.ok) {
-                const referrals = await response.json();
-                this.updateReferralsList(referrals);
-            }
+            // Временно отображаем заглушку вместо реального запроса
+            this.updateReferralsList([]);
         } catch (err) {
             console.error('Ошибка при загрузке рефералов:', err);
         }
@@ -1055,4 +1184,28 @@ class NumberGame {
 // Инициализация игры
 document.addEventListener('DOMContentLoaded', () => {
     const game = new NumberGame();
+    
+    // Инициализируем раздел друзей
+    game.initializeFriendsSection();
+    
+    // Добавляем тестовую кнопку для проверки уведомлений
+    const testButton = document.createElement('button');
+    testButton.textContent = 'Тест уведомлений';
+    testButton.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 9999;
+    `;
+    testButton.addEventListener('click', () => game.testNotifications());
+    document.body.appendChild(testButton);
+
+    // Добавляем в window для отладки
+    window.game = game;
 }); 
