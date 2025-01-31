@@ -105,6 +105,18 @@ body {
     position: relative;
 }
 
+.nav-item.new-feature {
+    color: #ffffff;
+}
+
+.nav-item.new-feature img {
+    filter: brightness(0) saturate(100%) invert(100%);
+}
+
+.nav-item.new-feature span {
+    color: #ffffff;
+}
+
 .nav-item span {
     font-size: 12px;
     margin-top: 4px;
@@ -113,11 +125,16 @@ body {
 }
 
 .nav-item.active {
-    color: #ffffff;
+    background: transparent;
+    border-color: transparent;
+}
+
+.nav-item.active img {
+    filter: brightness(0) saturate(100%) invert(68%) sepia(74%) saturate(385%) hue-rotate(84deg) brightness(89%) contrast(92%);
 }
 
 .nav-item.active span {
-    color: #ffffff;
+    color: #4CAF50;
 }
 
 .nav-icon {

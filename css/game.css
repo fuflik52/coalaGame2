@@ -49,10 +49,22 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.score-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 .game-score {
     font-size: 24px;
     font-weight: bold;
     color: #4CAF50;
+}
+
+.game-record {
+    font-size: 16px;
+    color: #f9f6f2;
+    opacity: 0.8;
 }
 
 .game-missions {
@@ -157,8 +169,9 @@
 
 .board-controls {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     align-items: center;
+    margin-bottom: 20px;
 }
 
 .attempts-counter {
@@ -171,7 +184,7 @@
     border: 1px solid rgba(255, 59, 48, 0.4);
 }
 
-.restart-button {
+.restart-button, .retry-button {
     background: linear-gradient(145deg, #4CAF50, #45a049);
     color: white;
     border: none;
@@ -184,14 +197,30 @@
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
 }
 
-.restart-button:hover {
+.restart-button:hover, .retry-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
 }
 
+.restart-button:active, .retry-button:active {
+    transform: translateY(0);
+}
+
+.restart-button:disabled, .retry-button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+}
+
 .nav-item.active {
-    background: rgba(76, 175, 80, 0.1);
-    border-color: #4CAF50;
+    background: transparent;
+    border-color: transparent;
+}
+
+.nav-item.active img {
+    filter: brightness(0) saturate(100%) invert(68%) sepia(74%) saturate(385%) hue-rotate(84deg) brightness(89%) contrast(92%);
 }
 
 .nav-item.active span {
@@ -511,23 +540,6 @@
     justify-content: center;
 }
 
-.retry-button {
-    background: linear-gradient(45deg, #4CAF50, #45a049);
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 15px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.retry-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-}
-
 .retry-button:disabled {
     background: #666;
     cursor: not-allowed;
@@ -598,4 +610,173 @@
 .cancel-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.game-section.development-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+}
+
+.development-content {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 20px;
+    padding: 30px 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.development-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(76, 175, 80, 0.2));
+}
+
+.development-title {
+    font-size: 24px;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.development-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+    border-radius: 20px;
+    font-size: 14px;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.progress-container {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 2px;
+    width: 35%;
+    animation: progressPulse 2s infinite;
+}
+
+.development-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    position: relative;
+    padding: 0 10px;
+}
+
+.development-steps::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 30px;
+    right: 30px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+}
+
+.step-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.step.completed .step-dot {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+.step.active .step-dot {
+    border-color: #4CAF50;
+    animation: dotPulse 2s infinite;
+}
+
+.step-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes progressPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes dotPulse {
+    0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+}
+
+.construction-animation {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.construction-beam {
+    position: absolute;
+    width: 2px;
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(76, 175, 80, 0.5), transparent);
+    animation: beamMove 4s infinite;
+}
+
+@keyframes beamMove {
+    0% {
+        transform: translateX(-100%) rotate(45deg);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(200%) rotate(45deg);
+        opacity: 0;
+    }
 } 

@@ -12,7 +12,7 @@
     <!-- Подключаем CSS файлы -->  game.css
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/home.css">
-    <link rel="stylesheet" href="css/game.css">
+
     <link rel="stylesheet" href="css/frens.css">
     <link rel="stylesheet" href="css/cards.css">
     <link rel="stylesheet" href="css/mining.css">
@@ -288,65 +288,43 @@
                     </section>
 
                     <!-- Секция Game -->
-                    <section class="content-section game-section" id="gameSection">
-                        <div class="game-header">
-                            <div class="game-score">Счёт: 0</div>
-                        </div>
-
-                        <div class="game-missions">
-                            <!-- Миссии будут добавлены через JavaScript -->
-                        </div>
-
-                        <button class="game-start">Начать игру</button>
-
-                        <div class="game-board">
-                            <div class="board-header">
-                                <div class="game-score">Счёт: 0</div>
-                                <div class="board-controls">
-                                    <div class="attempts-counter">Попыток: 5</div>
-                                    <button class="restart-button">Играть заново</button>
-                                    <button class="exit-button">Выйти</button>
+                    <section class="content-section development-section" id="gameSection">
+                        <div class="development-content">
+                            <img src="https://i.postimg.cc/prRPKdnL/image.png" alt="Game" class="development-icon">
+                            <h1 class="development-title">Мини-игры</h1>
+                            <div class="development-badge">в разработке</div>
+                            
+                            <div class="progress-container">
+                                <div class="progress-info">
+                                    <span>Версия 0.0.1</span>
+                                    <span>До релиза: 21 день</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 35%"></div>
                                 </div>
                             </div>
-                            <div class="board-grid">
-                                <!-- Игровая сетка будет добавлена через JavaScript -->
+
+                            <div class="development-steps">
+                                <div class="step completed">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">Дизайн</span>
+                                </div>
+                                <div class="step active">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">Разработка</span>
+                                </div>
+                                <div class="step">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">Тестирование</span>
+                                </div>
+                                <div class="step">
+                                    <div class="step-dot"></div>
+                                    <span class="step-label">Релиз</span>
+                                </div>
                             </div>
                         </div>
-
-                        <!-- Модальное окно с правилами -->
-                        <div class="rules-modal">
-                            <h2 class="rules-header">Правила игры</h2>
-                            <div class="rules-content">
-                                <p>Объединяйте одинаковые числа, чтобы получить 2048!</p>
-                                <p>Используйте стрелки на клавиатуре или свайпы на мобильном устройстве для перемещения плиток.</p>
-                                <p>Выполняйте миссии, чтобы получать дополнительные награды!</p>
-                            </div>
-                            <div class="rules-footer">
-                                <button class="start-game-button">Начать</button>
-                            </div>
-                        </div>
-
-                        <!-- Модальное окно проигрыша -->
-                        <div class="game-over-modal">
-                            <div class="game-over-title">Игра окончена!</div>
-                            <div class="game-over-score">Счёт: <span class="final-score">0</span></div>
-                            <div class="attempts-left">Осталось попыток: <span class="attempts-count">5</span></div>
-                            <div class="game-over-buttons">
-                                <button class="retry-button">Начать заново</button>
-                                <button class="exit-button">Выйти</button>
-                            </div>
-                        </div>
-
-                        <!-- Модальное окно подтверждения -->
-                        <div class="confirm-retry-modal">
-                            <div class="confirm-retry-text">
-                                Начать игру заново? <br>
-                                Будет потрачена 1 попытка
-                            </div>
-                            <div class="confirm-retry-buttons">
-                                <button class="confirm-button">Подтвердить</button>
-                                <button class="cancel-button">Отмена</button>
-                            </div>
+                        <div class="construction-animation">
+                            <div class="construction-beam"></div>
                         </div>
                     </section>
                 </div>
@@ -426,7 +404,7 @@
 
     <!-- Подключаем JavaScript файлы -->
     <script src="js/telegram-handler.js"></script>
-    <script src="js/game.js"></script>
+
     <script src="js/main.js"></script>
     <script src="js/home.js"></script>
     <script src="js/frens.js"></script>
