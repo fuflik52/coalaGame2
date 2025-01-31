@@ -836,10 +836,11 @@ class NumberGame {
     async saveUserData() {
         try {
             if (window.tg?.initDataUnsafe?.user?.id) {
+                const timestamp = Math.floor(Date.now() / 1000);
                 await window.db.updateUserData(window.tg.initDataUnsafe.user.id, {
-                    energy: this.energy,
-                    balance: this.balance,
-                    last_energy_update: Math.floor(Date.now() / 1000) // Конвертируем в Unix timestamp
+                    energy: parseInt(this.energy),
+                    balance: parseInt(this.balance),
+                    last_energy_update: timestamp
                 });
             }
         } catch (error) {
@@ -1063,6 +1064,8 @@ class NumberGame {
     }
 
     showNotification({ title, message, type = 'info' }) {
+        console.log('Показываем уведомление:', { title, message, type });
+        
         // Удаляем предыдущее уведомление, если оно есть
         const existingNotification = document.querySelector('.notification');
         if (existingNotification) {
@@ -1086,9 +1089,9 @@ class NumberGame {
         notification.offsetHeight;
 
         // Показываем уведомление
-        requestAnimationFrame(() => {
+        setTimeout(() => {
             notification.classList.add('show');
-        });
+        }, 10);
 
         // Удаляем уведомление через 5 секунд
         const hideTimeout = setTimeout(() => {
@@ -1116,27 +1119,32 @@ class NumberGame {
                 }, 300);
             }, 2000);
         });
-
-        // Добавляем возможность закрыть по клику
-        notification.addEventListener('click', () => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 300);
-        });
     }
 
     initializeFriendsSection() {
         const copyButton = document.querySelector('.copy-referral-button');
         if (copyButton) {
-            copyButton.addEventListener('click', () => {
-                console.log('Кнопка копирования нажата'); // Добавляем лог
-                this.copyReferralLink();
+            copyButton.addEventListener('click', async () => {
+                console.log('Кнопка копирования нажата');
+                try {
+                    const link = this.generateReferralLink();
+                    await navigator.clipboard.writeText(link);
+                    this.showNotification({
+                        title: 'Готово!',
+                        message: 'Реферальная ссылка скопирована',
+                        type: 'success'
+                    });
+                } catch (err) {
+                    console.error('Ошибка копирования:', err);
+                    this.showNotification({
+                        title: 'Ошибка',
+                        message: 'Не удалось скопировать ссылку. Попробуйте еще раз.',
+                        type: 'error'
+                    });
+                }
             });
         } else {
-            console.error('Кнопка копирования не найдена'); // Добавляем лог ошибки
+            console.error('Кнопка копирования не найдена');
         }
         
         // Загружаем список рефералов
@@ -1191,18 +1199,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Добавляем тестовую кнопку для проверки уведомлений
     const testButton = document.createElement('button');
     testButton.textContent = 'Тест уведомлений';
-    testButton.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        padding: 10px 20px;
-        background: #4CAF50;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        z-index: 9999;
-    `;
     testButton.addEventListener('click', () => game.testNotifications());
     document.body.appendChild(testButton);
 

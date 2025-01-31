@@ -172,4 +172,217 @@
     .machines-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.mining-section {
+    padding: 20px;
+    color: #fff;
+}
+
+.mining-container {
+    background: rgba(17, 24, 39, 0.7);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.mining-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.mining-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.mining-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.mining-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 8px;
+}
+
+.mining-stat i {
+    color: #4CAF50;
+}
+
+.mining-progress {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    width: 0;
+    transition: width 1s linear;
+}
+
+.mining-animation {
+    text-align: center;
+    margin-top: 16px;
+}
+
+.mining-animation i {
+    font-size: 32px;
+    color: #4CAF50;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.upgrades-container {
+    margin-top: 24px;
+}
+
+.upgrades-container h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: #fff;
+}
+
+.upgrade-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-height: calc(100vh - 400px);
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Стилизация скроллбара */
+.upgrade-cards::-webkit-scrollbar {
+    width: 6px;
+}
+
+.upgrade-cards::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.upgrade-cards::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.upgrade-cards::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.upgrade-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.upgrade-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.upgrade-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upgrade-icon i {
+    font-size: 24px;
+    color: #4CAF50;
+}
+
+.upgrade-info h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: #fff;
+}
+
+.upgrade-info p {
+    margin: 4px 0;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.upgrade-button {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.upgrade-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.upgrade-button:active {
+    transform: translateY(0);
+}
+
+.upgrade-button:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+.upgrade-button i {
+    font-size: 14px;
 } 
