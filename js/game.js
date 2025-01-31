@@ -454,12 +454,17 @@ class NumberGame {
         }
     }
 
-    updateBestScore() {
-        const bestScoreElement = document.querySelector('.stat-card:nth-child(1) .stat-value');
-        if (bestScoreElement) {
-            const bestScore = parseInt(bestScoreElement.textContent) || 0;
-            if (this.score > bestScore) {
-                bestScoreElement.textContent = this.score;
+    async updateBestScore() {
+        if (this.score > (this.bestScore || 0)) {
+            this.bestScore = this.score;
+            const bestScoreDisplay = document.querySelector('.best-score-value');
+            if (bestScoreDisplay) {
+                bestScoreDisplay.textContent = this.bestScore;
+            }
+
+            // Сохраняем лучший результат в базе данных
+            if (window.tg?.initDataUnsafe?.user?.id) {
+                await window.db.updateUserGameScore(window.tg.initDataUnsafe.user.id, this.score);
             }
         }
     }
@@ -489,129 +494,76 @@ class NumberGame {
         return false;
     }
 
-    showVictoryModal() {
-        this.isPlaying = false;
-        // Обновляем лучший счет при победе
-        this.updateBestScore();
-
-        const gameSection = document.querySelector('.game-section');
-        if (gameSection) {
-            gameSection.classList.remove('game-active');
-        }
-        // Убираем класс active у игрового поля
-        if (this.gameBoard) {
-            this.gameBoard.classList.remove('active');
+    async showVictoryModal() {
+        // Сохраняем результат в базе данных
+        if (window.tg?.initDataUnsafe?.user?.id) {
+            await window.db.updateUserGameScore(window.tg.initDataUnsafe.user.id, this.score);
         }
 
-        const victoryModal = document.querySelector('.game-modal.victory-modal');
-        if (victoryModal) {
-            victoryModal.style.display = 'flex';
-            const content = victoryModal.querySelector('.modal-content');
-            content.innerHTML = `
-                <div class="modal-title">Победа!</div>
-                <div class="modal-text">Поздравляем! Вы успешно выполнили задание!</div>
-                <div class="reward-text">
-                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="монеты">
-                    +1000 монет
+        const modal = document.createElement('div');
+        modal.className = 'game-modal victory-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Победа!</h2>
+                <div class="score-container">
+                    <div class="score-item">
+                        <span class="score-label">Счет:</span>
+                        <span class="score-value">${this.score}</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">Ходов:</span>
+                        <span class="score-value">${this.moves}</span>
+                    </div>
+                </div>
+                <div class="reward-container">
+                    <span class="reward-text">Награда:</span>
+                    <div class="reward-value">
+                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins" class="reward-icon">
+                        <span>1000</span>
+                    </div>
                 </div>
                 <div class="modal-buttons">
-                    <button class="control-button claim-reward">Получить награду</button>
+                    <button class="exit-button">Выйти</button>
+                    <button class="claim-reward">Получить награду</button>
                 </div>
-            `;
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
 
-            // Добавляем обработчик для кнопки награды
-            const claimButton = content.querySelector('.claim-reward');
-            if (claimButton) {
-                claimButton.addEventListener('click', () => {
-                    // Обновляем баланс (прибавляем, а не заменяем)
-                    if (window.addMoney) {
-                        window.addMoney(1000);
-                    }
-                    const balanceElement = document.querySelector('.balance-value');
-                    if (balanceElement) {
-                        const currentBalance = parseInt(balanceElement.textContent) || 0;
-                        balanceElement.textContent = (currentBalance + 1000).toString();
-                    }
-
-                    // Обновляем статистику
-                    const completedElement = document.querySelector('.stat-card:nth-child(2) .stat-value');
-                    if (completedElement) {
-                        const completed = parseInt(completedElement.textContent) || 0;
-                        completedElement.textContent = (completed + 1).toString();
-                    }
-                    
-                    const earnedElement = document.querySelector('.stat-card:nth-child(3) .stat-value');
-                    if (earnedElement) {
-                        const earned = parseInt(earnedElement.textContent) || 0;
-                        earnedElement.textContent = (earned + 1000).toString();
-                    }
-
-                    // Отключаем кнопку и меняем текст
-                    claimButton.disabled = true;
-                    claimButton.textContent = 'Награда получена';
-
-                    // Закрываем модальное окно
-                    victoryModal.style.display = 'none';
-
-                    // Создаем серпантин
-                    this.createConfetti();
-                });
-            }
-        }
-
-        // Отмечаем задание как выполненное и обновляем кнопку
-        const missionContainer = document.querySelector('.mission-container');
-        if (missionContainer) {
-            missionContainer.classList.add('mission-completed');
-            const attemptsCounter = missionContainer.querySelector('.attempts-counter');
-            if (attemptsCounter) {
-                const missionStatus = document.createElement('div');
-                missionStatus.className = 'mission-status';
-                missionStatus.textContent = 'Выполнено';
-                attemptsCounter.parentNode.replaceChild(missionStatus, attemptsCounter);
-            }
-        }
-
-        // Обновляем кнопку на главном экране и делаем её видимой
-        const startButton = document.querySelector('.start-button');
-        if (startButton) {
-            startButton.textContent = 'Играть';
-            startButton.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-            startButton.style.pointerEvents = 'auto';
-            startButton.style.display = 'block';
-        }
+        // Создаем эффект серпантина
+        this.createConfetti();
     }
 
-    showGameOverModal() {
-        this.isPlaying = false;
-        // Обновляем лучший счет при проигрыше
-        this.updateBestScore();
-
-        const gameSection = document.querySelector('.game-section');
-        if (gameSection) {
-            gameSection.classList.remove('game-active');
+    async showGameOverModal() {
+        // Сохраняем результат в базе данных даже при проигрыше
+        if (window.tg?.initDataUnsafe?.user?.id) {
+            await window.db.updateUserGameScore(window.tg.initDataUnsafe.user.id, this.score);
         }
-        const gameOverModal = document.querySelector('.game-modal.game-over-modal');
-        if (gameOverModal) {
-            gameOverModal.style.display = 'flex';
-            const content = gameOverModal.querySelector('.modal-content');
-            content.innerHTML = `
-                <div class="modal-title">Игра окончена 😢</div>
-                <div class="modal-text">К сожалению, не удалось выполнить задание. Осталось попыток: ${this.attempts}</div>
-                <div class="modal-buttons">
-                    <button class="control-button retry-button">ПОПРОБОВАТЬ СНОВА</button>
+
+        const modal = document.createElement('div');
+        modal.className = 'game-modal game-over-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h2>Игра окончена</h2>
+                <div class="score-container">
+                    <div class="score-item">
+                        <span class="score-label">Счет:</span>
+                        <span class="score-value">${this.score}</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">Ходов:</span>
+                        <span class="score-value">${this.moves}</span>
+                    </div>
                 </div>
-            `;
-
-            // Добавляем обработчик для кнопки "Попробовать снова"
-            const retryButton = content.querySelector('.retry-button');
-            if (retryButton) {
-                retryButton.addEventListener('click', () => {
-                    gameOverModal.style.display = 'none';
-                    this.startGame();
-                });
-            }
-        }
+                <div class="modal-buttons">
+                    <button class="exit-button">Выйти</button>
+                    <button class="start-button">Играть снова</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.style.display = 'flex';
     }
 
     createConfetti() {

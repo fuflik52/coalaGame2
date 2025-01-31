@@ -1,11 +1,11 @@
 // Инициализация Supabase
-const SUPABASE_URL = 'https://xvmjotofqhnkxatfmqxc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2bWpvdG9mcWhua3hhdGZtcXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgxODQwNDUsImV4cCI6MjA1Mzc2MDA0NX0.9Ql8P7P8WpHqbfuTT_fpLAFv4r1Sbn9ChR3F6_bYHbU';
+const SUPABASE_URL = 'https://qahulspklirvxnafaytd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhaHVsc3BrbGlydnhuYWZheXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgzNDI4ODMsImV4cCI6MjA1MzkxODg4M30.TAomMn9QHYFHCreVavdVGV6ld0LoZAqgyhSWWhacHr0';
 
 // Создаем клиент Supabase
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Получаем данные из Telegram WebApp если они еще не получены
+// Получаем данные из Telegram WebApp
 if (!window.tg) {
     window.tg = window.Telegram?.WebApp;
 }
@@ -13,21 +13,25 @@ const currentUser = window.tg?.initDataUnsafe?.user || {};
 
 class Database {
     constructor() {
-        this.isLocalMode = true; // Флаг локального режима
         this.supabase = supabaseClient;
+        this.initializeUser();
+    }
+
+    async initializeUser() {
+        if (currentUser.id) {
+            const userData = await this.getUserData(currentUser.id);
+            if (!userData) {
+                await this.createNewUser(
+                    currentUser.id,
+                    currentUser.username || 'Пользователь',
+                    `https://t.me/${currentUser.username}`
+                );
+            }
+        }
     }
 
     async getUserData(telegramId) {
-        if (this.isLocalMode) {
-            return {
-                energy: parseInt(localStorage.getItem('energy')) || 100,
-                max_energy: parseInt(localStorage.getItem('maxEnergy')) || 100,
-                balance: parseInt(localStorage.getItem('balance')) || 0
-            };
-        }
-
         try {
-            // Код для работы с Supabase
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
@@ -37,42 +41,68 @@ class Database {
             if (error) throw error;
             return data;
         } catch (error) {
-            // В локальном режиме не логируем ошибки
-            if (!this.isLocalMode) {
-                console.error('Ошибка при получении данных пользователя:', error);
-            }
+            console.error('Ошибка при получении данных пользователя:', error);
             return null;
         }
     }
 
-    async updateUserEnergy(telegramId, energy) {
-        if (this.isLocalMode) {
-            localStorage.setItem('energy', energy);
-            return true;
-        }
-
+    async getTopPlayers(limit = 10) {
         try {
+            const { data, error } = await this.supabase
+                .from('users')
+                .select('username, avatar_url, weekly_score')
+                .order('weekly_score', { ascending: false })
+                .limit(limit);
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Ошибка при получении топ игроков:', error);
+            return [];
+        }
+    }
+
+    async updateUserGameScore(telegramId, score) {
+        try {
+            const { data: userData } = await this.getUserData(telegramId);
+            const newWeeklyScore = (userData?.weekly_score || 0) + score;
+            const newTotalScore = (userData?.game_score || 0) + score;
+
             const { error } = await this.supabase
                 .from('users')
-                .update({ energy })
+                .update({
+                    game_score: newTotalScore,
+                    weekly_score: newWeeklyScore
+                })
                 .eq('telegram_id', telegramId);
 
             if (error) throw error;
             return true;
         } catch (error) {
-            if (!this.isLocalMode) {
-                console.error('Ошибка при обновлении энергии:', error);
-            }
+            console.error('Ошибка при обновлении счета игры:', error);
+            return false;
+        }
+    }
+
+    async updateUserEnergy(telegramId, energy) {
+        try {
+            const { error } = await this.supabase
+                .from('users')
+                .update({ 
+                    energy,
+                    last_energy_update: Date.now()
+                })
+                .eq('telegram_id', telegramId);
+
+            if (error) throw error;
+            return true;
+        } catch (error) {
+            console.error('Ошибка при обновлении энергии:', error);
             return false;
         }
     }
 
     async updateUserBalance(telegramId, balance) {
-        if (this.isLocalMode) {
-            localStorage.setItem('balance', balance);
-            return true;
-        }
-
         try {
             const { error } = await this.supabase
                 .from('users')
@@ -82,64 +112,58 @@ class Database {
             if (error) throw error;
             return true;
         } catch (error) {
-            if (!this.isLocalMode) {
-                console.error('Ошибка при обновлении баланса:', error);
-            }
+            console.error('Ошибка при обновлении баланса:', error);
             return false;
         }
     }
 
-    async regenerateEnergy(telegramId) {
-        if (this.isLocalMode) {
-            const currentEnergy = parseInt(localStorage.getItem('energy')) || 100;
-            const maxEnergy = parseInt(localStorage.getItem('maxEnergy')) || 100;
-            if (currentEnergy < maxEnergy) {
-                const newEnergy = Math.min(maxEnergy, currentEnergy + 1);
-                localStorage.setItem('energy', newEnergy);
-            }
-            return true;
-        }
-
+    async addPurchasedCard(telegramId, cardId) {
         try {
-            const userData = await this.getUserData(telegramId);
-            if (!userData) return false;
+            const { data: userData } = await this.getUserData(telegramId);
+            const purchasedCards = userData.purchased_cards || [];
+            
+            if (!purchasedCards.includes(cardId)) {
+                purchasedCards.push(cardId);
+                
+                const { error } = await this.supabase
+                    .from('users')
+                    .update({ purchased_cards: purchasedCards })
+                    .eq('telegram_id', telegramId);
 
-            if (userData.energy < userData.max_energy) {
-                const newEnergy = Math.min(userData.max_energy, userData.energy + 1);
-                await this.updateUserEnergy(telegramId, newEnergy);
+                if (error) throw error;
             }
             return true;
         } catch (error) {
-            if (!this.isLocalMode) {
-                console.error('Ошибка при регенерации энергии:', error);
-            }
+            console.error('Ошибка при добавлении купленной карточки:', error);
             return false;
         }
     }
 
-    // Синхронизация локального баланса
-    async syncLocalBalance(telegramId) {
+    async usePromoCode(telegramId, promoCode) {
         try {
-            const userData = await this.getUserData(telegramId);
-            if (!userData) return false;
-
-            const localBalance = parseInt(localStorage.getItem('balance')) || 0;
-            if (localBalance !== userData.balance) {
-                localStorage.setItem('balance', userData.balance);
-                // Обновляем отображение баланса
-                const balanceElement = document.querySelector('.balance-value');
-                if (balanceElement) {
-                    balanceElement.textContent = userData.balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-                }
+            const { data: userData } = await this.getUserData(telegramId);
+            const usedPromocodes = userData.used_promocodes || [];
+            
+            if (usedPromocodes.includes(promoCode)) {
+                return { success: false, message: 'Промокод уже использован' };
             }
-            return true;
+            
+            usedPromocodes.push(promoCode);
+            
+            const { error } = await this.supabase
+                .from('users')
+                .update({ used_promocodes: usedPromocodes })
+                .eq('telegram_id', telegramId);
+
+            if (error) throw error;
+            return { success: true, message: 'Промокод успешно активирован' };
         } catch (error) {
-            console.error('Ошибка при синхронизации баланса:', error);
-            return false;
+            console.error('Ошибка при использовании промокода:', error);
+            return { success: false, message: 'Ошибка при активации промокода' };
         }
     }
 
-    async createNewUser(telegramId, username = 'Пользователь') {
+    async createNewUser(telegramId, username = 'Пользователь', avatarUrl = null) {
         try {
             const { data, error } = await this.supabase
                 .from('users')
@@ -147,12 +171,18 @@ class Database {
                     {
                         telegram_id: telegramId,
                         username: username,
+                        avatar_url: avatarUrl,
                         balance: 0,
                         energy: 100,
                         max_energy: 100,
+                        rating: 0,
+                        game_score: 0,
+                        weekly_score: 0,
                         last_energy_update: Date.now(),
                         current_day: 1,
-                        last_claim_time: 0
+                        last_claim_time: 0,
+                        purchased_cards: [],
+                        used_promocodes: []
                     }
                 ])
                 .select()
@@ -166,39 +196,33 @@ class Database {
         }
     }
 
-    async updateUsername(telegramId, username) {
+    async regenerateEnergy(telegramId) {
         try {
-            const { data, error } = await this.supabase
-                .from('users')
-                .update({ username: username })
-                .eq('telegram_id', telegramId)
-                .select()
-                .single();
+            const userData = await this.getUserData(telegramId);
+            if (!userData) return false;
 
-            if (error) throw error;
-            return true;
-        } catch (error) {
-            console.error('Ошибка при обновлении имени пользователя:', error);
+            const now = Date.now();
+            const lastUpdate = userData.last_energy_update || now;
+            const secondsPassed = Math.floor((now - lastUpdate) / 1000);
+            
+            if (secondsPassed > 0 && userData.energy < userData.max_energy) {
+                // Добавляем по 1 единице энергии за каждую прошедшую секунду
+                const newEnergy = Math.min(userData.max_energy, userData.energy + secondsPassed);
+                
+                const { error } = await this.supabase
+                    .from('users')
+                    .update({ 
+                        energy: newEnergy,
+                        last_energy_update: now
+                    })
+                    .eq('telegram_id', telegramId);
+
+                if (error) throw error;
+                return true;
+            }
             return false;
-        }
-    }
-
-    async updateUserRewards(telegramId, newDay, claimTime) {
-        try {
-            const { data, error } = await this.supabase
-                .from('users')
-                .update({
-                    current_day: newDay,
-                    last_claim_time: claimTime
-                })
-                .eq('telegram_id', telegramId)
-                .select()
-                .single();
-
-            if (error) throw error;
-            return true;
         } catch (error) {
-            console.error('Ошибка при обновлении наград:', error);
+            console.error('Ошибка при восстановлении энергии:', error);
             return false;
         }
     }

@@ -8,20 +8,20 @@
     <link rel="stylesheet" href="css/loader.css">
     <link rel="stylesheet" href="css/development.css">
     <link rel="stylesheet" href="css/game.css">
-    <script src="js/telegram-logger.js"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем CSS файлы -->  game.css
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/home.css">
-
     <link rel="stylesheet" href="css/frens.css">
     <link rel="stylesheet" href="css/cards.css">
     <link rel="stylesheet" href="css/mining.css">
     <link rel="stylesheet" href="css/reward.css">
     <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/leaderboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/telegram-logger.js"></script>
     <script src="js/database.js"></script>
+    <script src="js/leaderboard.js"></script>
 </head>
 <body>
     <!-- Приветственное сообщение -->
@@ -98,6 +98,7 @@
                                 <span class="balance-value">0</span>
                             </div>
                         </div>
+                        
                         <div class="click-section">
                             <div class="clicker-button">
                                 <div class="clicker-gradient"></div>
@@ -309,6 +310,9 @@
                             </div>
                         </div>
 
+                        <!-- Кнопка начала игры -->
+                        <button class="control-button start-button">Начать попытку</button>
+
                         <!-- Статистика игрока -->
                         <div class="player-stats">
                             <div class="stat-card">
@@ -323,6 +327,12 @@
                                 <div class="stat-value">0</div>
                                 <div class="stat-label">Заработано</div>
                             </div>
+                        </div>
+
+                        <!-- Таблица лидеров -->
+                        <div class="leaderboard-container">
+                            <h2>Лучшие игроки недели</h2>
+                            <div class="leaderboard-list"></div>
                         </div>
 
                         <!-- Игровое поле -->
@@ -340,16 +350,7 @@
 
                         <!-- Кнопки управления -->
                         <div class="game-controls">
-                            <button class="control-button start-button">Начать попытку</button>
                             <button class="control-button exit-button">Выйти</button>
-                        </div>
-
-                        <!-- Таблица лидеров -->
-                        <div class="leaderboard">
-                            <div class="leaderboard-title">Лучшие игроки недели</div>
-                            <div class="leaderboard-list">
-                                <!-- Список лидеров будет добавлен через JavaScript -->
-                            </div>
                         </div>
 
                         <!-- Модальные окна -->
