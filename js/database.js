@@ -35,8 +35,8 @@ class Database {
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
-                .eq('telegram_id', telegramId)
-                .maybeSingle();
+                .eq('telegram_id', String(telegramId))
+                .single();
 
             if (error) throw error;
             return data;
@@ -82,21 +82,22 @@ class Database {
         }
     }
 
-    async updateUserEnergy(telegramId, energy) {
+    async updateUserEnergy(telegramId, newEnergy, maxEnergy = 100) {
         try {
-            const { error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('users')
                 .update({ 
-                    energy,
-                    last_energy_update: Date.now()
+                    energy: Math.min(Math.max(0, newEnergy), maxEnergy),
+                    last_energy_update: new Date().toISOString()
                 })
-                .eq('telegram_id', telegramId);
+                .eq('telegram_id', String(telegramId))
+                .select();
 
             if (error) throw error;
-            return true;
+            return data;
         } catch (error) {
             console.error('Ошибка при обновлении энергии:', error);
-            return false;
+            throw error;
         }
     }
 
@@ -200,10 +201,8 @@ class Database {
 
     async createNewUser(telegramId, username = 'Пользователь', avatarUrl = null) {
         try {
-            // Преобразуем telegramId в строку
             const telegramIdStr = String(telegramId);
             
-            // Проверяем, существует ли пользователь
             const { data: existingUser } = await this.supabase
                 .from('users')
                 .select('telegram_id')
@@ -211,7 +210,6 @@ class Database {
                 .single();
 
             if (existingUser) {
-                // Если пользователь существует, обновляем его данные
                 const { data, error } = await this.supabase
                     .from('users')
                     .update({
@@ -225,25 +223,25 @@ class Database {
                 if (error) throw error;
                 return data;
             } else {
-                // Если пользователь не существует, создаем нового
                 const { data, error } = await this.supabase
                     .from('users')
-                    .insert([
-                        {
-                            telegram_id: telegramIdStr,
-                            username: username,
-                            avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
-                            balance: 0,
-                            energy: 100,
-                            max_energy: 100,
-                            energy_regen_rate: 1,
-                            rating: 0,
-                            game_score: 0,
-                            weekly_score: 0,
-                            last_energy_update: new Date().toISOString(),
-                            last_seen: new Date().toISOString()
-                        }
-                    ])
+                    .insert([{
+                        telegram_id: telegramIdStr,
+                        username: username,
+                        avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
+                        balance: 0,
+                        energy: 100,
+                        max_energy: 100,
+                        energy_regen_rate: 1,
+                        level: 1,
+                        exp: 0,
+                        exp_next_level: 100,
+                        rating: 0,
+                        game_score: 0,
+                        weekly_score: 0,
+                        last_energy_update: new Date().toISOString(),
+                        last_seen: new Date().toISOString()
+                    }])
                     .select();
 
                 if (error) throw error;
@@ -325,9 +323,9 @@ class Database {
                 .from('users')
                 .update({ 
                     energy: newEnergy,
-                    last_energy_update: Date.now()
+                    last_energy_update: new Date().toISOString()
                 })
-                .eq('telegram_id', telegramId);
+                .eq('telegram_id', String(telegramId));
 
             if (error) throw error;
             return true;
@@ -339,19 +337,22 @@ class Database {
 
     async updateUserData(telegramId, userData) {
         try {
+            // Убеждаемся, что все числовые значения находятся в допустимом диапазоне
+            const sanitizedData = {
+                energy: Math.min(Math.max(0, Math.floor(userData.energy)), userData.max_energy || 100),
+                balance: Math.max(0, Math.floor(userData.balance)),
+                max_energy: Math.min(Math.max(1, Math.floor(userData.max_energy)), 2147483647),
+                energy_regen_rate: Math.min(Math.max(1, Math.floor(userData.energy_regen_rate)), 100),
+                level: Math.min(Math.max(1, Math.floor(userData.level)), 2147483647),
+                exp: Math.min(Math.max(0, Math.floor(userData.exp)), 2147483647),
+                exp_next_level: Math.min(Math.max(1, Math.floor(userData.exp_next_level)), 2147483647),
+                last_energy_update: new Date().toISOString(),
+                last_seen: new Date().toISOString()
+            };
+
             const { data, error } = await this.supabase
                 .from('users')
-                .update({
-                    energy: userData.energy,
-                    balance: userData.balance,
-                    max_energy: userData.max_energy,
-                    energy_regen_rate: userData.energy_regen_rate,
-                    level: userData.level,
-                    exp: userData.exp,
-                    exp_next_level: userData.exp_next_level,
-                    last_energy_update: userData.last_energy_update,
-                    last_seen: new Date().toISOString()
-                })
+                .update(sanitizedData)
                 .eq('telegram_id', String(telegramId))
                 .select();
 

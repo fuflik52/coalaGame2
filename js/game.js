@@ -804,20 +804,25 @@ class NumberGame {
                 const userData = await window.db.getUserData(window.tg.initDataUnsafe.user.id);
                 if (userData) {
                     // Получаем сохраненные данные
-                    const lastUpdate = userData.last_energy_update || Math.floor(Date.now() / 1000);
                     this.energy = userData.energy || this.maxEnergy;
                     this.balance = userData.balance || 0;
+                    this.maxEnergy = userData.max_energy || 100;
+                    this.energyRegenRate = userData.energy_regen_rate || 1;
+                    this.level = userData.level || 1;
+                    this.exp = userData.exp || 0;
+                    this.expNextLevel = userData.exp_next_level || 100;
 
                     // Обновляем имя пользователя
                     this.updateUsername();
 
                     // Вычисляем, сколько энергии должно было восстановиться
-                    const secondsPassed = Math.floor((Date.now() - lastUpdate * 1000) / 1000);
-                    const energyToAdd = Math.min(secondsPassed, this.maxEnergy - this.energy);
+                    const lastUpdate = userData.last_energy_update ? new Date(userData.last_energy_update) : new Date();
+                    const secondsPassed = Math.floor((Date.now() - lastUpdate.getTime()) / 1000);
+                    const energyToAdd = Math.min(secondsPassed * this.energyRegenRate, this.maxEnergy - this.energy);
                     this.energy = Math.min(this.maxEnergy, this.energy + energyToAdd);
 
                     // Обновляем время последнего обновления
-                    this.lastEnergyUpdate = Date.now();
+                    this.lastEnergyUpdate = new Date();
                     
                     // Обновляем отображение
                     this.updateEnergyDisplay();
