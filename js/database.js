@@ -333,42 +333,25 @@ class Database {
         }
     }
 
-    async updateUserData(userId, data) {
+    async updateUserData(telegramId, data) {
         try {
-            const telegramIdStr = String(userId);
-            
-            // Проверяем существование пользователя
-            const { data: existingUser } = await this.supabase
-                .from('users')
-                .select('telegram_id')
-                .eq('telegram_id', telegramIdStr)
-                .single();
-
-            if (!existingUser) {
-                // Если пользователь не существует, создаем его
-                const { error: insertError } = await this.supabase
-                    .from('users')
-                    .insert([{
-                        telegram_id: telegramIdStr,
-                        energy: data.energy,
-                        balance: data.balance,
-                        last_energy_update: new Date().toISOString()
-                    }]);
-                
-                if (insertError) throw insertError;
-            } else {
-                // Если пользователь существует, обновляем его данные
-                const { error: updateError } = await this.supabase
-                    .from('users')
-                    .update({
-                        energy: data.energy,
-                        balance: data.balance,
-                        last_energy_update: new Date().toISOString()
-                    })
-                    .eq('telegram_id', telegramIdStr);
-                
-                if (updateError) throw updateError;
+            // Проверяем и преобразуем все числовые значения
+            const sanitizedData = {};
+            for (const [key, value] of Object.entries(data)) {
+                if (typeof value === 'number') {
+                    // Ограничиваем значения диапазоном PostgreSQL integer
+                    sanitizedData[key] = Math.min(Math.max(Math.floor(value), -2147483648), 2147483647);
+                } else {
+                    sanitizedData[key] = value;
+                }
             }
+
+            const { error } = await this.supabase
+                .from('users')
+                .update(sanitizedData)
+                .eq('telegram_id', telegramId);
+
+            if (error) throw error;
         } catch (error) {
             console.error('Ошибка при обновлении данных пользователя:', error);
             throw error;
