@@ -58,7 +58,7 @@ class TelegramHandler {
                     .insert([{
                         telegram_id: telegramIdStr,
                         username: this.username,
-                        photo_url: this.photoUrl,
+                        avatar_url: this.photoUrl,
                         energy: 100,
                         balance: 0,
                         max_energy: 100,
@@ -74,7 +74,7 @@ class TelegramHandler {
                     .update({
                         last_seen: new Date().toISOString(),
                         username: this.username,
-                        photo_url: this.photoUrl
+                        avatar_url: this.photoUrl
                     })
                     .eq('telegram_id', telegramIdStr);
 

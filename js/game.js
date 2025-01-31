@@ -1128,7 +1128,7 @@ class NumberGame {
     }
 
     initializeFriendsSection() {
-        const copyButton = document.querySelector('.copy-referral-button');
+        const copyButton = document.querySelector('#copyReferralLink');
         if (copyButton) {
             copyButton.addEventListener('click', async () => {
                 console.log('Кнопка копирования нажата');

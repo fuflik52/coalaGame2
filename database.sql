@@ -7,6 +7,7 @@ CREATE TABLE users (
     balance INTEGER DEFAULT 0,
     energy INTEGER DEFAULT 100,
     max_energy INTEGER DEFAULT 100,
+    energy_regen_rate INTEGER DEFAULT 1,
     rating INTEGER DEFAULT 0,
     game_score INTEGER DEFAULT 0,
     weekly_score INTEGER DEFAULT 0,

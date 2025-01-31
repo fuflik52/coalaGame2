@@ -1,3 +1,25 @@
+// Наблюдаем за изменениями в DOM
+const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length) {
+            mutation.addedNodes.forEach((node) => {
+                // Проверяем, является ли добавленный узел нужной нам секцией
+                if (node.classList && node.classList.contains('rewards-section')) {
+                    if (!window.rewards) {
+                        window.rewards = new Rewards();
+                    }
+                }
+            });
+        }
+    });
+});
+
+// Начинаем наблюдение за изменениями в DOM
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
 class Rewards {
     constructor() {
         this.rewards = [
@@ -142,7 +164,6 @@ class Rewards {
         const reward = this.rewards.find(r => r.id === rewardId);
         if (!reward) return;
 
-        // Проверяем возможность получения награды
         if (reward.cooldown) {
             const timeLeft = reward.cooldown - (Date.now() - reward.lastClaimed);
             if (timeLeft > 0) {
@@ -164,19 +185,16 @@ class Rewards {
             return;
         }
 
-        // Начисляем награду
         if (window.game) {
             window.game.balance += reward.coins;
             window.game.updateBalanceDisplay();
             
-            // Обновляем данные награды
             reward.lastClaimed = Date.now();
             if (reward.progress !== undefined) {
                 reward.progress = 0;
             }
             reward.count = (reward.count || 0) + 1;
 
-            // Сохраняем данные
             if (window.tg?.initDataUnsafe?.user?.id) {
                 try {
                     await window.db.updateUserRewards(window.tg.initDataUnsafe.user.id, {
@@ -191,17 +209,14 @@ class Rewards {
                 }
             }
 
-            // Обновляем UI
             this.updateUI();
 
-            // Показываем уведомление
             window.game.showNotification({
                 title: 'Награда получена!',
                 message: `Вы получили ${reward.coins} монет`,
                 type: 'success'
             });
 
-            // Создаем эффект получения награды
             this.createRewardEffect(reward.coins);
         }
     }
@@ -243,27 +258,9 @@ class Rewards {
             }
         });
 
-        // Обновляем общую сумму полученных наград
         const totalEarned = this.rewards.reduce((sum, reward) => {
             return sum + (reward.count || 0) * reward.coins;
         }, 0);
         document.querySelector('.total-earned').textContent = totalEarned;
     }
-}
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        if (item.getAttribute('data-section') === 'rewards') {
-            item.addEventListener('click', () => {
-                const rewardsSection = document.querySelector('.rewards-section');
-                if (rewardsSection && rewardsSection.classList.contains('active')) {
-                    if (!window.rewards) {
-                        window.rewards = new Rewards();
-                    }
-                }
-            });
-        }
-    });
-}); 
+} 

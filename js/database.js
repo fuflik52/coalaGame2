@@ -216,7 +216,7 @@ class Database {
                     .from('users')
                     .update({
                         username: username,
-                        photo_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
+                        avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
                         last_seen: new Date().toISOString()
                     })
                     .eq('telegram_id', telegramIdStr)
@@ -232,10 +232,14 @@ class Database {
                         {
                             telegram_id: telegramIdStr,
                             username: username,
-                            photo_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
+                            avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
                             balance: 0,
                             energy: 100,
                             max_energy: 100,
+                            energy_regen_rate: 1,
+                            rating: 0,
+                            game_score: 0,
+                            weekly_score: 0,
                             last_energy_update: new Date().toISOString(),
                             last_seen: new Date().toISOString()
                         }
@@ -386,7 +390,7 @@ class Database {
                     join_date,
                     users:referral_id (
                         username,
-                        photo_url
+                        avatar_url
                     )
                 `)
                 .eq('referrer_id', userId);
