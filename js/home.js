@@ -22,6 +22,19 @@ function initializeTelegramId() {
     if (!window.telegramId) {
         console.error('Telegram ID не найден в URL');
     }
+    
+    // Получаем имя пользователя из Telegram WebApp
+    const username = window.tg?.initDataUnsafe?.user?.username || 
+                    window.Telegram?.WebApp?.initDataUnsafe?.user?.username ||
+                    window.tg?.initDataUnsafe?.user?.first_name ||
+                    window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name ||
+                    'Пользователь';
+                    
+    // Обновляем отображение имени пользователя
+    const userNameElement = document.querySelector('.user-name');
+    if (userNameElement) {
+        userNameElement.textContent = username;
+    }
 }
 
 function updateEnergy() {
@@ -81,16 +94,29 @@ async function handleClick(event) {
     isClicking = true;
 
     try {
-        // Получаем текущие данные пользователя
-        const userData = await window.db.getUserData(window.telegramId);
-        if (!userData) {
-            showNotification('Ошибка получения данных пользователя', 'error');
+        // Получаем Telegram ID
+        const telegramId = window.tg?.initDataUnsafe?.user?.id?.toString() || window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString();
+        
+        if (!telegramId) {
+            showNotification('Ошибка: не удалось получить ID пользователя', 'error');
             return;
         }
 
+        // Получаем текущие данные пользователя
+        const userData = await window.db.getUserData(telegramId);
+        if (!userData) {
+            // Если пользователь не существует, создаем нового
+            const newUser = await window.db.createNewUser(telegramId);
+            if (!newUser) {
+                showNotification('Ошибка создания данных пользователя', 'error');
+                return;
+            }
+        }
+
         // Синхронизируем локальное значение энергии с базой данных
-        energy = userData.energy;
-        maxEnergy = userData.max_energy;
+        const currentUserData = await window.db.getUserData(telegramId);
+        energy = currentUserData.energy;
+        maxEnergy = currentUserData.max_energy;
         updateEnergy();
 
         if (energy <= 0) {
@@ -101,7 +127,7 @@ async function handleClick(event) {
         // Тратим энергию
         energy--;
         updateEnergy();
-        await window.db.spendEnergy(window.telegramId);
+        await window.db.spendEnergy(telegramId);
 
         // Добавляем анимацию нажатия
         const clickerButton = document.querySelector('.clicker-button');
@@ -130,7 +156,7 @@ async function handleClick(event) {
 
         // Обновляем баланс
         const reward = 1 * clickMultiplier;
-        await window.db.updateUserBalance(window.telegramId, userData.balance + reward);
+        await window.db.updateUserBalance(telegramId, currentUserData.balance + reward);
 
         // Показываем анимацию награды
         showRewardAnimation(reward, event);
@@ -389,6 +415,18 @@ async function loadUserData() {
             // Обновляем отображение энергии
             if (typeof updateEnergyDisplay === 'function') {
                 updateEnergyDisplay(userData.energy, userData.max_energy);
+            }
+
+            // Обновляем имя пользователя
+            const username = window.tg?.initDataUnsafe?.user?.username || 
+                           window.Telegram?.WebApp?.initDataUnsafe?.user?.username ||
+                           window.tg?.initDataUnsafe?.user?.first_name ||
+                           window.Telegram?.WebApp?.initDataUnsafe?.user?.first_name ||
+                           'Пользователь';
+            
+            const userNameElement = document.querySelector('.user-name');
+            if (userNameElement) {
+                userNameElement.textContent = username;
             }
         }
     } catch (error) {
