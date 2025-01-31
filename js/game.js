@@ -835,17 +835,15 @@ class NumberGame {
     // Обновляем метод сохранения данных пользователя
     async saveUserData() {
         try {
-            const currentTime = Math.floor(Date.now() / 1000); // Конвертируем в секунды
             const userData = {
                 energy: Math.floor(this.energy),
                 balance: Math.floor(this.balance),
-                last_energy_update: currentTime,
-                // Убедимся, что все числовые значения находятся в допустимом диапазоне
+                last_energy_update: new Date().toISOString(),
                 max_energy: Math.min(Math.floor(this.maxEnergy), 2147483647),
-                energy_regen_rate: Math.min(Math.floor(this.energyRegenRate), 2147483647),
-                level: Math.min(Math.floor(this.level), 2147483647),
-                exp: Math.min(Math.floor(this.exp), 2147483647),
-                exp_next_level: Math.min(Math.floor(this.expNextLevel), 2147483647)
+                energy_regen_rate: Math.min(Math.floor(this.energyRegenRate || 1), 2147483647),
+                level: Math.min(Math.floor(this.level || 1), 2147483647),
+                exp: Math.min(Math.floor(this.exp || 0), 2147483647),
+                exp_next_level: Math.min(Math.floor(this.expNextLevel || 100), 2147483647)
             };
 
             await window.db.updateUserData(this.telegramUserId, userData);

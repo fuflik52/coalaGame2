@@ -337,25 +337,26 @@ class Database {
         }
     }
 
-    async updateUserData(telegramId, data) {
+    async updateUserData(telegramId, userData) {
         try {
-            // Проверяем и преобразуем все числовые значения
-            const sanitizedData = {};
-            for (const [key, value] of Object.entries(data)) {
-                if (typeof value === 'number') {
-                    // Ограничиваем значения диапазоном PostgreSQL integer
-                    sanitizedData[key] = Math.min(Math.max(Math.floor(value), -2147483648), 2147483647);
-                } else {
-                    sanitizedData[key] = value;
-                }
-            }
-
-            const { error } = await this.supabase
+            const { data, error } = await this.supabase
                 .from('users')
-                .update(sanitizedData)
-                .eq('telegram_id', telegramId);
+                .update({
+                    energy: userData.energy,
+                    balance: userData.balance,
+                    max_energy: userData.max_energy,
+                    energy_regen_rate: userData.energy_regen_rate,
+                    level: userData.level,
+                    exp: userData.exp,
+                    exp_next_level: userData.exp_next_level,
+                    last_energy_update: userData.last_energy_update,
+                    last_seen: new Date().toISOString()
+                })
+                .eq('telegram_id', String(telegramId))
+                .select();
 
             if (error) throw error;
+            return data;
         } catch (error) {
             console.error('Ошибка при обновлении данных пользователя:', error);
             throw error;
