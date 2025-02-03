@@ -13,29 +13,45 @@ if (!window.tg) {
 // Ждем инициализацию Telegram WebApp
 function waitForTelegramInit() {
     return new Promise((resolve) => {
-        if (window.tg?.initDataUnsafe?.user) {
-            resolve(window.tg.initDataUnsafe.user);
-        } else {
-            const checkInterval = setInterval(() => {
-                if (window.tg?.initDataUnsafe?.user) {
-                    clearInterval(checkInterval);
-                    resolve(window.tg.initDataUnsafe.user);
-                }
-            }, 100);
-            
-            // Таймаут через 5 секунд
-            setTimeout(() => {
+        const maxAttempts = 50; // 5 секунд максимум
+        let attempts = 0;
+        
+        const checkTelegram = () => {
+            if (window.tg?.initDataUnsafe?.user?.id) {
+                console.log('Telegram WebApp успешно инициализирован');
+                resolve(window.tg.initDataUnsafe.user);
+                return true;
+            }
+            return false;
+        };
+
+        // Проверяем сразу
+        if (checkTelegram()) return;
+
+        // Если не получилось, запускаем интервал
+        const checkInterval = setInterval(() => {
+            attempts++;
+            if (checkTelegram() || attempts >= maxAttempts) {
                 clearInterval(checkInterval);
-                resolve(null);
-            }, 5000);
-        }
+                if (attempts >= maxAttempts) {
+                    console.error('Не удалось получить данные пользователя Telegram');
+                    resolve(null);
+                }
+            }
+        }, 100);
     });
 }
 
 // Инициализируем базу данных
 async function initDatabase() {
-    const currentUser = await waitForTelegramInit() || {};
+    const currentUser = await waitForTelegramInit();
+    if (!currentUser || !currentUser.id) {
+        console.error('Не удалось получить ID пользователя Telegram');
+        return null;
+    }
+    console.log('Инициализация базы данных с пользователем:', currentUser.id);
     window.db = new Database(currentUser);
+    return window.db;
 }
 
 class Database {
@@ -392,9 +408,11 @@ class Database {
                 exp_next_level: Math.min(Math.max(1, Math.floor(userData.exp_next_level || 100)), 2147483647),
                 game_score: Math.max(0, Math.floor(userData.game_score || 0)),
                 weekly_score: Math.max(0, Math.floor(userData.weekly_score || 0)),
-                last_energy_update: Date.now(),
-                last_seen: Date.now()
+                last_energy_update: Math.floor(Date.now() / 1000), // Сохраняем как UNIX timestamp
+                last_seen: Math.floor(Date.now() / 1000) // Сохраняем как UNIX timestamp
             };
+
+            console.log('Обновление данных пользователя:', telegramId, sanitizedData);
 
             const { data, error } = await this.supabase
                 .from('users')
