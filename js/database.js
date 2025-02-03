@@ -313,12 +313,11 @@ class Database {
             const userData = await this.getUserData(telegramId);
             if (!userData) return false;
 
-            const now = Date.now();
+            const now = Math.floor(Date.now() / 1000); // UNIX timestamp
             const lastUpdate = userData.last_energy_update || now;
-            const secondsPassed = Math.floor((now - lastUpdate) / 1000);
+            const secondsPassed = now - lastUpdate;
             
             if (secondsPassed > 0 && userData.energy < userData.max_energy) {
-                // Добавляем по 1 единице энергии за каждую прошедшую секунду
                 const newEnergy = Math.min(userData.max_energy, userData.energy + secondsPassed);
                 
                 const { error } = await this.supabase
@@ -378,7 +377,7 @@ class Database {
                 .from('users')
                 .update({ 
                     energy: newEnergy,
-                    last_energy_update: new Date().toISOString()
+                    last_energy_update: Math.floor(Date.now() / 1000) // Сохраняем как UNIX timestamp
                 })
                 .eq('telegram_id', String(telegramId));
 
@@ -397,6 +396,8 @@ class Database {
                 return null;
             }
 
+            const now = Math.floor(Date.now() / 1000); // UNIX timestamp
+            
             // Убеждаемся, что все числовые значения находятся в допустимом диапазоне
             const sanitizedData = {
                 energy: Math.min(Math.max(0, Math.floor(userData.energy || 0)), userData.max_energy || 100),
@@ -408,8 +409,8 @@ class Database {
                 exp_next_level: Math.min(Math.max(1, Math.floor(userData.exp_next_level || 100)), 2147483647),
                 game_score: Math.max(0, Math.floor(userData.game_score || 0)),
                 weekly_score: Math.max(0, Math.floor(userData.weekly_score || 0)),
-                last_energy_update: Math.floor(Date.now() / 1000), // Сохраняем как UNIX timestamp
-                last_seen: Math.floor(Date.now() / 1000) // Сохраняем как UNIX timestamp
+                last_energy_update: now,
+                last_seen: now
             };
 
             console.log('Обновление данных пользователя:', telegramId, sanitizedData);
