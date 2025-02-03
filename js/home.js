@@ -15,17 +15,41 @@ let clickMultiplier = 1;
 let isClicking = false;
 let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
-// Инициализация Telegram ID из URL
+// Инициализация Telegram ID
 async function initializeTelegramId() {
-    // Ждем инициализацию Telegram WebApp
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    return new Promise((resolve) => {
+        const maxAttempts = 50;
+        let attempts = 0;
 
-    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-        window.currentTelegramId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
-        return true;
-    }
-    console.error('Telegram ID не найден');
-    return false;
+        const checkTelegram = () => {
+            if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+                const userId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
+                window.currentTelegramId = userId;
+                console.log('Telegram ID успешно получен:', userId);
+                return true;
+            }
+            return false;
+        };
+
+        // Проверяем сразу
+        if (checkTelegram()) {
+            resolve(true);
+            return;
+        }
+
+        // Если не получилось, запускаем интервал
+        const interval = setInterval(() => {
+            attempts++;
+            if (checkTelegram()) {
+                clearInterval(interval);
+                resolve(true);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                console.error('Не удалось получить Telegram ID');
+                resolve(false);
+            }
+        }, 100);
+    });
 }
 
 function updateEnergy() {
@@ -79,77 +103,58 @@ function vibrate(duration = 50) {
 }
 
 async function handleClick(event) {
-    event.preventDefault();
+    if (event) {
+        event.preventDefault();
+    }
     
-    if (isClicking) return;
-    isClicking = true;
+    if (!window.currentTelegramId) {
+        console.error('Ошибка: telegram_id не определен');
+        showNotification('Ошибка: не удалось получить данные пользователя', 'error');
+        return;
+    }
 
     try {
         // Получаем текущие данные пользователя
-        const userData = await window.db.getUserData(window.telegramId);
+        const userData = await window.db.getUserData(window.currentTelegramId);
         if (!userData) {
             showNotification('Ошибка получения данных пользователя', 'error');
             return;
         }
 
-        // Синхронизируем локальное значение энергии с базой данных
-        energy = userData.energy;
-        maxEnergy = userData.max_energy;
-        updateEnergy();
-
-        if (energy <= 0) {
+        if (userData.energy <= 0) {
             showNotification('Недостаточно энергии!', 'error');
             return;
         }
 
         // Тратим энергию
-        energy--;
-        updateEnergy();
-        await window.db.spendEnergy(window.telegramId);
-
-        // Добавляем анимацию нажатия
-        const clickerButton = document.querySelector('.clicker-button');
-        const koalaImage = clickerButton?.querySelector('.clicker-koala');
-        
-        if (clickerButton) clickerButton.classList.add('clicked');
-        if (koalaImage) koalaImage.classList.add('clicked');
-
-        // Вибрация при клике
-        if (isVibrationEnabled && checkVibrationSupport()) {
-            vibrate(50);
+        const success = await window.db.spendEnergy(window.currentTelegramId);
+        if (!success) {
+            showNotification('Ошибка при обновлении энергии', 'error');
+            return;
         }
-
-        // Обновляем счетчик кликов и множитель
-        const currentTime = Date.now();
-        if (currentTime - lastClickTime < 300) {
-            clickCount++;
-            if (clickCount >= 10) {
-                clickMultiplier = 2;
-            }
-        } else {
-            clickCount = 1;
-            clickMultiplier = 1;
-        }
-        lastClickTime = currentTime;
 
         // Обновляем баланс
-        const reward = 1 * clickMultiplier;
-        await window.db.updateUserBalance(window.telegramId, userData.balance + reward);
+        await window.db.updateUserBalance(window.currentTelegramId, userData.balance + 1);
 
-        // Показываем анимацию награды
-        showRewardAnimation(reward, event);
+        // Обновляем отображение
+        const updatedUserData = await window.db.getUserData(window.currentTelegramId);
+        if (updatedUserData) {
+            updateEnergyDisplay(updatedUserData.energy, updatedUserData.max_energy);
+            updateBalanceDisplay(updatedUserData.balance);
+        }
 
-        // Убираем анимацию нажатия
-        setTimeout(() => {
-            if (clickerButton) clickerButton.classList.remove('clicked');
-            if (koalaImage) koalaImage.classList.remove('clicked');
-        }, 100);
+        // Добавляем анимацию клика
+        const clickerButton = document.querySelector('.clicker-button');
+        if (clickerButton) {
+            clickerButton.classList.add('clicked');
+            setTimeout(() => {
+                clickerButton.classList.remove('clicked');
+            }, 100);
+        }
 
     } catch (error) {
         console.error('Ошибка при обработке клика:', error);
         showNotification('Произошла ошибка!', 'error');
-    } finally {
-        isClicking = false;
     }
 }
 
@@ -215,7 +220,7 @@ function initializeHomeSection() {
     clickerButton.addEventListener('touchend', (e) => e.preventDefault());
 }
 
-// Запускаем инициализацию при загрузке страницы
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Ждем инициализацию Telegram
@@ -228,12 +233,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Ждем инициализацию базы данных
         await waitForDatabase();
 
-        // Инициализируем остальные компоненты
+        // Инициализируем компоненты
         initializeHomeSection();
         initializeEventListeners();
         
         // Запускаем обновление энергии
-        setInterval(updateEnergy, 1000);
+        await updateEnergy(); // Первое обновление
+        setInterval(updateEnergy, 1000); // Регулярное обновление
         
     } catch (error) {
         console.error('Ошибка при инициализации:', error);
@@ -291,22 +297,31 @@ function waitForDatabase() {
     });
 }
 
+// Функция обновления энергии
 async function updateEnergy() {
     try {
-        if (!window.db) {
-            await waitForDatabase();
-        }
-        
-        if (!currentTelegramId) {
+        if (!window.currentTelegramId) {
             console.error('Telegram ID не определен');
             return;
         }
 
-        await window.db.regenerateEnergy(currentTelegramId);
-        const userData = await window.db.getUserData(currentTelegramId);
-        if (userData && typeof updateEnergyDisplay === 'function') {
+        if (!window.db) {
+            await waitForDatabase();
+        }
+
+        const userData = await window.db.getUserData(window.currentTelegramId);
+        if (!userData) {
+            console.error('Не удалось получить данные пользователя');
+            return;
+        }
+
+        // Обновляем отображение энергии
+        if (typeof updateEnergyDisplay === 'function') {
             updateEnergyDisplay(userData.energy, userData.max_energy);
         }
+
+        // Регенерируем энергию
+        await window.db.regenerateEnergy(window.currentTelegramId);
     } catch (error) {
         console.error('Ошибка при обновлении энергии:', error);
     }
