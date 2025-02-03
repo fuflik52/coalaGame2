@@ -73,24 +73,16 @@ function copyReferralLink() {
     const referralLink = `https://t.me/CoalaGame_Bot/play?startapp=${user ? user.id : 'u0'}`;
     
     if (window.Telegram?.WebApp) {
-        // Используем нативный метод Telegram
-        window.Telegram.WebApp.showPopup({
-            title: 'Реферальная ссылка',
-            message: referralLink,
-            buttons: [{
-                type: 'default',
-                text: 'Копировать',
-                onClick: () => {
-                    navigator.clipboard.writeText(referralLink)
-                        .then(() => {
-                            window.Telegram.WebApp.showAlert('Ссылка скопирована!');
-                        })
-                        .catch(() => {
-                            window.Telegram.WebApp.showAlert('Не удалось скопировать ссылку');
-                        });
-                }
-            }]
-        });
+        // Создаем временный элемент input
+        const tempInput = document.createElement('input');
+        tempInput.value = referralLink;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        
+        // Показываем небольшое уведомление
+        window.Telegram.WebApp.showAlert('Ссылка скопирована!');
     } else {
         navigator.clipboard.writeText(referralLink)
             .then(() => {
