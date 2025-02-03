@@ -36,13 +36,25 @@ function copyReferralLink() {
     const user = getUserInfo();
     const referralLink = `https://t.me/CoalaGame_Bot/play?startapp=${user ? user.id : 'u0'}`;
     
-    navigator.clipboard.writeText(referralLink)
-        .then(() => {
-            console.log('Реферальная ссылка скопирована');
-        })
-        .catch(() => {
-            console.error('Не удалось скопировать ссылку');
-        });
+    // Если мы в Telegram WebApp
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.copyTextToClipboard(referralLink)
+            .then(() => {
+                console.log('Реферальная ссылка скопирована');
+            })
+            .catch(() => {
+                console.error('Не удалось скопировать ссылку');
+            });
+    } else {
+        // Для обычного браузера
+        navigator.clipboard.writeText(referralLink)
+            .then(() => {
+                console.log('Реферальная ссылка скопирована');
+            })
+            .catch(() => {
+                console.error('Не удалось скопировать ссылку');
+            });
+    }
 }
 
 function generateReferralCode() {
