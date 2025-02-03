@@ -20,7 +20,8 @@
             /color:/,
             /#ffffff/,
             /bg_color/,
-            /Navigation item clicked:/
+            /Navigation item clicked:/,
+            /Обновление данных пользователя:/
         ];
 
         // Преобразуем все аргументы в строку для полной проверки
