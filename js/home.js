@@ -1,19 +1,19 @@
 let currentTelegramId = null;
-let energy = parseInt(localStorage.getItem('energy')) || 100;
+let energy = 100;
 let maxEnergy = 100;
-let balance = parseInt(localStorage.getItem('balance')) || 0;
+let balance = 0;
 let lastEnergyUpdate = parseInt(localStorage.getItem('lastEnergyUpdate')) || Date.now();
 let lastEarningCheck = parseInt(localStorage.getItem('lastEarningCheck')) || Date.now();
-let hourlyRate = 0; // Общая прибыль в час от всех карточек
-let isLocalMode = true; // Добавляем флаг локального режима
-const energyBar = document.getElementById('energyBar');
+let hourlyRate = 0;
+let isLocalMode = true;
+let energyRegenerationInterval = null;
+let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
 // Инициализация переменных
 let clickCount = 0;
 let lastClickTime = 0;
 let clickMultiplier = 1;
 let isClicking = false;
-let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
 // Инициализация Telegram ID
 async function initializeTelegramId() {
@@ -52,35 +52,85 @@ async function initializeTelegramId() {
     });
 }
 
-function updateEnergy() {
-    energy = Math.min(maxEnergy, energy);
-    energy = Math.max(0, energy);
-    energyBar.style.width = `${energy}%`;
+// Функция обновления отображения энергии
+function updateEnergyDisplay() {
+    const energyText = document.querySelector('#energyText span');
+    const energyBar = document.querySelector('#energyBar');
     
-    // Обновляем текст энергии
-    const energyText = document.getElementById('energyText');
     if (energyText) {
         energyText.textContent = `${energy}/${maxEnergy}`;
     }
-    
-    // Сохраняем текущее значение энергии
-    localStorage.setItem('energy', energy);
-    localStorage.setItem('lastEnergyUpdate', Date.now());
+    if (energyBar) {
+        energyBar.style.width = `${(energy / maxEnergy) * 100}%`;
+    }
 }
 
-function updateEnergyDisplay(currentEnergy, maxEnergy) {
-    const energyBar = document.getElementById('energyBar');
-    const energyText = document.getElementById('energyText');
-    
-    if (energyBar) {
-        energyBar.style.width = `${(currentEnergy / maxEnergy) * 100}%`;
+// Функция обновления отображения баланса
+function updateBalanceDisplay() {
+    const balanceElement = document.querySelector('.balance-value');
+    if (balanceElement) {
+        balanceElement.textContent = balance.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     }
-    
-    if (energyText) {
-        const energySpan = energyText.querySelector('span');
-        if (energySpan) {
-            energySpan.textContent = `${currentEnergy}/${maxEnergy}`;
+}
+
+// Функция для запуска регенерации энергии
+function startEnergyRegeneration() {
+    if (energyRegenerationInterval) {
+        clearInterval(energyRegenerationInterval);
+    }
+
+    energyRegenerationInterval = setInterval(() => {
+        if (energy < maxEnergy) {
+            energy = Math.min(maxEnergy, energy + 1);
+            updateEnergyDisplay();
+            saveUserData();
         }
+    }, 1000);
+}
+
+// Функция сохранения данных пользователя
+async function saveUserData() {
+    try {
+        const userData = {
+            energy: energy,
+            balance: balance,
+            max_energy: maxEnergy
+        };
+        
+        if (window.tg?.initDataUnsafe?.user?.id) {
+            await window.db.updateUserData(window.tg.initDataUnsafe.user.id, userData);
+        } else {
+            localStorage.setItem('userData', JSON.stringify(userData));
+        }
+    } catch (error) {
+        console.error('Ошибка при сохранении данных:', error);
+    }
+}
+
+// Функция загрузки данных пользователя
+async function loadUserData() {
+    try {
+        let userData;
+        
+        if (window.tg?.initDataUnsafe?.user?.id) {
+            userData = await window.db.getUserData(window.tg.initDataUnsafe.user.id);
+        } else {
+            const savedData = localStorage.getItem('userData');
+            if (savedData) {
+                userData = JSON.parse(savedData);
+            }
+        }
+
+        if (userData) {
+            energy = userData.energy || maxEnergy;
+            balance = userData.balance || 0;
+            maxEnergy = userData.max_energy || 100;
+            
+            updateEnergyDisplay();
+            updateBalanceDisplay();
+        }
+    } catch (error) {
+        console.error('Ошибка при загрузке данных:', error);
     }
 }
 
@@ -92,48 +142,32 @@ function checkVibrationSupport() {
 // Функция для вибрации
 function vibrate(duration = 50) {
     try {
-        const isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
         if (isVibrationEnabled && checkVibrationSupport()) {
             navigator.vibrate(duration);
-            console.log('Вибрация активирована:', duration, 'мс');
         }
     } catch (error) {
         console.error('Ошибка при вибрации:', error);
     }
 }
 
-async function handleClick(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    
-    if (!window.currentTelegramId) {
-        console.error('Ошибка: telegram_id не определен');
-        return;
-    }
-
-    try {
-        // Получаем текущие данные пользователя
-        const userData = await window.db.getUserData(window.currentTelegramId);
-        if (!userData) return;
-
-        if (userData.energy <= 0) return;
-
-        // Тратим энергию
-        const success = await window.db.spendEnergy(window.currentTelegramId);
-        if (!success) return;
-
-        // Обновляем баланс
-        await window.db.updateUserBalance(window.currentTelegramId, userData.balance + 1);
-
+// Обработчик клика
+function handleClick() {
+    if (energy > 0) {
+        // Уменьшаем энергию
+        energy--;
+        // Увеличиваем баланс
+        balance++;
+        
+        // Вибрация при клике
+        vibrate();
+        
         // Обновляем отображение
-        const updatedUserData = await window.db.getUserData(window.currentTelegramId);
-        if (updatedUserData) {
-            updateEnergyDisplay(updatedUserData.energy, updatedUserData.max_energy);
-            updateBalanceDisplay(updatedUserData.balance);
-        }
-
+        updateEnergyDisplay();
+        updateBalanceDisplay();
+        
+        // Сохраняем данные
+        saveUserData();
+        
         // Добавляем анимацию клика
         const clickerButton = document.querySelector('.clicker-button');
         if (clickerButton) {
@@ -142,11 +176,32 @@ async function handleClick(event) {
                 clickerButton.classList.remove('clicked');
             }, 100);
         }
-
-    } catch (error) {
-        console.error('Ошибка при обработке клика:', error);
     }
 }
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    // Загружаем данные пользователя
+    loadUserData();
+    
+    // Запускаем регенерацию энергии
+    startEnergyRegeneration();
+    
+    // Добавляем обработчик для кнопки кликера
+    const clickerButton = document.querySelector('.clicker-button');
+    if (clickerButton) {
+        clickerButton.addEventListener('click', handleClick);
+        clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
+        clickerButton.addEventListener('touchend', (e) => e.preventDefault());
+    }
+    
+    // Обновляем отображение при возвращении на вкладку
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            loadUserData();
+        }
+    });
+});
 
 function showRewardAnimation(reward, event) {
     const rewardElement = document.createElement('div');
@@ -193,62 +248,6 @@ function showRewardAnimation(reward, event) {
     setTimeout(() => {
         document.body.removeChild(rewardElement);
     }, 2000);
-}
-
-// Инициализация обработчиков событий
-function initializeHomeSection() {
-    const clickerButton = document.querySelector('.clicker-button');
-    if (!clickerButton) return;
-    
-    // Удаляем старые обработчики
-    clickerButton.removeEventListener('mousedown', handleClick);
-    clickerButton.removeEventListener('touchstart', handleClick);
-    clickerButton.removeEventListener('click', handleClick);
-    
-    // Добавляем новые обработчики
-    if ('ontouchstart' in window) {
-        // Для мобильных устройств
-        clickerButton.addEventListener('touchstart', handleClick, { passive: false });
-    } else {
-        // Для десктопов
-        clickerButton.addEventListener('mousedown', handleClick);
-    }
-    
-    // Предотвращаем стандартные действия браузера
-    clickerButton.addEventListener('click', (e) => e.preventDefault());
-    clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
-    clickerButton.addEventListener('touchend', (e) => e.preventDefault());
-}
-
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        // Ждем инициализацию Telegram
-        const hasTelegramId = await initializeTelegramId();
-        if (!hasTelegramId) return;
-
-        // Ждем инициализацию базы данных
-        await waitForDatabase();
-
-        // Инициализируем компоненты
-        initializeHomeSection();
-        
-        // Запускаем обновление энергии
-        await updateEnergy(); // Первое обновление
-        setInterval(updateEnergy, 1000); // Регулярное обновление
-        
-    } catch (error) {
-        console.error('Ошибка при инициализации:', error);
-    }
-});
-
-function updateBalance(amount) {
-    balance += amount;
-    localStorage.setItem('balance', balance);
-    const balanceElement = document.querySelector('.balance-value');
-    if (balanceElement && document.querySelector('.home-section.active')) {
-        balanceElement.textContent = balance.toLocaleString();
-    }
 }
 
 function calculateHourlyRate() {
@@ -312,13 +311,6 @@ async function updateEnergy() {
     }
 }
 
-function updateBalanceDisplay(balance) {
-    const balanceElement = document.querySelector('.balance-value');
-    if (balanceElement) {
-        balanceElement.textContent = balance.toLocaleString();
-    }
-}
-
 // Функция для восстановления энергии
 function restoreEnergy() {
     const lastUpdate = parseInt(localStorage.getItem('lastEnergyUpdate')) || Date.now();
@@ -327,7 +319,7 @@ function restoreEnergy() {
     
     // Добавляем по 1 единице энергии за каждую прошедшую секунду
     energy = Math.min(maxEnergy, energy + secondsPassed);
-    updateEnergy();
+    updateEnergyDisplay();
 }
 
 // Инициализация энергии
@@ -358,15 +350,4 @@ document.addEventListener('DOMContentLoaded', () => {
             restoreEnergy();
         }
     });
-});
-
-function initializeHome() {
-    // Инициализация основных компонентов
-    const game = new NumberGame();
-    
-    // Инициализируем раздел друзей
-    game.initializeFriendsSection();
-    
-    // Добавляем в window для отладки
-    window.game = game;
-} 
+}); 

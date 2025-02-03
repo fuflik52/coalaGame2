@@ -10,7 +10,77 @@ console.log = function() {
 // Инициализация Telegram WebApp
 class TelegramHandler {
     constructor() {
-        this.tg = window.Telegram.WebApp;
+        // Проверяем наличие Telegram WebApp
+        if (typeof window.Telegram === 'undefined') {
+            console.log('Telegram WebApp не обнаружен, инициализация в тестовом режиме');
+            this.tg = {
+                ready: () => {},
+                initDataUnsafe: {
+                    user: {
+                        id: 'test_user',
+                        username: 'test_user',
+                        first_name: 'Test',
+                        last_name: 'User'
+                    }
+                }
+            };
+        } else {
+            this.tg = window.Telegram.WebApp;
+        }
+
+        // Создаем тестовую базу данных если нет Supabase
+        if (typeof window.db === 'undefined' || !window.db.supabase) {
+            console.log('База данных не обнаружена, использую тестовый режим');
+            window.db = {
+                supabase: {
+                    from: () => ({
+                        select: () => ({
+                            eq: () => ({
+                                single: async () => ({ data: null, error: { code: 'PGRST116' } })
+                            })
+                        }),
+                        insert: async () => ({ error: null }),
+                        update: async () => ({ error: null })
+                    })
+                },
+                // Добавляем тестовые функции для таблицы лидеров
+                getTopPlayers: async () => {
+                    return {
+                        data: [
+                            {
+                                username: 'Игрок 1',
+                                game_score: 1000,
+                                avatar_url: null,
+                                telegram_id: 'user1'
+                            },
+                            {
+                                username: 'Игрок 2',
+                                game_score: 800,
+                                avatar_url: null,
+                                telegram_id: 'user2'
+                            },
+                            {
+                                username: 'Игрок 3',
+                                game_score: 600,
+                                avatar_url: null,
+                                telegram_id: 'user3'
+                            }
+                        ],
+                        error: null
+                    };
+                },
+                getUserRank: async (telegramId) => {
+                    return {
+                        data: { rank: 4, total_players: 100 },
+                        error: null
+                    };
+                },
+                updateUserScore: async (telegramId, score) => {
+                    return { error: null };
+                }
+            };
+        }
+        
         this.initApp();
     }
 
@@ -36,6 +106,10 @@ class TelegramHandler {
 
                 // Инициализируем пользователя в базе данных
                 this.initUser();
+            } else {
+                console.log('Используется тестовый пользователь');
+                this.userId = 'test_user';
+                this.username = 'test_user';
             }
         } catch (error) {
             console.error('Ошибка при инициализации Telegram WebApp:', error);
@@ -108,5 +182,5 @@ class TelegramHandler {
     }
 }
 
-// Создаем экземпляр обработчика Telegram
+// Создаем глобальный экземпляр
 window.telegramHandler = new TelegramHandler(); 

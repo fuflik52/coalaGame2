@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Koala Game Demo</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/loader.css">
     <link rel="stylesheet" href="css/development.css">
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/main.css">
@@ -17,11 +16,7 @@
     <link rel="stylesheet" href="css/settings.css">
     <link rel="stylesheet" href="css/leaderboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/telegram-logger.js"></script>
-    <script src="js/database.js"></script>
-    <script src="js/leaderboard.js"></script>
+
 </head>
 <body>
     <!-- Приветственное сообщение -->
@@ -291,110 +286,9 @@
 
                     <!-- Секция Game -->
                     <section class="content-section game-section" id="gameSection">
-                        <!-- Текущее задание -->
-                        <div class="mission-container">
-                            <div class="mission-header">
-                                <img src="https://i.postimg.cc/vT0w9ts0/image.png" alt="Mission">
-                                Недельная задача
-                            </div>
-                            <div class="mission-description">
-                                Наберите 15000 очков в одной игре
-                            </div>
-                            <div class="mission-reward">
-                                <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins">
-                                1000 монет
-                            </div>
-                            <div class="attempts-info">
-                                <div class="attempts-counter">Осталось попыток: 5</div>
-                                <div class="time-left">До конца: 6 дней</div>
-                            </div>
-                        </div>
-
-                        <!-- Кнопка начала игры -->
-                        <button class="control-button start-button">Начать попытку</button>
-
-                        <!-- Статистика игрока -->
-                        <div class="player-stats">
-                            <div class="stat-card">
-                                <div class="stat-value">0</div>
-                                <div class="stat-label">Лучший счёт</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">0</div>
-                                <div class="stat-label">Выполнено</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value">0</div>
-                                <div class="stat-label">Заработано</div>
-                            </div>
-                        </div>
-
-                        <!-- Таблица лидеров -->
-                        <div class="leaderboard-container">
-                            <h2>Лучшие игроки недели</h2>
-                            <div class="leaderboard-list"></div>
-                        </div>
-
-                        <!-- Игровое поле -->
-                        <div class="game-board">
-                            <div class="board-header">
-                                <div class="score-container">
-                                    <div class="score-value">0</div>
-                                    <div class="moves-value">0</div>
-                                </div>
-                            </div>
-                            <div class="grid-container">
-                                <!-- Ячейки будут добавлены через JavaScript -->
-                            </div>
-                        </div>
-
-                        <!-- Кнопки управления -->
-                        <div class="game-controls">
-                            <button class="control-button exit-button">Выйти</button>
-                        </div>
-
-                        <!-- Модальные окна -->
-                        <div class="game-modal rules-modal">
-                            <div class="modal-content">
-                                <div class="modal-title">Правила игры</div>
-                                <div class="modal-text">
-                                    Используйте свайпы для перемещения плиток. Собирайте одинаковые числа, чтобы они объединялись. Цель - собрать 5 одинаковых чисел на поле.
-                                </div>
-                                <div class="modal-buttons">
-                                    <button class="control-button start-button">Начать</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="game-modal victory-modal">
-                            <div class="modal-content">
-                                <div class="modal-title">Победа!</div>
-                                <div class="modal-text">
-                                    Поздравляем! Вы успешно выполнили задание!
-                                    <div class="reward-info">
-                                        <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="Coins">
-                                        +1000 монет
-                                    </div>
-                                </div>
-                                <div class="modal-buttons">
-                                    <button class="control-button claim-reward">Получить награду</button>
-                                    <button class="control-button exit-button">Закрыть</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="game-modal game-over-modal">
-                            <div class="modal-content">
-                                <div class="modal-title">Игра окончена</div>
-                                <div class="modal-text">
-                                    К сожалению, не удалось выполнить задание.
-                                    Осталось попыток: <span class="attempts-left">4</span>
-                                </div>
-                                <div class="modal-buttons">
-                                    <button class="control-button start-button">Попробовать снова</button>
-                                    <button class="control-button exit-button">Выйти</button>
-                                </div>
-                            </div>
+                        <div class="section-content">
+                            <h2>Игровой раздел</h2>
+                            <p>Этот раздел находится в разработке</p>
                         </div>
                     </section>
                 </div>
@@ -489,6 +383,11 @@
     <script src="js/main.js"></script>
     <script src="js/home.js"></script>
     <script src="js/frens.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/telegram-logger.js"></script>
+    <script src="js/database.js"></script>
+    <script src="js/leaderboard.js"></script>
     <script src="js/cards.js"></script>
     <script src="js/mining.js"></script>
     <script src="js/reward.js"></script>

@@ -1,6 +1,15 @@
 let friendCount = 0;
 let totalEarnings = 0;
-let tg = window.Telegram.WebApp;
+let tg = window.Telegram?.WebApp || {
+    initDataUnsafe: {
+        user: {
+            id: 'test_user',
+            username: 'test_user',
+            first_name: 'Test',
+            last_name: 'User'
+        }
+    }
+};
 
 function updateFriendStats() {
     const friendCountElements = document.querySelectorAll('#friendCount, #friendCountBadge');
@@ -29,10 +38,10 @@ function copyReferralLink() {
     
     navigator.clipboard.writeText(referralLink)
         .then(() => {
-            showNotification('Реферальная ссылка скопирована!', 'success');
+            console.log('Реферальная ссылка скопирована');
         })
         .catch(() => {
-            showNotification('Не удалось скопировать ссылку', 'error');
+            console.error('Не удалось скопировать ссылку');
         });
 }
 
