@@ -8,6 +8,7 @@ let hourlyRate = 0;
 let isLocalMode = true;
 let energyRegenerationInterval = null;
 let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
+let hasUserInteracted = false;
 
 // Инициализация переменных
 let clickCount = 0;
@@ -142,7 +143,7 @@ function checkVibrationSupport() {
 // Функция для вибрации
 function vibrate(duration = 50) {
     try {
-        if (isVibrationEnabled && checkVibrationSupport()) {
+        if (isVibrationEnabled && hasUserInteracted && checkVibrationSupport()) {
             navigator.vibrate(duration);
         }
     } catch (error) {
@@ -150,57 +151,128 @@ function vibrate(duration = 50) {
     }
 }
 
+// Функция для показа анимации награды
+function showRewardAnimation(reward, coordinates) {
+    try {
+        const rewardElement = document.createElement('div');
+        rewardElement.className = 'reward-animation';
+        
+        // Создаем контейнер для текста и иконки
+        const container = document.createElement('div');
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.gap = '5px';
+        
+        // Добавляем текст
+        const text = document.createElement('span');
+        text.textContent = `+${reward}`;
+        
+        // Добавляем иконку
+        const icon = document.createElement('img');
+        icon.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
+        icon.style.width = '20px';
+        icon.style.height = '20px';
+        icon.style.objectFit = 'contain';
+        
+        // Собираем элементы
+        container.appendChild(text);
+        container.appendChild(icon);
+        rewardElement.appendChild(container);
+        
+        // Позиционируем анимацию
+        if (coordinates && typeof coordinates.clientX !== 'undefined' && typeof coordinates.clientY !== 'undefined') {
+            rewardElement.style.left = `${coordinates.clientX}px`;
+            rewardElement.style.top = `${coordinates.clientY}px`;
+        } else {
+            // Если координаты не переданы, используем центр экрана
+            rewardElement.style.left = '50%';
+            rewardElement.style.top = '50%';
+            rewardElement.style.transform = 'translate(-50%, -50%)';
+        }
+        
+        document.body.appendChild(rewardElement);
+        
+        // Запускаем анимацию
+        requestAnimationFrame(() => {
+            rewardElement.style.transform = 'translateY(-100px)';
+            rewardElement.style.opacity = '0';
+        });
+        
+        // Удаляем элемент после анимации
+        setTimeout(() => {
+            if (document.body.contains(rewardElement)) {
+                document.body.removeChild(rewardElement);
+            }
+        }, 2000);
+    } catch (error) {
+        console.error('Ошибка при показе анимации награды:', error);
+    }
+}
+
 // Обработчик клика
 function handleClick(event) {
-    event.preventDefault();
-    event.stopPropagation();
-
     if (!isClicking && energy > 0) {
+        event.preventDefault();
+        event.stopPropagation();
         isClicking = true;
+        
+        try {
+            // Уменьшаем энергию и увеличиваем баланс
+            energy--;
+            balance++;
 
-        // Уменьшаем энергию
-        energy--;
-        // Увеличиваем баланс
-        balance++;
+            // Обновляем отображение
+            updateEnergyDisplay();
+            updateBalanceDisplay();
 
-        // Вибрация при клике
-        vibrate();
+            // Устанавливаем флаг взаимодействия при первом клике
+            hasUserInteracted = true;
 
-        // Обновляем отображение
-        updateEnergyDisplay();
-        updateBalanceDisplay();
+            // Получаем координаты для анимации
+            let coordinates = {
+                clientX: 0,
+                clientY: 0
+            };
 
-        // Сохраняем данные
-        saveUserData();
+            if (event.type === 'touchstart' && event.touches && event.touches[0]) {
+                coordinates.clientX = event.touches[0].clientX;
+                coordinates.clientY = event.touches[0].clientY;
+            } else if (event.clientX !== undefined && event.clientY !== undefined) {
+                coordinates.clientX = event.clientX;
+                coordinates.clientY = event.clientY;
+            } else {
+                const button = event.target.closest('.clicker-button');
+                if (button) {
+                    const rect = button.getBoundingClientRect();
+                    coordinates.clientX = rect.left + rect.width / 2;
+                    coordinates.clientY = rect.top + rect.height / 2;
+                }
+            }
 
-        // Получаем координаты для анимации
-        let x, y;
-        if (event.type.includes('touch') && event.touches && event.touches[0]) {
-            x = event.touches[0].clientX;
-            y = event.touches[0].clientY;
-        } else if (event.clientX !== undefined && event.clientY !== undefined) {
-            x = event.clientX;
-            y = event.clientY;
-        } else {
-            // Если координаты недоступны, используем центр кнопки
-            const button = event.target.closest('.clicker-button');
-            const rect = button.getBoundingClientRect();
-            x = rect.left + rect.width / 2;
-            y = rect.top + rect.height / 2;
+            // Показываем анимацию награды
+            showRewardAnimation(1, coordinates);
+
+            // Добавляем анимацию клика
+            const clickerButton = event.target.closest('.clicker-button');
+            if (clickerButton) {
+                clickerButton.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    clickerButton.style.transform = 'scale(1)';
+                }, 100);
+            }
+
+            // Вибрация после успешного клика
+            if (hasUserInteracted) {
+                vibrate();
+            }
+
+            // Сохраняем данные
+            saveUserData();
+        } catch (error) {
+            console.error('Ошибка при обработке клика:', error);
         }
 
-        // Показываем анимацию награды
-        showRewardAnimation(1, { clientX: x, clientY: y });
-
-        // Добавляем анимацию клика
-        const clickerButton = event.target.closest('.clicker-button');
-        if (clickerButton) {
-            clickerButton.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                clickerButton.style.transform = 'scale(1)';
-            }, 100);
-        }
-
+        // Сбрасываем флаг клика
         setTimeout(() => {
             isClicking = false;
         }, 100);
@@ -218,49 +290,45 @@ document.addEventListener('DOMContentLoaded', () => {
     // Добавляем обработчики для кнопки кликера
     const clickerButton = document.querySelector('.clicker-button');
     if (clickerButton) {
-        // Обработчики для мыши
-        clickerButton.addEventListener('mousedown', handleClick);
+        // Добавляем обработчик для первого взаимодействия
+        const handleFirstInteraction = (e) => {
+            hasUserInteracted = true;
+            clickerButton.removeEventListener('mousedown', handleFirstInteraction);
+            clickerButton.removeEventListener('touchstart', handleFirstInteraction);
+        };
+
+        // Обработчики для мыши и тачскрина с учетом первого взаимодействия
+        clickerButton.addEventListener('mousedown', handleFirstInteraction);
+        clickerButton.addEventListener('touchstart', handleFirstInteraction, { passive: false });
         
-        // Обработчики для тачскрина
+        // Основные обработчики событий
+        clickerButton.addEventListener('mousedown', handleClick);
         clickerButton.addEventListener('touchstart', handleClick, { passive: false });
-        clickerButton.addEventListener('touchend', (e) => {
+        
+        // Предотвращаем стандартные события
+        const preventDefaultHandler = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const button = e.target.closest('.clicker-button');
-            if (button) {
-                button.style.transform = 'scale(1)';
-            }
-        }, { passive: false });
+        };
 
-        // Предотвращаем скролл при касании кнопки
-        clickerButton.addEventListener('touchmove', (e) => {
-            if (e.target.closest('.click-section')) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }, { passive: false });
-
-        // Отключаем контекстное меню
-        clickerButton.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-
-        // Предотвращаем выделение текста
-        clickerButton.addEventListener('selectstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
+        clickerButton.addEventListener('touchend', preventDefaultHandler, { passive: false });
+        clickerButton.addEventListener('touchmove', preventDefaultHandler, { passive: false });
+        clickerButton.addEventListener('contextmenu', preventDefaultHandler);
+        clickerButton.addEventListener('selectstart', preventDefaultHandler);
+        clickerButton.addEventListener('dragstart', preventDefaultHandler);
 
         // Предотвращаем перетаскивание изображений
         const images = clickerButton.getElementsByTagName('img');
         for (let img of images) {
-            img.addEventListener('dragstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
+            img.addEventListener('dragstart', preventDefaultHandler);
         }
     }
+
+    // Добавляем обработчик для первого взаимодействия пользователя
+    document.body.addEventListener('click', function onFirstInteraction() {
+        hasUserInteracted = true;
+        document.body.removeEventListener('click', onFirstInteraction);
+    }, { once: true });
 
     // Обновляем отображение при возвращении на вкладку
     document.addEventListener('visibilitychange', () => {
@@ -269,53 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-function showRewardAnimation(reward, event) {
-    const rewardElement = document.createElement('div');
-    rewardElement.className = 'reward-animation';
-    
-    // Создаем контейнер для текста и иконки
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.alignItems = 'center';
-    container.style.gap = '5px';
-    
-    // Добавляем текст
-    const text = document.createElement('span');
-    text.textContent = `+${reward}`;
-    
-    // Добавляем иконку
-    const icon = document.createElement('img');
-    icon.src = 'https://i.postimg.cc/FFx7T4Bh/image.png';
-    icon.style.width = '20px';
-    icon.style.height = '20px';
-    icon.style.objectFit = 'contain';
-    
-    // Сначала добавляем текст, потом иконку
-    container.appendChild(text);
-    container.appendChild(icon);
-    rewardElement.appendChild(container);
-    
-    // Позиционируем анимацию относительно клика
-    const x = event.type.includes('touch') ? event.touches[0].clientX : event.clientX;
-    const y = event.type.includes('touch') ? event.touches[0].clientY : event.clientY;
-    
-    rewardElement.style.left = `${x}px`;
-    rewardElement.style.top = `${y}px`;
-    
-    document.body.appendChild(rewardElement);
-    
-    // Запускаем анимацию
-    requestAnimationFrame(() => {
-        rewardElement.style.transform = 'translateY(-100px)';
-        rewardElement.style.opacity = '0';
-    });
-    
-    // Удаляем элемент после анимации
-    setTimeout(() => {
-        document.body.removeChild(rewardElement);
-    }, 2000);
-}
 
 function calculateHourlyRate() {
     const cards = JSON.parse(localStorage.getItem('activeCards')) || [];
