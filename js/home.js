@@ -105,33 +105,24 @@ function vibrate(duration = 50) {
 async function handleClick(event) {
     if (event) {
         event.preventDefault();
+        event.stopPropagation();
     }
     
     if (!window.currentTelegramId) {
         console.error('Ошибка: telegram_id не определен');
-        showNotification('Ошибка: не удалось получить данные пользователя', 'error');
         return;
     }
 
     try {
         // Получаем текущие данные пользователя
         const userData = await window.db.getUserData(window.currentTelegramId);
-        if (!userData) {
-            showNotification('Ошибка получения данных пользователя', 'error');
-            return;
-        }
+        if (!userData) return;
 
-        if (userData.energy <= 0) {
-            showNotification('Недостаточно энергии!', 'error');
-            return;
-        }
+        if (userData.energy <= 0) return;
 
         // Тратим энергию
         const success = await window.db.spendEnergy(window.currentTelegramId);
-        if (!success) {
-            showNotification('Ошибка при обновлении энергии', 'error');
-            return;
-        }
+        if (!success) return;
 
         // Обновляем баланс
         await window.db.updateUserBalance(window.currentTelegramId, userData.balance + 1);
@@ -154,7 +145,6 @@ async function handleClick(event) {
 
     } catch (error) {
         console.error('Ошибка при обработке клика:', error);
-        showNotification('Произошла ошибка!', 'error');
     }
 }
 
@@ -210,9 +200,19 @@ function initializeHomeSection() {
     const clickerButton = document.querySelector('.clicker-button');
     if (!clickerButton) return;
     
-    // Добавляем обработчики для всех типов устройств
-    clickerButton.addEventListener('mousedown', handleClick);
-    clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+    // Удаляем старые обработчики
+    clickerButton.removeEventListener('mousedown', handleClick);
+    clickerButton.removeEventListener('touchstart', handleClick);
+    clickerButton.removeEventListener('click', handleClick);
+    
+    // Добавляем новые обработчики
+    if ('ontouchstart' in window) {
+        // Для мобильных устройств
+        clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+    } else {
+        // Для десктопов
+        clickerButton.addEventListener('mousedown', handleClick);
+    }
     
     // Предотвращаем стандартные действия браузера
     clickerButton.addEventListener('click', (e) => e.preventDefault());
@@ -225,17 +225,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Ждем инициализацию Telegram
         const hasTelegramId = await initializeTelegramId();
-        if (!hasTelegramId) {
-            showNotification('Ошибка: не удалось получить данные пользователя', 'error');
-            return;
-        }
+        if (!hasTelegramId) return;
 
         // Ждем инициализацию базы данных
         await waitForDatabase();
 
         // Инициализируем компоненты
         initializeHomeSection();
-        initializeEventListeners();
         
         // Запускаем обновление энергии
         await updateEnergy(); // Первое обновление
@@ -243,7 +239,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
     } catch (error) {
         console.error('Ошибка при инициализации:', error);
-        showNotification('Произошла ошибка при инициализации', 'error');
     }
 });
 
@@ -300,20 +295,10 @@ function waitForDatabase() {
 // Функция обновления энергии
 async function updateEnergy() {
     try {
-        if (!window.currentTelegramId) {
-            console.error('Telegram ID не определен');
-            return;
-        }
-
-        if (!window.db) {
-            await waitForDatabase();
-        }
+        if (!window.currentTelegramId || !window.db) return;
 
         const userData = await window.db.getUserData(window.currentTelegramId);
-        if (!userData) {
-            console.error('Не удалось получить данные пользователя');
-            return;
-        }
+        if (!userData) return;
 
         // Обновляем отображение энергии
         if (typeof updateEnergyDisplay === 'function') {
@@ -327,11 +312,10 @@ async function updateEnergy() {
     }
 }
 
-function initializeEventListeners() {
-    const clickerButton = document.querySelector('.clicker-button');
-    if (clickerButton) {
-        clickerButton.addEventListener('click', handleClick);
-        clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+function updateBalanceDisplay(balance) {
+    const balanceElement = document.querySelector('.balance-value');
+    if (balanceElement) {
+        balanceElement.textContent = balance.toLocaleString();
     }
 }
 
