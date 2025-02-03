@@ -254,57 +254,34 @@ class Database {
         }
     }
 
-    async createNewUser(telegramId, username = 'Пользователь', avatarUrl = null) {
+    async createNewUser(telegramId, username, avatarUrl = '') {
         try {
-            const telegramIdStr = String(telegramId);
-            
-            const { data: existingUser } = await this.supabase
+            const now = Math.floor(Date.now() / 1000); // UNIX timestamp
+            const { error } = await this.supabase
                 .from('users')
-                .select('telegram_id')
-                .eq('telegram_id', telegramIdStr)
-                .single();
+                .insert([{
+                    telegram_id: String(telegramId),
+                    username: username,
+                    avatar_url: avatarUrl,
+                    energy: 100,
+                    max_energy: 100,
+                    balance: 0,
+                    level: 1,
+                    exp: 0,
+                    exp_next_level: 100,
+                    energy_regen_rate: 1,
+                    last_energy_update: now,
+                    last_seen: now,
+                    created_at: now,
+                    current_day: 1,
+                    last_claim_time: now
+                }]);
 
-            if (existingUser) {
-                const { data, error } = await this.supabase
-                    .from('users')
-                    .update({
-                        username: username,
-                        avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
-                        last_seen: Date.now()
-                    })
-                    .eq('telegram_id', telegramIdStr)
-                    .select();
-
-                if (error) throw error;
-                return data;
-            } else {
-                const { data, error } = await this.supabase
-                    .from('users')
-                    .insert([{
-                        telegram_id: telegramIdStr,
-                        username: username,
-                        avatar_url: avatarUrl || 'https://i.postimg.cc/vBBWGZjL/image.png',
-                        balance: 0,
-                        energy: 100,
-                        max_energy: 100,
-                        energy_regen_rate: 1,
-                        level: 1,
-                        exp: 0,
-                        exp_next_level: 100,
-                        rating: 0,
-                        game_score: 0,
-                        weekly_score: 0,
-                        last_energy_update: Date.now(),
-                        last_seen: Date.now()
-                    }])
-                    .select();
-
-                if (error) throw error;
-                return data;
-            }
+            if (error) throw error;
+            return true;
         } catch (error) {
-            console.error('Ошибка при создании/обновлении пользователя:', error);
-            return null;
+            console.error('Ошибка при создании пользователя:', error);
+            return false;
         }
     }
 
@@ -435,13 +412,14 @@ class Database {
 
     async addReferral(referrerId, referralId) {
         try {
+            const now = Math.floor(Date.now() / 1000); // UNIX timestamp
             const { error } = await this.supabase
                 .from('referrals')
                 .insert([
                     {
                         referrer_id: referrerId,
                         referral_id: referralId,
-                        join_date: new Date().toISOString()
+                        join_date: now
                     }
                 ]);
 
@@ -503,19 +481,16 @@ async function updateUserBalance(telegramId, newBalance) {
 // Функция для сохранения прогресса наград
 async function updateUserRewards(telegramId, currentDay, lastClaimTime) {
     try {
-        const { error } = await supabaseClient
+        const now = Math.floor(Date.now() / 1000); // UNIX timestamp
+        const { error } = await this.supabase
             .from('users')
             .update({
                 current_day: currentDay,
-                last_claim_time: lastClaimTime
+                last_claim_time: now
             })
             .eq('telegram_id', telegramId);
         
-        if (error) {
-            console.error('Ошибка при обновлении наград:', error);
-            return false;
-        }
-        
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error('Ошибка при обновлении наград:', error);
@@ -534,25 +509,22 @@ function updateUsername() {
 // Функция для обновления энергии
 async function updateUserEnergy(telegramId, newEnergy, newMaxEnergy = null) {
     try {
+        const now = Math.floor(Date.now() / 1000); // UNIX timestamp
         const updateData = {
             energy: newEnergy,
-            last_energy_update: Date.now()
+            last_energy_update: now
         };
         
         if (newMaxEnergy !== null) {
             updateData.max_energy = newMaxEnergy;
         }
 
-        const { error } = await supabaseClient
+        const { error } = await this.supabase
             .from('users')
             .update(updateData)
             .eq('telegram_id', telegramId);
         
-        if (error) {
-            console.error('Ошибка при обновлении энергии:', error);
-            return false;
-        }
-        
+        if (error) throw error;
         return true;
     } catch (error) {
         console.error('Ошибка при обновлении энергии:', error);
