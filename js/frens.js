@@ -1,15 +1,51 @@
 let friendCount = 0;
 let totalEarnings = 0;
-let tg = window.Telegram?.WebApp || {
-    initDataUnsafe: {
-        user: {
-            id: 'test_user',
-            username: 'test_user',
-            first_name: 'Test',
-            last_name: 'User'
+let tg;
+
+function initializeTelegram() {
+    return new Promise((resolve) => {
+        const maxAttempts = 50;
+        let attempts = 0;
+
+        const checkTelegram = () => {
+            if (window.Telegram?.WebApp) {
+                tg = window.Telegram.WebApp;
+                console.log('Telegram WebApp успешно инициализирован');
+                return true;
+            }
+            return false;
+        };
+
+        // Проверяем сразу
+        if (checkTelegram()) {
+            resolve(true);
+            return;
         }
-    }
-};
+
+        // Если не получилось, запускаем интервал
+        const interval = setInterval(() => {
+            attempts++;
+            if (checkTelegram()) {
+                clearInterval(interval);
+                resolve(true);
+            } else if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                console.log('Telegram WebApp не обнаружен, инициализация в тестовом режиме');
+                tg = {
+                    initDataUnsafe: {
+                        user: {
+                            id: 'test_user',
+                            username: 'test_user',
+                            first_name: 'Test',
+                            last_name: 'User'
+                        }
+                    }
+                };
+                resolve(false);
+            }
+        }, 100);
+    });
+}
 
 function updateFriendStats() {
     const friendCountElements = document.querySelectorAll('#friendCount, #friendCountBadge');
@@ -21,7 +57,7 @@ function updateFriendStats() {
 }
 
 function getUserInfo() {
-    if (tg.initDataUnsafe?.user) {
+    if (tg?.initDataUnsafe?.user) {
         return {
             username: tg.initDataUnsafe.user.username || 'Пользователь',
             id: tg.initDataUnsafe.user.id,
@@ -36,17 +72,26 @@ function copyReferralLink() {
     const user = getUserInfo();
     const referralLink = `https://t.me/CoalaGame_Bot/play?startapp=${user ? user.id : 'u0'}`;
     
-    // Если мы в Telegram WebApp
     if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.copyTextToClipboard(referralLink)
-            .then(() => {
-                console.log('Реферальная ссылка скопирована');
-            })
-            .catch(() => {
-                console.error('Не удалось скопировать ссылку');
-            });
+        // Используем нативный метод Telegram
+        window.Telegram.WebApp.showPopup({
+            title: 'Реферальная ссылка',
+            message: referralLink,
+            buttons: [{
+                type: 'default',
+                text: 'Копировать',
+                onClick: () => {
+                    navigator.clipboard.writeText(referralLink)
+                        .then(() => {
+                            window.Telegram.WebApp.showAlert('Ссылка скопирована!');
+                        })
+                        .catch(() => {
+                            window.Telegram.WebApp.showAlert('Не удалось скопировать ссылку');
+                        });
+                }
+            }]
+        });
     } else {
-        // Для обычного браузера
         navigator.clipboard.writeText(referralLink)
             .then(() => {
                 console.log('Реферальная ссылка скопирована');
@@ -62,7 +107,8 @@ function generateReferralCode() {
 }
 
 // Инициализация
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await initializeTelegram();
     const frensSection = document.getElementById('frensSection');
     const user = getUserInfo();
     
