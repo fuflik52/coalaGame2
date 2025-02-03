@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карточная игра</title>
+    <link rel="stylesheet" href="rulekta.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Кнопка запуска -->
+        <button class="spin-button">
+            <span class="spin-text">Купить карточку</span>
+            <div class="price-container">
+                <span class="price-value">1</span>
+                <img src="https://tapkoala.com/_next/image?url=%2Fimages%2Fstar.png&w=32&q=75" alt="star" class="star-icon">
+            </div>
+        </button>
+
+        <!-- Контейнер для карточек -->
+        <div class="cards-container">
+            <!-- Карточки будут добавлены через JavaScript -->
+        </div>
+
+        <!-- Текст-подсказка -->
+        <div class="hint-text">Выберите одну из 3 карточек</div>
+    </div>
+    <script src="rulekta.js"></script>
+    <script>
+        if (CONFIG.TEST_MODE) {
+            // В тестовом режиме сразу запускаем игру
+            new CardGame();
+        } else {
+            // В боевом режиме ждем инициализации Telegram WebApp
+            window.Telegram.WebApp.ready(() => {
+                new CardGame();
+            });
+        }
+    </script>
+</body>
+</html> 

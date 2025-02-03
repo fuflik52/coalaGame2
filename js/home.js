@@ -151,31 +151,40 @@ function vibrate(duration = 50) {
 }
 
 // Обработчик клика
-function handleClick() {
-    if (energy > 0) {
-        // Уменьшаем энергию
-        energy--;
-        // Увеличиваем баланс
-        balance++;
+function handleClick(e) {
+    e.preventDefault();
+    if (!isClicking) {
+        isClicking = true;
         
-        // Вибрация при клике
-        vibrate();
-        
-        // Обновляем отображение
-        updateEnergyDisplay();
-        updateBalanceDisplay();
-        
-        // Сохраняем данные
-        saveUserData();
-        
-        // Добавляем анимацию клика
-        const clickerButton = document.querySelector('.clicker-button');
-        if (clickerButton) {
-            clickerButton.classList.add('clicked');
-            setTimeout(() => {
-                clickerButton.classList.remove('clicked');
-            }, 100);
+        if (energy > 0) {
+            // Уменьшаем энергию
+            energy--;
+            // Увеличиваем баланс
+            balance++;
+            
+            // Вибрация при клике
+            vibrate();
+            
+            // Обновляем отображение
+            updateEnergyDisplay();
+            updateBalanceDisplay();
+            
+            // Сохраняем данные
+            saveUserData();
+            
+            // Добавляем анимацию клика
+            const clickerButton = document.querySelector('.clicker-button');
+            if (clickerButton) {
+                clickerButton.classList.add('clicked');
+                setTimeout(() => {
+                    clickerButton.classList.remove('clicked');
+                }, 100);
+            }
         }
+        
+        setTimeout(() => {
+            isClicking = false;
+        }, 100);
     }
 }
 
@@ -190,9 +199,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Добавляем обработчик для кнопки кликера
     const clickerButton = document.querySelector('.clicker-button');
     if (clickerButton) {
-        clickerButton.addEventListener('click', handleClick);
-        clickerButton.addEventListener('contextmenu', (e) => e.preventDefault());
-        clickerButton.addEventListener('touchend', (e) => e.preventDefault());
+        clickerButton.addEventListener('mousedown', handleClick);
+        clickerButton.addEventListener('touchstart', handleClick, { passive: false });
+        clickerButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+        
+        // Предотвращаем прокрутку на мобильных устройствах
+        document.body.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.click-section')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Отключаем контекстное меню
+        clickerButton.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        // Предотвращаем выделение текста
+        clickerButton.addEventListener('selectstart', (e) => {
+            e.preventDefault();
+        });
+        
+        // Предотвращаем перетаскивание изображений
+        const images = clickerButton.getElementsByTagName('img');
+        for (let img of images) {
+            img.addEventListener('dragstart', (e) => {
+                e.preventDefault();
+            });
+        }
     }
     
     // Обновляем отображение при возвращении на вкладку

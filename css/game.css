@@ -11,4 +11,345 @@
 .game-section p {
     color: #ccc;
     font-size: 16px;
+}
+
+/* Стили для карточной игры */
+.game-cards-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.game-cards-container .container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Стили для кнопки запуска */
+.game-cards-container .spin-button {
+    order: 1;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 180px;
+    height: 45px;
+    background: linear-gradient(145deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.9));
+    border-radius: 10px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+@keyframes confetti-fall {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.game-cards-container .spin-text {
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.game-cards-container .price-container {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 10px;
+    padding: 3px 6px;
+}
+
+.game-cards-container .price-value {
+    color: black;
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+.game-cards-container .star-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Контейнер карточек */
+.game-cards-container .cards-container {
+    perspective: 2000px;
+    transform-style: preserve-3d;
+    order: 3;
+    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 450px;
+    min-height: auto;
+    padding: 10px;
+    margin-top: 20px;
+    flex-direction: row;
+}
+
+/* Карточки */
+.game-cards-container .card {
+    width: 100px;
+    height: 130px;
+    position: relative;
+    margin: 3px;
+    cursor: pointer;
+    border-radius: 15px;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    flex-shrink: 0;
+}
+
+.game-cards-container .card:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+
+.game-cards-container .card.flipped {
+    transform: rotateY(180deg);
+}
+
+.game-cards-container .card.disabled {
+    opacity: 0.9;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.game-cards-container .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.game-cards-container .card-front {
+    background: none;
+    transform: rotateY(0deg);
+}
+
+.game-cards-container .card-back {
+    transform: rotateY(180deg);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+/* Стили для разных редкостей */
+.game-cards-container .card-back.common {
+    background: linear-gradient(145deg, #DEDEDE, #343735);
+    border: 2px solid #4a4a4a;
+}
+
+.game-cards-container .card-back.rare {
+    background: linear-gradient(145deg, #4F7BFF, #3A0DFF);
+    border: 2px solid #3A0DFF;
+    box-shadow: 0 0 20px rgba(79, 123, 255, 0.3);
+}
+
+.game-cards-container .card-back.gold {
+    background: linear-gradient(145deg, #FFD700, #FF8F00);
+    border: 2px solid #FFD700;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+/* Стили для текста редкости */
+.game-cards-container .rarity-badge {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px 10px;
+    border-radius: 10px;
+    color: white;
+    font-size: 12px;
+    white-space: nowrap;
+    width: auto;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Стили для контейнера приза */
+.game-cards-container .prize-container {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px 10px;
+    border-radius: 10px;
+    width: 90%;
+    text-align: center;
+}
+
+.game-cards-container .prize-value {
+    color: white;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.game-cards-container .prize-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* Подсказка */
+.game-cards-container .hint-text {
+    order: 2;
+    margin: 0 auto;
+    padding: 8px 20px;
+    background: linear-gradient(145deg, rgb(220, 38, 38), rgb(185, 28, 28));
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: fit-content;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+/* Конфетти */
+.game-cards-container .confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1001;
+}
+
+.game-cards-container .confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #4ADE80;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    animation: confetti-fall 3s linear forwards;
+}
+
+/* Адаптивность */
+@media (max-width: 767px) {
+    .game-cards-container .card {
+        width: 240px;
+        height: 280px;
+    }
+    
+    .game-cards-container .hint-text {
+        font-size: 14px;
+        padding: 8px 20px;
+    }
+    
+    .game-cards-container .prize-value {
+        font-size: 12px;
+    }
+    
+    .game-cards-container .prize-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .game-cards-container .cards-container {
+        max-width: 800px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-cards-container .card {
+        width: 200px;
+        height: 240px;
+    }
+    
+    .game-cards-container .spin-button {
+        width: 160px;
+        height: 40px;
+    }
+    
+    .game-cards-container .spin-text {
+        font-size: 16px;
+    }
+    
+    .game-cards-container .cards-container {
+        gap: 10px;
+        max-width: 650px;
+        padding: 5px;
+    }
+    
+    .game-cards-container .rarity-badge {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    .game-cards-container .prize-value {
+        font-size: 11px;
+    }
+}
+
+.game-cards-container .card-pattern {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.game-cards-container .card-pattern img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.game-cards-container .center-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.game-cards-container .card-back .center-image {
+    transform: translate(-50%, -50%) rotateY(180deg);
 } 

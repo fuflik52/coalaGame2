@@ -47,32 +47,77 @@
 
     <!-- Загрузочный экран -->
     <div class="loader-screen" id="loaderScreen">
+        <div class="loader-background">
+            <div class="loader-particles-container">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+        </div>
+        
         <div class="loader-content">
-            <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="loader-image">
-            <h1 class="loader-title">Koala Game Demo</h1>
-            <p class="loader-subtitle">Это демонстрационная версия игры для тестирования улучшений</p>
-            <a href="https://t.me/TapTapKoala_bot" class="loader-bot-link">Официальная игра доступна здесь: @TapTapKoala_bot</a>
-            
-            <div class="loader-progress">
-                <div class="loader-progress-bar"></div>
+            <div class="loader-logo-wrapper">
+                <div class="loader-glow"></div>
+                <div class="loader-logo-container">
+                    <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Koala" class="loader-logo">
+                    <div class="loader-shine"></div>
+                </div>
             </div>
             
-            <div class="loader-steps">
-                <div class="loader-step active">
-                    <div class="loader-step-dot"></div>
-                    <span class="loader-step-text">Подключение</span>
+            <div class="loader-info">
+                <div class="loader-title-container">
+                    <h1 class="loader-title">Koala Game</h1>
+                    <div class="loader-badge">
+                        <span class="loader-version">Demo</span>
+                        <div class="badge-shine"></div>
+                    </div>
                 </div>
-                <div class="loader-step">
-                    <div class="loader-step-dot"></div>
-                    <span class="loader-step-text">Загрузка данных</span>
+                <p class="loader-description">Это демонстрационная версия игры для тестирования улучшений</p>
+                <a href="https://t.me/TapTapKoala_bot" class="loader-link">
+                    <div class="link-content">
+                        <span class="loader-link-icon">🎮</span>
+                        <span class="link-text">Официальная игра: @TapTapKoala_bot</span>
+                    </div>
+                    <div class="link-shine"></div>
+                </a>
+            </div>
+            
+            <div class="loader-progress-container">
+                <div class="loader-steps">
+                    <div class="loader-step active" data-step="connection">
+                        <div class="step-icon-container">
+                            <div class="step-icon">🔌</div>
+                            <div class="step-glow"></div>
+                        </div>
+                        <span class="step-text">Подключение</span>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="loader-step" data-step="loading">
+                        <div class="step-icon-container">
+                            <div class="step-icon">📦</div>
+                            <div class="step-glow"></div>
+                        </div>
+                        <span class="step-text">Загрузка данных</span>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="loader-step" data-step="initialization">
+                        <div class="step-icon-container">
+                            <div class="step-icon">⚙️</div>
+                            <div class="step-glow"></div>
+                        </div>
+                        <span class="step-text">Инициализация</span>
+                    </div>
                 </div>
-                <div class="loader-step">
-                    <div class="loader-step-dot"></div>
-                    <span class="loader-step-text">Инициализация</span>
-                </div>
-                <div class="loader-step">
-                    <div class="loader-step-dot"></div>
-                    <span class="loader-step-text">Готово</span>
+                <div class="loader-bar">
+                    <div class="loader-progress">
+                        <div class="progress-glow"></div>
+                    </div>
+                    <div class="progress-particles"></div>
                 </div>
             </div>
         </div>
@@ -206,83 +251,157 @@
 
                     <!-- Секция Mining -->
                     <section class="content-section development-section" id="miningSection">
-                        <div class="development-content">
-                            <img src="https://i.postimg.cc/prRPKdnL/image.png" alt="Mining" class="development-icon">
-                            <h1 class="development-title">Майнинг-ферма</h1>
-                            <div class="development-badge">в разработке</div>
-                            
-                            <div class="progress-container">
-                                <div class="progress-info">
-                                    <span>Версия 0.0.1</span>
-                                    <span>До релиза: 14 дней</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill"></div>
-                                </div>
+                        <div class="development-status">
+                            <span class="status-dot"></span>
+                            В разработке
+                        </div>
+                        
+                        <div class="development-header">
+                            <div class="header-icon">
+                                <i class="fas fa-microchip"></i>
+                                <div class="icon-glow"></div>
                             </div>
-
-                            <div class="development-steps">
-                                <div class="step completed">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Дизайн</span>
+                            <h2 class="development-title">Майнинг-ферма</h2>
+                            <div class="development-version">
+                                <span class="version-label">Версия</span>
+                                <span class="version-number">0.0.1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="development-timeline">
+                            <div class="timeline-progress-wrapper">
+                                <div class="timeline-bar">
+                                    <div class="timeline-progress" style="width: 25%">
+                                        <div class="progress-pulse"></div>
+                                    </div>
                                 </div>
-                                <div class="step active">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Разработка</span>
+                                <div class="progress-percentage">25%</div>
+                            </div>
+                            
+                            <div class="timeline-stages">
+                                <div class="timeline-stage">
+                                    <div class="stage-dot active">
+                                        <i class="fas fa-paint-brush"></i>
+                                    </div>
+                                    <div class="stage-line active"></div>
+                                    <span class="stage-label active">Дизайн</span>
                                 </div>
-                                <div class="step">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Тестирование</span>
+                                <div class="timeline-stage">
+                                    <div class="stage-dot active">
+                                        <i class="fas fa-code"></i>
+                                    </div>
+                                    <div class="stage-line"></div>
+                                    <span class="stage-label active">Разработка</span>
                                 </div>
-                                <div class="step">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Релиз</span>
+                                <div class="timeline-stage">
+                                    <div class="stage-dot">
+                                        <i class="fas fa-vial"></i>
+                                    </div>
+                                    <div class="stage-line"></div>
+                                    <span class="stage-label">Тестирование</span>
+                                </div>
+                                <div class="timeline-stage">
+                                    <div class="stage-dot">
+                                        <i class="fas fa-rocket"></i>
+                                    </div>
+                                    <span class="stage-label">Релиз</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="construction-animation">
-                            <div class="construction-beam"></div>
+                        
+                        <div class="development-info">
+                            <div class="info-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="card-content">
+                                    <div class="release-date">До релиза: 14 дней</div>
+                                    <div class="release-progress">
+                                        <div class="days-left">
+                                            <span class="number">14</span>
+                                            <span class="label">дней</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
                     <!-- Секция Reward -->
                     <section class="content-section development-section" id="rewardSection">
-                        <div class="development-content">
-                            <img src="https://i.postimg.cc/prRPKdnL/image.png" alt="Reward" class="development-icon">
-                            <h1 class="development-title">Ежедневные награды</h1>
-                            <div class="development-badge">в разработке</div>
-                            
-                            <div class="progress-container">
-                                <div class="progress-info">
-                                    <span>Версия 0.0.1</span>
-                                    <span>До релиза: 7 дней</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: 75%"></div>
-                                </div>
+                        <div class="development-status">
+                            <span class="status-dot"></span>
+                            В разработке
+                        </div>
+                        
+                        <div class="development-header">
+                            <div class="header-icon">
+                                <i class="fas fa-gift"></i>
+                                <div class="icon-glow"></div>
                             </div>
-
-                            <div class="development-steps">
-                                <div class="step completed">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Дизайн</span>
+                            <h2 class="development-title">Ежедневные награды</h2>
+                            <div class="development-version">
+                                <span class="version-label">Версия</span>
+                                <span class="version-number">0.0.1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="development-timeline">
+                            <div class="timeline-progress-wrapper">
+                                <div class="timeline-bar">
+                                    <div class="timeline-progress" style="width: 50%">
+                                        <div class="progress-pulse"></div>
+                                    </div>
                                 </div>
-                                <div class="step completed">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Разработка</span>
+                                <div class="progress-percentage">50%</div>
+                            </div>
+                            
+                            <div class="timeline-stages">
+                                <div class="timeline-stage">
+                                    <div class="stage-dot active">
+                                        <i class="fas fa-paint-brush"></i>
+                                    </div>
+                                    <div class="stage-line active"></div>
+                                    <span class="stage-label active">Дизайн</span>
                                 </div>
-                                <div class="step active">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Тестирование</span>
+                                <div class="timeline-stage">
+                                    <div class="stage-dot active">
+                                        <i class="fas fa-code"></i>
+                                    </div>
+                                    <div class="stage-line"></div>
+                                    <span class="stage-label active">Разработка</span>
                                 </div>
-                                <div class="step">
-                                    <div class="step-dot"></div>
-                                    <span class="step-label">Релиз</span>
+                                <div class="timeline-stage">
+                                    <div class="stage-dot">
+                                        <i class="fas fa-vial"></i>
+                                    </div>
+                                    <div class="stage-line"></div>
+                                    <span class="stage-label">Тестирование</span>
+                                </div>
+                                <div class="timeline-stage">
+                                    <div class="stage-dot">
+                                        <i class="fas fa-rocket"></i>
+                                    </div>
+                                    <span class="stage-label">Релиз</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="construction-animation">
-                            <div class="construction-beam"></div>
+                        
+                        <div class="development-info">
+                            <div class="info-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="card-content">
+                                    <div class="release-date">До релиза: 7 дней</div>
+                                    <div class="release-progress">
+                                        <div class="days-left">
+                                            <span class="number">7</span>
+                                            <span class="label">дней</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
@@ -290,7 +409,27 @@
                     <section class="content-section game-section" id="gameSection">
                         <div class="section-content">
                             <h2>Игровой раздел</h2>
-                            <p>Этот раздел находится в разработке</p>
+                            <!-- Контейнер для карточной игры -->
+                            <div class="game-cards-container">
+                                <div class="container">
+                                    <!-- Кнопка запуска -->
+                                    <button class="spin-button">
+                                        <span class="spin-text">Купить карточку</span>
+                                        <div class="price-container">
+                                            <span class="price-value">1</span>
+                                            <img src="https://tapkoala.com/_next/image?url=%2Fimages%2Fstar.png&w=32&q=75" alt="star" class="star-icon">
+                                        </div>
+                                    </button>
+
+                                    <!-- Контейнер для карточек -->
+                                    <div class="cards-container">
+                                        <!-- Карточки будут добавлены через JavaScript -->
+                                    </div>
+
+                                    <!-- Текст-подсказка -->
+                                    <div class="hint-text">Выберите одну из 3 карточек</div>
+                                </div>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -381,6 +520,8 @@
     <!-- Подключаем JavaScript файлы -->
     <script src="js/telegram-handler.js"></script>
     <script src="js/game-settings.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="js/config.js"></script>
     <script src="js/game.js"></script>
     <script src="js/main.js"></script>
     <script src="js/home.js"></script>

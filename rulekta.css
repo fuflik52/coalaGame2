@@ -1,0 +1,649 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {  
+    background: #1a1a1a;
+    color: white;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+    text-align: center;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Анимация пульсации для кнопки Spin */
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+/* Анимация конфетти */
+@keyframes confetti-fall {
+    0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+
+/* Анимация блика */
+@keyframes shine {
+    0% { transform: translateX(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) rotate(45deg); }
+}
+
+/* Стили для кнопки запуска */
+.spin-button {
+    order: 1;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 226px;
+    height: 60px;
+    background: linear-gradient(145deg, rgba(31, 41, 55, 0.8), rgba(17, 24, 39, 0.9));
+    border-radius: 15px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.spin-text {
+    color: white;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.price-container {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 20px;
+    padding: 4px 8px;
+}
+
+.price-value {
+    color: black;
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+.star-icon {
+    width: 21px;
+    height: 21px;
+}
+
+/* Стили для контейнера карточек */
+.cards-container {
+    perspective: 2000px;
+    transform-style: preserve-3d;
+    order: 3;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+}
+
+/* Стили для карточек */
+.card {
+    width: 280px;
+    height: 400px;
+    position: relative;
+    margin: 10px;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.card:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+
+.card.flipped {
+    transform: rotateY(180deg);
+}
+
+.card.disabled {
+    opacity: 0.9;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    transform-style: preserve-3d;
+}
+
+.card-front {
+    background: none;
+    transform: rotateY(0deg);
+}
+
+.card-pattern {
+    width: 100%;
+    height: 100%;
+    border-radius: 20px;
+}
+
+.card-pattern img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+}
+
+.hint-text {
+    order: 2;
+    margin: 0 auto;
+    padding: 12px 30px;
+    background: linear-gradient(145deg, rgb(220, 38, 38), rgb(185, 28, 28));
+    border-radius: 12px;
+    color: white;
+    font-size: 18px;
+    font-weight: 500;
+    max-width: fit-content;
+    box-shadow: 0 0 20px rgba(220, 38, 38, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+.game-active .hint-text {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.game-inactive .hint-text {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.card-back {
+    transform: rotateY(180deg);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+/* Стили для разных редкостей */
+.card-back.common {
+    background: linear-gradient(145deg, #DEDEDE, #343735);
+    border: 2px solid #4a4a4a;
+}
+
+.card-back.rare {
+    background: linear-gradient(145deg, #4F7BFF, #3A0DFF);
+    border: 2px solid #3A0DFF;
+    box-shadow: 0 0 20px rgba(79, 123, 255, 0.3);
+}
+
+.card-back.gold {
+    background: linear-gradient(145deg, #FFD700, #FF8F00);
+    border: 2px solid #FFD700;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+}
+
+.prize-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: linear-gradient(to bottom, 
+        rgba(0,0,0,0), 
+        rgba(0,0,0,0.7) 30%, 
+        rgba(0,0,0,0.9)
+    );
+}
+
+.prize-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    margin-left: 8px;
+}
+
+.prize-value {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px;
+    width: 100%;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: white;
+}
+
+.common .prize-value {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.rare .prize-value {
+    background: rgba(79, 123, 255, 0.2);
+    color: white;
+    text-shadow: 0 0 5px rgba(79, 123, 255, 0.5);
+}
+
+.gold .prize-value {
+    background: rgba(255, 215, 0, 0.2);
+    color: #FFD700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.rarity-badge {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 16px;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 767px) {
+    .hint-text {
+        font-size: 16px;
+        padding: 10px 24px;
+    }
+    
+    .card {
+        width: 32%;
+        height: auto;
+        aspect-ratio: 2/3;
+    }
+    
+    .center-image {
+        width: 80%;
+        height: auto;
+        max-height: 50%;
+    }
+    
+    .prize-value {
+        font-size: 14px;
+        padding: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hint-text {
+        font-size: 14px;
+        padding: 8px 20px;
+    }
+    
+    .prize-value {
+        font-size: 12px;
+        padding: 6px;
+    }
+    
+    .center-image {
+        width: 70%;
+        max-height: 45%;
+    }
+    
+    .prize-icon {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+.card-back.previous-prize {
+    background: linear-gradient(145deg, #FF4444, #CC0000);
+    border: 2px solid #FF0000;
+    opacity: 0.9;
+    position: relative;
+    overflow: hidden;
+}
+
+.previous-prize .prize-container {
+    background: linear-gradient(to bottom, 
+        rgba(0,0,0,0), 
+        rgba(0,0,0,0.8) 30%, 
+        rgba(0,0,0,0.95)
+    );
+    z-index: 3;
+}
+
+.previous-prize .prize-value {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 20px;
+    padding: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.previous-prize .rarity-badge {
+    background: linear-gradient(to right, #FF4444, #CC0000);
+    color: white;
+    font-size: 14px;
+    padding: 8px 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3);
+    white-space: nowrap;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+}
+
+.previous-prize .center-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    z-index: 2;
+    opacity: 0.9;
+}
+
+@keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes cardHover {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+.rarity-type {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.possible-win-text {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 14px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 16px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    text-align: center;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rarity-badge.common-border {
+    background: linear-gradient(145deg, #DEDEDE, #343735);
+    color: white;
+    box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+}
+
+.rarity-badge.rare-border {
+    background: linear-gradient(145deg, #4F7BFF, #3A0DFF);
+    color: white;
+    box-shadow: 0 4px 8px rgba(79, 123, 255, 0.3);
+}
+
+.rarity-badge.gold-border {
+    background: linear-gradient(145deg, #FFD700, #FF8F00);
+    color: black;
+    box-shadow: 0 4px 8px rgba(255, 215, 0, 0.4);
+}
+
+.previous-prize .rarity-badge {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 14px;
+    padding: 8px 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    max-width: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-radius: 15px;
+}
+
+.possible-win-text {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    font-size: 14px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 16px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.center-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    z-index: 2;
+}
+
+.center-image.no-flip {
+    transform: translate(-50%, -50%) rotateY(180deg);
+}
+
+/* Конфетти контейнер */
+.confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1001;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #4ADE80;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    animation: confetti-fall 3s linear forwards;
+}
+
+/* Разные цвета для конфетти */
+.confetti:nth-child(4n) {
+    background-color: #4ADE80; /* зеленый */
+}
+.confetti:nth-child(4n + 1) {
+    background-color: #FFC107; /* желтый */
+}
+.confetti:nth-child(4n + 2) {
+    background-color: #0088CC; /* голубой */
+}
+.confetti:nth-child(4n + 3) {
+    background-color: #FF4081; /* розовый */
+}
+
+/* Разные задержки для конфетти */
+.confetti:nth-child(5n) { animation-delay: 0s; }
+.confetti:nth-child(5n + 1) { animation-delay: 0.2s; }
+.confetti:nth-child(5n + 2) { animation-delay: 0.4s; }
+.confetti:nth-child(5n + 3) { animation-delay: 0.6s; }
+.confetti:nth-child(5n + 4) { animation-delay: 0.8s; }
+
+/* Стили для неактивных карточек */
+.card.unpaid .card-front::before {
+    content: 'Купите игру';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(145deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 20, 0.95));
+    color: #FFD700;
+    padding: 15px 30px;
+    border-radius: 15px;
+    font-size: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 
+        0 0 20px rgba(255, 215, 0, 0.2),
+        0 0 40px rgba(255, 215, 0, 0.1),
+        inset 0 0 15px rgba(255, 215, 0, 0.1);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(5px);
+}
+
+.card.unpaid .card-front {
+    position: relative;
+}
+
+.card.unpaid .card-front::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, 
+        rgba(0, 0, 0, 0.7),
+        rgba(0, 0, 0, 0.5)
+    );
+    border-radius: 20px;
+    z-index: 1;
+}
+
+.card.unpaid .card-pattern {
+    filter: grayscale(30%) brightness(0.7);
+    transition: all 0.3s ease;
+}
+
+.card.unpaid:hover .card-pattern {
+    filter: grayscale(0%) brightness(0.8);
+}
+
+/* Анимация для текста на неактивных карточках */
+@keyframes unpaidPulse {
+    0% { 
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 
+            0 0 20px rgba(255, 215, 0, 0.2),
+            0 0 40px rgba(255, 215, 0, 0.1),
+            inset 0 0 15px rgba(255, 215, 0, 0.1);
+    }
+    50% { 
+        transform: translate(-50%, -50%) scale(1.05);
+        box-shadow: 
+            0 0 25px rgba(255, 215, 0, 0.3),
+            0 0 50px rgba(255, 215, 0, 0.2),
+            inset 0 0 20px rgba(255, 215, 0, 0.2);
+    }
+    100% { 
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 
+            0 0 20px rgba(255, 215, 0, 0.2),
+            0 0 40px rgba(255, 215, 0, 0.1),
+            inset 0 0 15px rgba(255, 215, 0, 0.1);
+    }
+}
+
+.card.unpaid .card-front::before {
+    animation: unpaidPulse 2s ease-in-out infinite;
+}
+
+.card.unpaid {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.card.unpaid:hover {
+    transform: translateY(-5px);
+}
+
+.card.unpaid:hover .card-front::before {
+    background: linear-gradient(145deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 20, 1));
+    color: #FFF;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+
+
+
