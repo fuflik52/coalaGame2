@@ -151,37 +151,56 @@ function vibrate(duration = 50) {
 }
 
 // Обработчик клика
-function handleClick(e) {
-    e.preventDefault();
-    if (!isClicking) {
+function handleClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!isClicking && energy > 0) {
         isClicking = true;
-        
-        if (energy > 0) {
-            // Уменьшаем энергию
-            energy--;
-            // Увеличиваем баланс
-            balance++;
-            
-            // Вибрация при клике
-            vibrate();
-            
-            // Обновляем отображение
-            updateEnergyDisplay();
-            updateBalanceDisplay();
-            
-            // Сохраняем данные
-            saveUserData();
-            
-            // Добавляем анимацию клика
-            const clickerButton = document.querySelector('.clicker-button');
-            if (clickerButton) {
-                clickerButton.classList.add('clicked');
-                setTimeout(() => {
-                    clickerButton.classList.remove('clicked');
-                }, 100);
-            }
+
+        // Уменьшаем энергию
+        energy--;
+        // Увеличиваем баланс
+        balance++;
+
+        // Вибрация при клике
+        vibrate();
+
+        // Обновляем отображение
+        updateEnergyDisplay();
+        updateBalanceDisplay();
+
+        // Сохраняем данные
+        saveUserData();
+
+        // Получаем координаты для анимации
+        let x, y;
+        if (event.type.includes('touch') && event.touches && event.touches[0]) {
+            x = event.touches[0].clientX;
+            y = event.touches[0].clientY;
+        } else if (event.clientX !== undefined && event.clientY !== undefined) {
+            x = event.clientX;
+            y = event.clientY;
+        } else {
+            // Если координаты недоступны, используем центр кнопки
+            const button = event.target.closest('.clicker-button');
+            const rect = button.getBoundingClientRect();
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
         }
-        
+
+        // Показываем анимацию награды
+        showRewardAnimation(1, { clientX: x, clientY: y });
+
+        // Добавляем анимацию клика
+        const clickerButton = event.target.closest('.clicker-button');
+        if (clickerButton) {
+            clickerButton.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                clickerButton.style.transform = 'scale(1)';
+            }, 100);
+        }
+
         setTimeout(() => {
             isClicking = false;
         }, 100);
@@ -196,41 +215,53 @@ document.addEventListener('DOMContentLoaded', () => {
     // Запускаем регенерацию энергии
     startEnergyRegeneration();
     
-    // Добавляем обработчик для кнопки кликера
+    // Добавляем обработчики для кнопки кликера
     const clickerButton = document.querySelector('.clicker-button');
     if (clickerButton) {
+        // Обработчики для мыши
         clickerButton.addEventListener('mousedown', handleClick);
+        
+        // Обработчики для тачскрина
         clickerButton.addEventListener('touchstart', handleClick, { passive: false });
         clickerButton.addEventListener('touchend', (e) => {
             e.preventDefault();
-        }, { passive: false });
-        
-        // Предотвращаем прокрутку на мобильных устройствах
-        document.body.addEventListener('touchmove', (e) => {
-            if (e.target.closest('.click-section')) {
-                e.preventDefault();
+            e.stopPropagation();
+            const button = e.target.closest('.clicker-button');
+            if (button) {
+                button.style.transform = 'scale(1)';
             }
         }, { passive: false });
-        
+
+        // Предотвращаем скролл при касании кнопки
+        clickerButton.addEventListener('touchmove', (e) => {
+            if (e.target.closest('.click-section')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, { passive: false });
+
         // Отключаем контекстное меню
         clickerButton.addEventListener('contextmenu', (e) => {
             e.preventDefault();
+            e.stopPropagation();
         });
-        
+
         // Предотвращаем выделение текста
         clickerButton.addEventListener('selectstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
         });
-        
+
         // Предотвращаем перетаскивание изображений
         const images = clickerButton.getElementsByTagName('img');
         for (let img of images) {
             img.addEventListener('dragstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
             });
         }
     }
-    
+
     // Обновляем отображение при возвращении на вкладку
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) {
