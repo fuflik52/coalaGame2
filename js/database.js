@@ -9,22 +9,50 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 if (!window.tg) {
     window.tg = window.Telegram?.WebApp;
 }
-const currentUser = window.tg?.initDataUnsafe?.user || {};
+
+// Ждем инициализацию Telegram WebApp
+function waitForTelegramInit() {
+    return new Promise((resolve) => {
+        if (window.tg?.initDataUnsafe?.user) {
+            resolve(window.tg.initDataUnsafe.user);
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.tg?.initDataUnsafe?.user) {
+                    clearInterval(checkInterval);
+                    resolve(window.tg.initDataUnsafe.user);
+                }
+            }, 100);
+            
+            // Таймаут через 5 секунд
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                resolve(null);
+            }, 5000);
+        }
+    });
+}
+
+// Инициализируем базу данных
+async function initDatabase() {
+    const currentUser = await waitForTelegramInit() || {};
+    window.db = new Database(currentUser);
+}
 
 class Database {
-    constructor() {
+    constructor(currentUser) {
         this.supabase = supabaseClient;
+        this.currentUser = currentUser;
         this.initializeUser();
     }
 
     async initializeUser() {
-        if (currentUser.id) {
-            const userData = await this.getUserData(currentUser.id);
+        if (this.currentUser.id) {
+            const userData = await this.getUserData(this.currentUser.id);
             if (!userData) {
                 await this.createNewUser(
-                    currentUser.id,
-                    currentUser.username || 'Пользователь',
-                    `https://t.me/${currentUser.username}`
+                    this.currentUser.id,
+                    this.currentUser.username || 'Пользователь',
+                    `https://t.me/${this.currentUser.username}`
                 );
             }
         }
@@ -32,13 +60,24 @@ class Database {
 
     async getUserData(telegramId) {
         try {
+            if (!telegramId) {
+                console.error('Ошибка: telegram_id не определен');
+                return null;
+            }
+
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
                 .eq('telegram_id', String(telegramId))
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    console.log('Пользователь не найден, будет создан новый');
+                    return null;
+                }
+                throw error;
+            }
             return data;
         } catch (error) {
             console.error('Ошибка при получении данных пользователя:', error);
@@ -337,15 +376,22 @@ class Database {
 
     async updateUserData(telegramId, userData) {
         try {
+            if (!telegramId) {
+                console.error('Ошибка: telegram_id не определен');
+                return null;
+            }
+
             // Убеждаемся, что все числовые значения находятся в допустимом диапазоне
             const sanitizedData = {
-                energy: Math.min(Math.max(0, Math.floor(userData.energy)), userData.max_energy || 100),
-                balance: Math.max(0, Math.floor(userData.balance)),
-                max_energy: Math.min(Math.max(1, Math.floor(userData.max_energy)), 2147483647),
-                energy_regen_rate: Math.min(Math.max(1, Math.floor(userData.energy_regen_rate)), 100),
-                level: Math.min(Math.max(1, Math.floor(userData.level)), 2147483647),
-                exp: Math.min(Math.max(0, Math.floor(userData.exp)), 2147483647),
-                exp_next_level: Math.min(Math.max(1, Math.floor(userData.exp_next_level)), 2147483647),
+                energy: Math.min(Math.max(0, Math.floor(userData.energy || 0)), userData.max_energy || 100),
+                balance: Math.max(0, Math.floor(userData.balance || 0)),
+                max_energy: Math.min(Math.max(1, Math.floor(userData.max_energy || 100)), 2147483647),
+                energy_regen_rate: Math.min(Math.max(1, Math.floor(userData.energy_regen_rate || 1)), 100),
+                level: Math.min(Math.max(1, Math.floor(userData.level || 1)), 2147483647),
+                exp: Math.min(Math.max(0, Math.floor(userData.exp || 0)), 2147483647),
+                exp_next_level: Math.min(Math.max(1, Math.floor(userData.exp_next_level || 100)), 2147483647),
+                game_score: Math.max(0, Math.floor(userData.game_score || 0)),
+                weekly_score: Math.max(0, Math.floor(userData.weekly_score || 0)),
                 last_energy_update: Date.now(),
                 last_seen: Date.now()
             };
@@ -356,11 +402,15 @@ class Database {
                 .eq('telegram_id', String(telegramId))
                 .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Ошибка при обновлении данных:', error);
+                throw error;
+            }
+
             return data;
         } catch (error) {
             console.error('Ошибка при обновлении данных пользователя:', error);
-            throw error;
+            return null;
         }
     }
 
@@ -406,8 +456,8 @@ class Database {
     }
 }
 
-// Экспортируем инстанс базы данных
-window.db = new Database();
+// Запускаем инициализацию
+initDatabase().catch(console.error);
 
 // Функция для обновления баланса
 async function updateUserBalance(telegramId, newBalance) {
@@ -457,8 +507,8 @@ async function updateUserRewards(telegramId, currentDay, lastClaimTime) {
 // Функция для обновления имени пользователя в интерфейсе
 function updateUsername() {
     const usernameElement = document.querySelector('.username');
-    if (usernameElement && currentUser.username) {
-        usernameElement.textContent = currentUser.username;
+    if (usernameElement && this.currentUser.username) {
+        usernameElement.textContent = this.currentUser.username;
     }
 }
 

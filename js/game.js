@@ -39,6 +39,9 @@ class NumberGame {
         // Добавляем обновление имени пользователя
         this.updateUsername();
         
+        // Добавляем ID пользователя
+        this.telegramUserId = window.tg?.initDataUnsafe?.user?.id;
+        
         this.initializeGame();
     }
 
@@ -840,6 +843,11 @@ class NumberGame {
     // Обновляем метод сохранения данных пользователя
     async saveUserData() {
         try {
+            if (!this.telegramUserId) {
+                console.error('ID пользователя не определен');
+                return;
+            }
+
             const userData = {
                 energy: Math.floor(this.energy),
                 balance: Math.floor(this.balance),
@@ -850,6 +858,11 @@ class NumberGame {
                 exp: Math.min(Math.floor(this.exp || 0), 2147483647),
                 exp_next_level: Math.min(Math.floor(this.expNextLevel || 100), 2147483647)
             };
+
+            if (!window.db) {
+                console.error('База данных не инициализирована');
+                return;
+            }
 
             await window.db.updateUserData(this.telegramUserId, userData);
         } catch (error) {

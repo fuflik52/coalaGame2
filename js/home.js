@@ -16,7 +16,10 @@ let isClicking = false;
 let isVibrationEnabled = localStorage.getItem('vibrationEnabled') === 'true';
 
 // Инициализация Telegram ID из URL
-function initializeTelegramId() {
+async function initializeTelegramId() {
+    // Ждем инициализацию Telegram WebApp
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
     if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
         window.currentTelegramId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
         return true;
@@ -213,10 +216,28 @@ function initializeHomeSection() {
 }
 
 // Запускаем инициализацию при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-    if (initializeTelegramId()) {
-        // Продолжаем инициализацию только если получили Telegram ID
-        initializeHome();
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Ждем инициализацию Telegram
+        const hasTelegramId = await initializeTelegramId();
+        if (!hasTelegramId) {
+            showNotification('Ошибка: не удалось получить данные пользователя', 'error');
+            return;
+        }
+
+        // Ждем инициализацию базы данных
+        await waitForDatabase();
+
+        // Инициализируем остальные компоненты
+        initializeHomeSection();
+        initializeEventListeners();
+        
+        // Запускаем обновление энергии
+        setInterval(updateEnergy, 1000);
+        
+    } catch (error) {
+        console.error('Ошибка при инициализации:', error);
+        showNotification('Произошла ошибка при инициализации', 'error');
     }
 });
 
@@ -256,142 +277,31 @@ function checkPassiveEarnings() {
     localStorage.setItem('lastEarningCheck', lastEarningCheck);
 }
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', async () => {
-    // Получаем Telegram ID
-    currentTelegramId = window.tg?.initDataUnsafe?.user?.id?.toString();
-
-    const clickerButton = document.querySelector('.clicker-button'); // Изменено с getElementById на querySelector
-    if (clickerButton) { // Добавляем проверку
-        clickerButton.addEventListener('click', async (event) => {
-            if (!currentTelegramId) return;
-
-            try {
-                const userData = await window.db.getUserData(currentTelegramId);
-                if (!userData || userData.energy <= 0) {
-                    showNotification('Недостаточно энергии!', 'error');
-                    return;
-                }
-
-                // Обновляем энергию
-                const newEnergy = userData.energy - 1;
-                await window.db.updateUserEnergy(currentTelegramId, newEnergy);
-
-                // Обновляем баланс
-                const newBalance = userData.balance + 1;
-                await window.db.updateUserBalance(currentTelegramId, newBalance);
-
-                // Обновляем отображение
-                updateEnergyDisplay(newEnergy, userData.max_energy);
-                const balanceElement = document.querySelector('.balance-value');
-                if (balanceElement) {
-                    balanceElement.textContent = newBalance.toLocaleString();
-                }
-
-                // Создаем анимацию +1
-                const floatingValue = document.createElement('div');
-                floatingValue.className = 'floating-value';
-                floatingValue.textContent = '+1';
-                
-                // Позиционируем относительно клика
-                const rect = event.target.getBoundingClientRect();
-                floatingValue.style.left = `${event.clientX}px`;
-                floatingValue.style.top = `${event.clientY}px`;
-                
-                document.body.appendChild(floatingValue);
-                
-                // Анимация движения вверх и исчезновения
-                requestAnimationFrame(() => {
-                    floatingValue.style.transform = 'translateY(-50px)';
-                    floatingValue.style.opacity = '0';
-                });
-                
-                // Удаляем элемент после анимации
-                setTimeout(() => {
-                    floatingValue.remove();
-                }, 1000);
-            } catch (error) {
-                console.error('Ошибка при обработке клика:', error);
+// Ждем инициализацию базы данных
+function waitForDatabase() {
+    return new Promise((resolve) => {
+        const checkDb = () => {
+            if (window.db) {
+                resolve();
+            } else {
+                setTimeout(checkDb, 100);
             }
-        });
-
-        clickerButton.addEventListener('touchstart', handleClick);
-    }
-    
-    // Обновляем энергию каждую секунду
-    setInterval(updateEnergy, 1000);
-    
-    // Сохраняем состояние перед закрытием страницы
-    window.addEventListener('beforeunload', () => {
-        localStorage.setItem('energy', energy);
-        localStorage.setItem('maxEnergy', maxEnergy);
-        localStorage.setItem('balance', balance);
-        localStorage.setItem('lastEnergyUpdate', lastEnergyUpdate);
+        };
+        checkDb();
     });
-    
-    // Загружаем сохраненное состояние
-    const savedEnergy = localStorage.getItem('energy');
-    const savedMaxEnergy = localStorage.getItem('maxEnergy');
-    const savedBalance = localStorage.getItem('balance');
-    const savedLastUpdate = localStorage.getItem('lastEnergyUpdate');
-    
-    if (savedEnergy) energy = parseInt(savedEnergy);
-    if (savedMaxEnergy) maxEnergy = parseInt(savedMaxEnergy);
-    if (savedBalance && document.querySelector('.home-section.active')) {
-        balance = parseInt(savedBalance);
-        const balanceElement = document.querySelector('.balance-value');
-        if (balanceElement) {
-            balanceElement.textContent = balance.toLocaleString();
-        }
-    }
-    if (savedLastUpdate) lastEnergyUpdate = parseInt(savedLastUpdate);
-    
-    updateEnergyDisplay();
-
-    // Добавляем элемент для отображения прибыли в час
-    const userInfo = document.querySelector('.user-info');
-    if (userInfo && document.querySelector('.home-section.active')) {
-        const hourlyProfitElement = document.createElement('div');
-        hourlyProfitElement.className = 'hourly-profit';
-        hourlyProfitElement.textContent = '0 /час';
-        userInfo.appendChild(hourlyProfitElement);
-    }
-    
-    // Обновляем баланс и прибыль в час
-    calculateHourlyRate();
-    
-    // Проверяем пассивный заработок каждую минуту
-    setInterval(() => {
-        checkPassiveEarnings();
-        calculateHourlyRate();
-    }, 60000); // Каждую минуту
-    
-    // Проверяем сразу при загрузке
-    checkPassiveEarnings();
-});
-
-async function loadUserData() {
-    try {
-        const userData = await window.db.getUserData(currentTelegramId);
-        if (userData) {
-            // Обновляем отображение баланса
-            const balanceElement = document.querySelector('.balance-value');
-            if (balanceElement) {
-                balanceElement.textContent = userData.balance.toLocaleString();
-            }
-
-            // Обновляем отображение энергии
-            if (typeof updateEnergyDisplay === 'function') {
-                updateEnergyDisplay(userData.energy, userData.max_energy);
-            }
-        }
-    } catch (error) {
-        console.error('Ошибка при загрузке данных пользователя:', error);
-    }
 }
 
 async function updateEnergy() {
     try {
+        if (!window.db) {
+            await waitForDatabase();
+        }
+        
+        if (!currentTelegramId) {
+            console.error('Telegram ID не определен');
+            return;
+        }
+
         await window.db.regenerateEnergy(currentTelegramId);
         const userData = await window.db.getUserData(currentTelegramId);
         if (userData && typeof updateEnergyDisplay === 'function') {
@@ -402,21 +312,12 @@ async function updateEnergy() {
     }
 }
 
-function checkPassiveEarnings() {
-    const now = Date.now();
-    const timePassed = now - lastEarningCheck;
-    const hoursPassedFraction = timePassed / (60 * 60 * 1000); // Сколько часов прошло (дробное число)
-    
-    if (hoursPassedFraction > 0 && hourlyRate > 0) {
-        const earnedAmount = Math.floor(hourlyRate * hoursPassedFraction);
-        if (earnedAmount > 0) {
-            updateBalance(earnedAmount);
-            showNotification(`Вы заработали ${earnedAmount.toLocaleString()} монет!`, 'success');
-        }
+function initializeEventListeners() {
+    const clickerButton = document.querySelector('.clicker-button');
+    if (clickerButton) {
+        clickerButton.addEventListener('click', handleClick);
+        clickerButton.addEventListener('touchstart', handleClick, { passive: false });
     }
-    
-    lastEarningCheck = now;
-    localStorage.setItem('lastEarningCheck', lastEarningCheck);
 }
 
 // Функция для восстановления энергии
