@@ -1,286 +1,194 @@
 // Этот файл оставлен для будущей реализации игрового функционала
 console.log('Game section is under development');
 
-class CardGame {
+class Game {
     constructor() {
-        this.spinButton = document.querySelector('.game-cards-container .spin-button');
-        this.cardsContainer = document.querySelector('.game-cards-container .cards-container');
-        this.hintText = document.querySelector('.game-cards-container .hint-text');
-        this.container = document.querySelector('.game-cards-container .container');
-        
-        if (!this.spinButton || !this.cardsContainer || !this.hintText || !this.container) {
-            console.error('Не удалось найти необходимые элементы игры');
+        this.cardsOpened = 0;
+        this.adShown = false;
+        this.initializeGame();
+    }
+
+    initializeGame() {
+        // Инициализация кнопки покупки карточки
+        const spinButton = document.querySelector('.spin-button');
+        if (spinButton) {
+            spinButton.addEventListener('click', () => this.startGame());
+        }
+
+        // Проверяем поддержку рекламы в Telegram WebApp
+        if (window.Telegram?.WebApp?.isSupported) {
+            this.initializeAds();
+        }
+    }
+
+    async startGame() {
+        const starBalance = parseInt(localStorage.getItem('starBalance') || '0');
+        const cost = 1; // Стоимость одной игры
+
+        if (starBalance < cost) {
+            // Если недостаточно звезд, предлагаем посмотреть рекламу
+            this.showAdPrompt();
             return;
         }
-        
-        this.confettiContainer = document.createElement('div');
-        this.confettiContainer.className = 'confetti-container';
-        document.body.appendChild(this.confettiContainer);
-        
-        this.isGameActive = false;
-        this.selectedCard = null;
-        this.touchStartX = 0;
-        this.touchStartY = 0;
-        this.isPaid = false;
-        
-        this.hintText.style.display = 'none';
-        this.container.classList.add('game-inactive');
-        
-        this.tg = window.Telegram?.WebApp;
-        
-        this.prizes = [
-            { type: 'leaf', value: 1000, chance: 45, rarity: 'common' },
-            { type: 'koala', value: 5000, chance: 15, rarity: 'common' },
-            { type: 'leaf', value: 10000, chance: 20, rarity: 'rare' },
-            { type: 'koala', value: 50000, chance: 10, rarity: 'rare' },
-            { type: 'ton', value: 0.1, chance: 5, rarity: 'gold' },
-            { type: 'ton', value: 0.5, chance: 3, rarity: 'gold' },
-            { type: 'ton', value: 1, chance: 2, rarity: 'gold' }
-        ];
-        
-        this.init();
-        this.createInitialCards();
+
+        // Списываем звезды
+        localStorage.setItem('starBalance', (starBalance - cost).toString());
+        this.updateStarBalance();
+
+        // Показываем карточки
+        this.showCards();
     }
 
-    init() {
-        if (this.spinButton) {
-            this.spinButton.addEventListener('click', () => this.handleSpinClick());
-        }
-        if (this.cardsContainer) {
-            this.cardsContainer.addEventListener('touchstart', (e) => this.handleTouchStart(e), false);
-            this.cardsContainer.addEventListener('touchmove', (e) => this.handleTouchMove(e), false);
-        }
+    showAdPrompt() {
+        const gameSection = document.querySelector('.game-section');
+        if (!gameSection) return;
+
+        const prompt = document.createElement('div');
+        prompt.className = 'ad-prompt';
+        prompt.innerHTML = `
+            <div class="ad-prompt-content">
+                <h3>Недостаточно звезд</h3>
+                <p>Посмотрите рекламу, чтобы получить бесплатную игру!</p>
+                <button class="watch-ad-button">
+                    <i class="fas fa-play"></i>
+                    Смотреть рекламу
+                </button>
+            </div>
+        `;
+
+        const watchButton = prompt.querySelector('.watch-ad-button');
+        watchButton.addEventListener('click', () => this.showAd());
+
+        gameSection.appendChild(prompt);
     }
 
-    handleTouchStart(e) {
-        const touch = e.touches[0];
-        this.touchStartX = touch.clientX;
-        this.touchStartY = touch.clientY;
-    }
-
-    handleTouchMove(e) {
-        if (!this.touchStartX || !this.touchStartY || !this.isGameActive) return;
-
-        const touch = e.touches[0];
-        const diffX = this.touchStartX - touch.clientX;
-        const diffY = this.touchStartY - touch.clientY;
-
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-            const card = e.target.closest('.card');
-            if (card && !card.classList.contains('flipped')) {
-                this.selectCard(card);
+    async showAd() {
+        try {
+            if (!this.adShown && window.Telegram?.WebApp?.showAd) {
+                await window.Telegram.WebApp.showAd();
+                this.adShown = true;
+                this.onAdComplete();
             }
-        }
-
-        this.touchStartX = null;
-        this.touchStartY = null;
-    }
-
-    createConfetti() {
-        for (let i = 0; i < 50; i++) {
-            const confetti = document.createElement('div');
-            confetti.className = 'confetti';
-            confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.animationDelay = Math.random() * 2 + 's';
-            this.confettiContainer.appendChild(confetti);
-
-            confetti.addEventListener('animationend', () => {
-                confetti.remove();
-            });
+        } catch (error) {
+            console.error('Ошибка при показе рекламы:', error);
         }
     }
 
-    createInitialCards() {
-        if (!this.cardsContainer) return;
-        
-        this.cardsContainer.innerHTML = '';
-        
+    onAdComplete() {
+        // Удаляем промпт рекламы
+        const prompt = document.querySelector('.ad-prompt');
+        if (prompt) {
+            prompt.remove();
+        }
+
+        // Даем бесплатную игру
+        this.showCards();
+    }
+
+    showCards() {
+        const cardsContainer = document.querySelector('.cards-container');
+        if (!cardsContainer) return;
+
+        cardsContainer.innerHTML = '';
+
+        // Создаем 3 карточки
         for (let i = 0; i < 3; i++) {
-            const card = this.createCard();
-            card.classList.add('disabled');
-            this.cardsContainer.appendChild(card);
-        }
-    }
-
-    createCard() {
-        const card = document.createElement('div');
-        card.className = 'card unpaid';
-        
-        const frontFace = document.createElement('div');
-        frontFace.className = 'card-face card-front';
-        frontFace.innerHTML = `
-            <div class="card-pattern">
-                <img src="https://i.postimg.cc/T3qC7r9b/image.png" alt="Коала" class="center-image">
-            </div>
-        `;
-
-        const backFace = document.createElement('div');
-        backFace.className = 'card-face card-back';
-
-        card.appendChild(frontFace);
-        card.appendChild(backFace);
-
-        card.addEventListener('click', () => {
-            if (!this.isPaid) {
-                this.handleSpinClick();
-                return;
-            }
-            this.selectCard(card);
-        });
-
-        return card;
-    }
-
-    handleSpinClick() {
-        if (this.isGameActive) return;
-        
-        // В демо-режиме автоматически активируем игру
-        this.isPaid = true;
-        this.startGame();
-    }
-
-    startGame() {
-        if (!this.isPaid) return;
-        
-        this.isGameActive = true;
-        if (this.spinButton) this.spinButton.disabled = true;
-        
-        this.hintText.style.display = 'block';
-        this.hintText.style.opacity = '1';
-        
-        this.createInitialCards();
-        
-        const cards = this.cardsContainer.querySelectorAll('.card');
-        cards.forEach(card => {
-            card.classList.remove('disabled', 'unpaid');
-        });
-        
-        this.container.classList.remove('game-inactive');
-        this.container.classList.add('game-active');
-    }
-
-    selectCard(card) {
-        if (!this.isGameActive || card.classList.contains('flipped') || this.selectedCard || !this.isPaid) return;
-        
-        const prize = this.getRandomPrize();
-        const backFace = card.querySelector('.card-back');
-        
-        this.hintText.style.opacity = '0';
-        
-        backFace.className = `card-face card-back ${prize.rarity}`;
-        backFace.innerHTML = this.getCardBackContent(prize);
-
-        card.classList.add('flipped');
-        this.selectedCard = card;
-        
-        if (prize.rarity === 'rare' || prize.rarity === 'gold') {
-            this.createConfetti();
-        }
-
-        this.isGameActive = false;
-        if (this.spinButton) this.spinButton.disabled = false;
-        this.isPaid = false;
-
-        setTimeout(() => this.resetGame(), 3000);
-    }
-
-    getCardBackContent(prize) {
-        return `
-            <div class="rarity-badge">${this.getRarityText(prize.rarity)}</div>
-            <div class="card-pattern">
-                <img src="https://i.postimg.cc/ZnggtH7v/image.png" alt="Коала" class="center-image">
-            </div>
-            <div class="prize-container">
-                <div class="prize-value">
-                    <span>${this.formatPrizeValue(prize)}</span>
-                    <img src="${this.getPrizeIcon(prize.type)}" alt="${prize.type}" class="prize-icon">
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="card-question">?</div>
+                    </div>
+                    <div class="card-back">
+                        <div class="card-content">
+                            <!-- Содержимое карточки будет добавлено при открытии -->
+                        </div>
+                    </div>
                 </div>
+            `;
+
+            card.addEventListener('click', () => this.openCard(card));
+            cardsContainer.appendChild(card);
+        }
+    }
+
+    openCard(card) {
+        if (card.classList.contains('opened')) return;
+
+        card.classList.add('opened');
+        this.cardsOpened++;
+
+        // Генерируем случайную награду
+        const reward = this.generateReward();
+        const cardContent = card.querySelector('.card-content');
+        if (cardContent) {
+            cardContent.innerHTML = `
+                <div class="reward-content">
+                    <div class="reward-icon">${reward.icon}</div>
+                    <div class="reward-value">+${reward.value}</div>
+                    <div class="reward-type">${reward.type}</div>
+                </div>
+            `;
+        }
+
+        // Если открыты все карточки, показываем кнопку "Играть снова"
+        if (this.cardsOpened === 3) {
+            setTimeout(() => this.showPlayAgainButton(), 1500);
+        }
+    }
+
+    generateReward() {
+        const rewards = [
+            { icon: '💰', type: 'монет', minValue: 100, maxValue: 1000 },
+            { icon: '⭐', type: 'звезд', minValue: 1, maxValue: 5 },
+            { icon: '💎', type: 'кристаллов', minValue: 1, maxValue: 3 }
+        ];
+
+        const reward = rewards[Math.floor(Math.random() * rewards.length)];
+        const value = Math.floor(Math.random() * (reward.maxValue - reward.minValue + 1)) + reward.minValue;
+
+        return {
+            icon: reward.icon,
+            type: reward.type,
+            value: value
+        };
+    }
+
+    showPlayAgainButton() {
+        const gameSection = document.querySelector('.game-section');
+        if (!gameSection) return;
+
+        const button = document.createElement('button');
+        button.className = 'play-again-button';
+        button.innerHTML = `
+            <span>Играть снова</span>
+            <div class="price-container">
+                <span class="price-value">1</span>
+                <img src="https://tapkoala.com/_next/image?url=%2Fimages%2Fstar.png&w=32&q=75" alt="star" class="star-icon">
             </div>
         `;
+
+        button.addEventListener('click', () => {
+            button.remove();
+            this.cardsOpened = 0;
+            this.startGame();
+        });
+
+        gameSection.appendChild(button);
     }
 
-    getRarityText(rarity) {
-        switch (rarity) {
-            case 'common': return 'Обычная';
-            case 'rare': return 'Редкая';
-            case 'gold': return 'Золотая';
-            default: return '';
+    updateStarBalance() {
+        const starBalance = parseInt(localStorage.getItem('starBalance') || '0');
+        const balanceElement = document.querySelector('.star-balance');
+        if (balanceElement) {
+            balanceElement.textContent = starBalance;
         }
-    }
-
-    getRandomPrize() {
-        const random = Math.random() * 100;
-        let sum = 0;
-        
-        for (const prize of this.prizes) {
-            sum += prize.chance;
-            if (random <= sum) {
-                return prize;
-            }
-        }
-        
-        return this.prizes[0];
-    }
-
-    formatPrizeValue(prize) {
-        let value = prize.value.toLocaleString();
-        switch (prize.type) {
-            case 'ton':
-                return `${value} TON`;
-            case 'koala':
-            case 'leaf':
-                return value;
-            default:
-                return value;
-        }
-    }
-
-    getPrizeIcon(type) {
-        switch (type) {
-            case 'leaf':
-            case 'koala':
-                return 'https://i.postimg.cc/FFx7T4Bh/image.png';
-            case 'ton':
-                return 'https://i.postimg.cc/gkM0v59L/image.png';
-            default:
-                return '';
-        }
-    }
-
-    resetGame() {
-        this.isGameActive = false;
-        this.selectedCard = null;
-        if (this.spinButton) this.spinButton.disabled = false;
-        this.isPaid = false;
-        
-        this.hintText.style.opacity = '0';
-        this.hintText.style.display = 'none';
-        this.container.classList.remove('game-active');
-        this.container.classList.add('game-inactive');
-        
-        this.createInitialCards();
     }
 }
 
-// Инициализация игры при загрузке страницы
+// Инициализация при загрузке страницы
+let game = null;
 document.addEventListener('DOMContentLoaded', () => {
-    const gameSection = document.getElementById('gameSection');
-    if (gameSection && gameSection.classList.contains('active')) {
-        new CardGame();
-    }
-    
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            if (mutation.target.classList.contains('active')) {
-                new CardGame();
-            }
-        });
-    });
-    
-    if (gameSection) {
-        observer.observe(gameSection, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-    }
+    game = new Game();
 }); 

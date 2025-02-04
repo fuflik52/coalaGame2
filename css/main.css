@@ -34,11 +34,10 @@ body {
     max-width: 420px;
     height: 100vh;
     max-height: 900px;
-    background-color: #1a1a1a;
+    background: transparent;
     border-radius: 30px;
     overflow: hidden;
     position: fixed;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -50,6 +49,7 @@ body {
     flex-direction: column;
     position: relative;
     padding: 0;
+    background: transparent;
 }
 
 .main-content {
@@ -58,6 +58,10 @@ body {
     height: calc(100% - 70px);
     overflow: hidden;
     padding: 0;
+    background-image: url('https://i.postimg.cc/Px0TSzPj/Rectangle-1.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
 }
 
 .content-section {
@@ -69,12 +73,47 @@ body {
     left: 0;
     opacity: 0;
     transition: opacity 0.3s ease-out;
-    flex-direction: column;
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%);
 }
 
 .content-section.active {
-    display: flex;
+    display: block;
     opacity: 1;
+    height: 100vh;
+    overflow-y: auto;
+    padding-bottom: 70px;
+}
+
+/* Стилизация скроллбара */
+.content-section.active::-webkit-scrollbar {
+    width: 6px;
+}
+
+.content-section.active::-webkit-scrollbar-track {
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.content-section.active::-webkit-scrollbar-thumb {
+    background: rgba(76, 175, 80, 0.3);
+    border-radius: 3px;
+}
+
+.content-section.active::-webkit-scrollbar-thumb:hover {
+    background: rgba(76, 175, 80, 0.5);
+}
+
+/* Фоновый паттерн для секций */
+.content-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="rgba(255,255,255,0.05)"/></svg>');
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
 }
 
 .bottom-nav {
@@ -1345,4 +1384,39 @@ body {
         overscroll-behavior: none;
         touch-action: none;
     }
+}
+
+/* Общий стиль для всех секций */
+.section {
+    background: transparent;
+}
+
+/* Добавляем фон для конкретных секций */
+.home-section,
+.mining-section,
+.reward-section,
+.cards-section,
+.shop-section {
+    background: transparent;
+}
+
+/* Добавляем полупрозрачный оверлей для лучшей читаемости контента */
+.section::before,
+.home-section::before,
+.mining-section::before,
+.reward-section::before,
+.cards-section::before,
+.shop-section::before {
+    display: none;
+}
+
+/* Обеспечиваем правильное позиционирование контента поверх фона */
+.section > *,
+.home-section > *,
+.mining-section > *,
+.reward-section > *,
+.cards-section > *,
+.shop-section > * {
+    position: relative;
+    z-index: 2;
 } 

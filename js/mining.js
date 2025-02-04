@@ -3,10 +3,9 @@ const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
         if (mutation.addedNodes.length) {
             mutation.addedNodes.forEach((node) => {
-                // Проверяем, является ли добавленный узел нужной нам секцией
                 if (node.classList && node.classList.contains('mining-section')) {
                     if (!window.mining) {
-                        window.mining = new Mining();
+                        initializeMining();
                     }
                 }
             });
@@ -20,172 +19,288 @@ observer.observe(document.body, {
     subtree: true
 });
 
+// Функция инициализации майнинга
+async function initializeMining() {
+    try {
+        // Ждем инициализацию базы данных и Telegram ID
+        await waitForDatabase();
+        await initializeTelegramId();
+        
+        // Создаем экземпляр майнинга
+        window.mining = new Mining();
+    } catch (error) {
+        console.error('Ошибка при инициализации майнинга:', error);
+    }
+}
+
 class Mining {
     constructor() {
-        this.miningPower = 1;
-        this.currentMiningSpeed = 0;
-        this.upgrades = {
-            basic: { level: 1, cost: 100, power: 1 },
-            advanced: { level: 0, cost: 500, power: 5 },
-            premium: { level: 0, cost: 2000, power: 20 }
+        // Загружаем сохраненные данные или используем начальные значения
+        const savedData = localStorage.getItem('miningData');
+        const initialData = savedData ? JSON.parse(savedData) : {
+            miningRate: 0,
+            energyUsage: 0,
+            upgrades: [
+                {
+                    id: 'miner_1',
+                    name: 'Базовый майнер',
+                    cost: 100,
+                    rate: 1,
+                    energy: 1,
+                    level: 0,
+                    maxLevel: 10
+                },
+                {
+                    id: 'miner_2',
+                    name: 'Продвинутый майнер',
+                    cost: 500,
+                    rate: 5,
+                    energy: 4,
+                    level: 0,
+                    maxLevel: 5
+                },
+                {
+                    id: 'miner_3',
+                    name: 'Супер майнер',
+                    cost: 2000,
+                    rate: 20,
+                    energy: 15,
+                    level: 0,
+                    maxLevel: 3
+                }
+            ]
         };
-        
-        this.initializeUI();
-        this.initializeEventListeners();
+
+        this.miningRate = initialData.miningRate;
+        this.energyUsage = initialData.energyUsage;
+        this.upgrades = initialData.upgrades;
+
+        this.initializeUpgrades();
         this.startMining();
+        this.updateStats();
+        this.startBalanceCheck();
     }
 
-    initializeUI() {
-        const miningSection = document.querySelector('.mining-section');
-        if (!miningSection) return;
-
-        miningSection.innerHTML = `
-            <div class="mining-container">
-                <div class="mining-header">
-                    <h2>Майнинг-ферма</h2>
-                    <div class="mining-stats">
-                        <div class="mining-stat">
-                            <i class="fas fa-bolt"></i>
-                            <span class="mining-power">Мощность: ${this.miningPower}</span>
-                        </div>
-                        <div class="mining-stat">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span class="mining-speed">Скорость: ${this.currentMiningSpeed}/сек</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mining-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill"></div>
-                    </div>
-                    <div class="mining-animation">
-                        <i class="fas fa-microchip pulse"></i>
-                    </div>
-                </div>
-
-                <div class="upgrades-container">
-                    <h3>Улучшения</h3>
-                    <div class="upgrade-cards">
-                        <div class="upgrade-card" data-type="basic">
-                            <div class="upgrade-icon">
-                                <i class="fas fa-microchip"></i>
-                            </div>
-                            <div class="upgrade-info">
-                                <h4>Базовый майнер</h4>
-                                <p>Уровень: <span class="level">1</span></p>
-                                <p>Мощность: +1</p>
-                                <button class="upgrade-button">
-                                    Улучшить <span class="cost">100</span>
-                                    <i class="fas fa-coins"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="upgrade-card" data-type="advanced">
-                            <div class="upgrade-icon">
-                                <i class="fas fa-server"></i>
-                            </div>
-                            <div class="upgrade-info">
-                                <h4>Продвинутый майнер</h4>
-                                <p>Уровень: <span class="level">0</span></p>
-                                <p>Мощность: +5</p>
-                                <button class="upgrade-button">
-                                    Улучшить <span class="cost">500</span>
-                                    <i class="fas fa-coins"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="upgrade-card" data-type="premium">
-                            <div class="upgrade-icon">
-                                <i class="fas fa-database"></i>
-                            </div>
-                            <div class="upgrade-info">
-                                <h4>Премиум майнер</h4>
-                                <p>Уровень: <span class="level">0</span></p>
-                                <p>Мощность: +20</p>
-                                <button class="upgrade-button">
-                                    Улучшить <span class="cost">2000</span>
-                                    <i class="fas fa-coins"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+    startBalanceCheck() {
+        // Проверяем баланс каждую секунду
+        setInterval(() => {
+            this.updateUpgradeButtons();
+        }, 1000);
     }
 
-    initializeEventListeners() {
-        const upgradeButtons = document.querySelectorAll('.upgrade-button');
-        upgradeButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const card = e.target.closest('.upgrade-card');
-                const type = card.dataset.type;
-                this.purchaseUpgrade(type);
-            });
-        });
-    }
-
-    purchaseUpgrade(type) {
-        const upgrade = this.upgrades[type];
-        if (window.game && window.game.balance >= upgrade.cost) {
-            window.game.balance -= upgrade.cost;
-            upgrade.level++;
-            upgrade.cost = Math.floor(upgrade.cost * 1.5);
-            this.miningPower += upgrade.power;
-            
-            this.updateUI();
-            window.game.updateBalanceDisplay();
-            
-            window.game.showNotification({
-                title: 'Улучшение куплено!',
-                message: `Мощность майнинга увеличена на ${upgrade.power}`,
-                type: 'success'
-            });
-        } else {
-            window.game.showNotification({
-                title: 'Недостаточно средств',
-                message: 'Заработайте больше монет для покупки улучшения',
-                type: 'error'
-            });
+    getBalance() {
+        // Получаем баланс из основного интерфейса игры
+        const balanceElement = document.querySelector('.user-info .balance');
+        if (balanceElement) {
+            const balanceText = balanceElement.textContent.trim();
+            return parseInt(balanceText) || 0;
         }
+        return 0;
     }
 
-    updateUI() {
-        document.querySelector('.mining-power').textContent = `Мощность: ${this.miningPower}`;
-        document.querySelector('.mining-speed').textContent = `Скорость: ${this.currentMiningSpeed}/сек`;
+    updateUpgradeButtons() {
+        const balance = this.getBalance();
         
-        Object.entries(this.upgrades).forEach(([type, upgrade]) => {
-            const card = document.querySelector(`.upgrade-card[data-type="${type}"]`);
-            if (card) {
-                card.querySelector('.level').textContent = upgrade.level;
-                card.querySelector('.cost').textContent = upgrade.cost;
+        this.upgrades.forEach(upgrade => {
+            const button = document.querySelector(`#upgrade-${upgrade.id} .upgrade-button`);
+            if (button) {
+                const cost = this.calculateCost(upgrade);
+                const canAfford = balance >= cost;
+                const isMaxLevel = upgrade.level >= upgrade.maxLevel;
+                
+                button.disabled = !canAfford || isMaxLevel;
+                
+                if (!canAfford) {
+                    button.style.opacity = '0.5';
+                    button.style.cursor = 'not-allowed';
+                } else {
+                    button.style.opacity = '1';
+                    button.style.cursor = 'pointer';
+                }
             }
         });
+    }
+
+    initializeUpgrades() {
+        const upgradeCards = document.getElementById('upgradeCards');
+        if (!upgradeCards) return;
+
+        upgradeCards.innerHTML = '';
+        
+        this.upgrades.forEach(upgrade => {
+            const card = document.createElement('div');
+            card.className = `upgrade-card ${upgrade.level > 0 ? 'upgraded' : ''}`;
+            card.id = `upgrade-${upgrade.id}`;
+            
+            const stats = [
+                `+${upgrade.rate} монет/сек`,
+                `+${upgrade.energy} энергии/сек`
+            ];
+            
+            const cost = this.calculateCost(upgrade);
+            const balance = this.getBalance();
+            const canAfford = balance >= cost;
+            const isMaxLevel = upgrade.level >= upgrade.maxLevel;
+            
+            card.innerHTML = `
+                <div class="upgrade-info">
+                    <h3>${upgrade.name}</h3>
+                    <div class="upgrade-stats">
+                        ${stats.map(stat => `<span>${stat}</span>`).join('')}
+                    </div>
+                    <div class="upgrade-level">
+                        Уровень: ${upgrade.level}/${upgrade.maxLevel}
+                    </div>
+                </div>
+                <button class="upgrade-button" onclick="mining.upgrade('${upgrade.id}')" ${(!canAfford || isMaxLevel) ? 'disabled' : ''}>
+                    Улучшить за ${cost}
+                    <img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="coins" class="coin-icon">
+                </button>
+            `;
+            
+            upgradeCards.appendChild(card);
+        });
+    }
+
+    calculateCost(upgrade) {
+        return Math.floor(upgrade.cost * Math.pow(1.5, upgrade.level));
+    }
+
+    upgrade(upgradeId) {
+        const upgrade = this.upgrades.find(u => u.id === upgradeId);
+        if (!upgrade) return;
+
+        const cost = this.calculateCost(upgrade);
+        const balance = this.getBalance();
+
+        if (balance < cost) {
+            console.log('Недостаточно монет:', balance, '<', cost);
+            return;
+        }
+        if (upgrade.level >= upgrade.maxLevel) {
+            console.log('Достигнут максимальный уровень');
+            return;
+        }
+
+        // Обновляем баланс через основную систему игры
+        if (window.updateBalance) {
+            window.updateBalance(-cost);
+        }
+
+        // Обновляем уровень улучшения
+        upgrade.level++;
+        this.miningRate += upgrade.rate;
+        this.energyUsage += upgrade.energy;
+
+        // Сохраняем данные
+        this.saveData();
+
+        // Обновляем интерфейс
+        this.initializeUpgrades();
+        this.updateStats();
     }
 
     startMining() {
         setInterval(() => {
-            if (window.game) {
-                this.currentMiningSpeed = this.miningPower / 10;
-                window.game.balance += this.currentMiningSpeed;
-                window.game.updateBalanceDisplay();
-                this.updateUI();
-                this.updateProgressBar();
+            if (this.miningRate > 0) {
+                // Добавляем монеты через основную систему игры
+                if (window.updateBalance) {
+                    window.updateBalance(this.miningRate);
+                }
+                
+                // Создаем эффект появления монет
+                this.showMiningEffect();
             }
         }, 1000);
     }
 
-    updateProgressBar() {
-        const progressFill = document.querySelector('.progress-fill');
-        if (progressFill) {
-            progressFill.style.width = '100%';
-            progressFill.style.transition = 'width 1s linear';
-            setTimeout(() => {
-                progressFill.style.width = '0%';
-            }, 50);
+    showMiningEffect() {
+        // Добавляем визуальный эффект при майнинге
+        const miningContainer = document.querySelector('.mining-container');
+        if (!miningContainer) return;
+
+        const particle = document.createElement('div');
+        particle.className = 'mining-particle';
+        particle.innerHTML = `<img src="https://i.postimg.cc/FFx7T4Bh/image.png" alt="coin" style="width: 16px; height: 16px;">`;
+        
+        // Случайное начальное положение
+        const startX = Math.random() * 40 - 20;
+        particle.style.cssText = `
+            position: absolute;
+            left: 50%;
+            bottom: 100%;
+            transform: translateX(${startX}px);
+            animation: float-up 1s ease-out forwards;
+        `;
+
+        miningContainer.appendChild(particle);
+        
+        // Удаляем частицу после анимации
+        setTimeout(() => particle.remove(), 1000);
+    }
+
+    updateStats() {
+        const miningRateElement = document.getElementById('miningRate');
+        const energyUsageElement = document.getElementById('energyUsage');
+
+        if (miningRateElement) {
+            miningRateElement.innerText = this.miningRate;
+        }
+        if (energyUsageElement) {
+            energyUsageElement.innerText = this.energyUsage;
+        }
+
+        // Обновляем визуальное отображение кнопок
+        this.updateUpgradeButtons();
+    }
+
+    saveData() {
+        const data = {
+            miningRate: this.miningRate,
+            energyUsage: this.energyUsage,
+            upgrades: this.upgrades
+        };
+        localStorage.setItem('miningData', JSON.stringify(data));
+    }
+}
+
+// Добавляем стили для частиц
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes float-up {
+        0% {
+            transform: translateY(0) scale(1);
+            opacity: 0.8;
+        }
+        100% {
+            transform: translateY(-100px) scale(0.5);
+            opacity: 0;
         }
     }
-} 
+
+    @keyframes particle-burst {
+        0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(var(--x, 50px), var(--y, -50px)) scale(0);
+            opacity: 0;
+        }
+    }
+
+    .mining-particle {
+        z-index: 100;
+    }
+
+    .upgrade-particle {
+        z-index: 100;
+    }
+`;
+document.head.appendChild(style);
+
+// Инициализация при загрузке страницы
+let mining = null;
+document.addEventListener('DOMContentLoaded', () => {
+    mining = new Mining();
+}); 
