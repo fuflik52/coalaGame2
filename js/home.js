@@ -25,7 +25,15 @@ async function initializeTelegramId() {
         const checkTelegram = () => {
             if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
                 const userId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
+                const username = window.Telegram.WebApp.initDataUnsafe.user.username || 'Пользователь';
                 window.currentTelegramId = userId;
+                
+                // Обновляем отображаемое имя пользователя
+                const usernameElement = document.querySelector('.username');
+                if (usernameElement) {
+                    usernameElement.textContent = username;
+                }
+                
                 console.log('Telegram ID успешно получен:', userId);
                 return true;
             }
@@ -280,7 +288,10 @@ function handleClick(event) {
 }
 
 // Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Инициализируем Telegram ID и имя пользователя
+    await initializeTelegramId();
+    
     // Загружаем данные пользователя
     loadUserData();
     
