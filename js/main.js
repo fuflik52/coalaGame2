@@ -273,3 +273,16 @@ async function updateBalanceDisplay(balance) {
         }
     }
 }
+
+// Функция обновления отображения энергии
+function updateEnergyDisplay(currentEnergy, maxEnergy) {
+    const energyText = document.querySelector('#energyText span');
+    const energyBar = document.querySelector('#energyBar');
+    
+    if (energyText) {
+        energyText.textContent = `${currentEnergy}/${maxEnergy}`;
+    }
+    if (energyBar) {
+        energyBar.style.width = `${(currentEnergy / maxEnergy) * 100}%`;
+    }
+}
