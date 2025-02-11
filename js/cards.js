@@ -3,7 +3,7 @@ const cardsData = [
     {
         id: 1,
         title: "Начало пути",
-        description: "Коала только начинает своё путешествие. Даёт 120 эвкалипта в час",
+        description: "Коала только начинает своё путешествие!",
         image: "https://res.cloudinary.com/dib4woqge/image/upload/v1735300135/1000000472_wu48p4.png",
         price: 10000,
         income: 120,
@@ -12,7 +12,7 @@ const cardsData = [
     {
         id: 2,
         title: "Первые деньги",
-        description: "Коала заработала свои первые деньги. Продолжаем в том же духе",
+        description: "Коала заработала свои первые деньги. Продолжаем в том же духе!",
         image: "https://i.postimg.cc/sxpJmh0S/image.png",
         price: 25000,
         income: 350,
@@ -21,7 +21,7 @@ const cardsData = [
     {
         id: 3,
         title: "Коала на отдыхе",
-        description: "После первых заработанных денег можно хорошенько отдохнуть",
+        description: "После заработанных денег можно хорошенько отдохнуть!",
         image: "https://i.postimg.cc/pVwWnFHC/image.png",
         price: 50000,
         income: 800,
@@ -30,7 +30,7 @@ const cardsData = [
     {
         id: 4,
         title: "Снежные забавы",
-        description: "Наступила зима, а значит можно хорошо порезвиться в снежки",
+        description: "Зима подходит к концу, скоро масленица! Самое время для последних зимних развлечений!",
         image: "https://i.postimg.cc/nLCgk3KD/image.png",
         price: 100000,
         income: 1800,
@@ -39,7 +39,7 @@ const cardsData = [
     {
         id: 5,
         title: "Коала-путешественник",
-        description: "Наша коала отправляется в кругосветное путешествие, собирая эвкалипт по всему миру",
+        description: "Наша коала отправляется в кругосветное путешествие, собирая эвкалипт по всему миру!",
         image: "https://i.postimg.cc/wTxjfh3V/Leonardo-Phoenix-10-A-vibrant-whimsical-illustration-of-Koala-2.jpg",
         price: 200000,
         income: 3500,
@@ -48,7 +48,7 @@ const cardsData = [
     {
         id: 6,
         title: "Бизнес-коала",
-        description: "Пора открывать свой бизнес! Коала в деловом костюме управляет сетью эвкалиптовых плантаций",
+        description: "А вот и первый бизнес! Коала управляет сетью эвкалиптовых плантаций!",
         image: "https://i.postimg.cc/3JnrGd8c/Leonardo-Phoenix-10-A-whimsical-digital-illustration-of-a-koal-0.jpg",
         price: 500000,
         income: 7000,
@@ -57,7 +57,7 @@ const cardsData = [
     {
         id: 7,
         title: "Космический исследователь",
-        description: "Коала покоряет космос в поисках редких видов эвкалипта на других планетах",
+        description: "Коала покоряет космос в поисках редких видов эвкалипта, древних артефактов и новых форм жизни!",
         image: "https://i.postimg.cc/zvqbJ67b/Leonardo-Phoenix-10-A-vibrant-whimsical-illustration-of-Space-0.jpg",
         price: 1000000,
         income: 12000,
@@ -65,8 +65,8 @@ const cardsData = [
     },
     {
         id: 8,
-        title: "Коала-волшебник",
-        description: "Магия и эвкалипт - отличное сочетание! Коала освоила древние заклинания приумножения эвкалипта",
+        title: "Коала-маг",
+        description: "Магия и эвкалипт - отличное сочетание! Коала овладела древними знаниями приумножения эвкалипта!",
         image: "https://i.postimg.cc/bv23bSh0/Leonardo-Phoenix-10-In-a-whimsical-vibrant-illustration-depict-0.jpg",
         price: 5000000,
         income: 20000,
@@ -121,22 +121,22 @@ function showCardModal(cardData) {
     let backgroundGradient;
     switch(cardData.id) {
         case 1:
-            backgroundGradient = 'linear-gradient(180deg, rgba(139, 69, 69, 0.95) 0%, rgba(76, 38, 38, 0.98) 100%)';
+            backgroundGradient = 'linear-gradient(180deg, rgba(217, 196, 175, 0.95) 0%, rgba(186, 168, 150, 0.98) 100%)';
             break;
         case 2:
             backgroundGradient = 'linear-gradient(180deg, rgba(21, 71, 52, 0.95) 0%, rgba(15, 48, 35, 0.98) 100%)';
             break;
         case 3:
-            backgroundGradient = 'linear-gradient(180deg, rgba(195, 177, 145, 0.95) 0%, rgba(139, 126, 103, 0.98) 100%)';
+            backgroundGradient = 'linear-gradient(180deg, rgba(210, 180, 140, 0.95) 0%, rgba(180, 150, 110, 0.98) 100%)';
             break;
         case 4:
             backgroundGradient = 'linear-gradient(180deg, rgba(65, 105, 145, 0.95) 0%, rgba(45, 73, 101, 0.98) 100%)';
             break;
         case 5:
-            backgroundGradient = 'linear-gradient(180deg, rgba(147, 112, 219, 0.95) 0%, rgba(104, 79, 155, 0.98) 100%)';
+            backgroundGradient = 'linear-gradient(180deg, rgba(255, 198, 88, 0.95) 0%, rgba(222, 172, 77, 0.98) 100%)';
             break;
         case 6:
-            backgroundGradient = 'linear-gradient(180deg, rgba(195, 177, 145, 0.95) 0%, rgba(139, 126, 103, 0.98) 100%)';
+            backgroundGradient = 'linear-gradient(180deg, rgba(139, 69, 19, 0.95) 0%, rgba(101, 50, 14, 0.98) 100%)';
             break;
         case 7:
             backgroundGradient = 'linear-gradient(180deg, rgba(70, 130, 180, 0.95) 0%, rgba(49, 91, 126, 0.98) 100%)';
@@ -152,7 +152,7 @@ function showCardModal(cardData) {
         <div class="modal-content" style="background: ${backgroundGradient}">
             <div class="modal-header">
                 <h2>${cardData.title}</h2>
-                <button class="close-button">←</button>
+                <button class="close-button">×</button>
             </div>
             <img src="${cardData.image}" alt="${cardData.title}" class="card-image">
             <div class="description-box">
