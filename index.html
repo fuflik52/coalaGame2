@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/settings.css">
     <link rel="stylesheet" href="css/leaderboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/minigames.css">
 </head>
 <body>
     <!-- Приветственное сообщение -->
@@ -325,6 +326,19 @@
                         </div>
                     </section>
 
+                    <!-- Секция Minigames -->
+                    <section class="content-section" id="minigamesSection">
+                        <div class="minigames-container">
+                            <div class="minigames-header">
+                                <h2>Мини-игры</h2>
+                                <p>Играйте и зарабатывайте награды</p>
+                            </div>
+                            <div class="minigames-grid">
+                                <!-- Карточки мини-игр будут добавлены через JavaScript -->
+                            </div>
+                        </div>
+                    </section>
+
                     <!-- Секция Reward -->
                     <section class="content-section development-section" id="rewardSection">
                         <div class="development-status">
@@ -445,6 +459,7 @@
                         <img src="https://i.postimg.cc/T2C0DZG4/image.png" alt="Cards" class="nav-icon">
                         <span>Cards</span>
                     </div>
+
                     <div class="nav-item" data-section="mining">
                         <img src="https://i.postimg.cc/jd48ZLzZ/image.png" alt="Mining" class="nav-icon">
                         <span>Mining</span>
@@ -453,7 +468,10 @@
                         <img src="https://i.postimg.cc/XY2s6m15/image.png" alt="Reward" class="nav-icon">
                         <span>Reward</span>
                     </div>
-
+                    <div class="nav-item" data-section="minigames">
+                        <img src="https://i.postimg.cc/x1G1QxmR/image.png" alt="Minigames" class="nav-icon">
+                        <span>Игры</span>
+                    </div>
                 </nav>
 
                 <!-- Модальное окно настроек -->
@@ -507,6 +525,8 @@
                         </div>
                     </div>
                 </div>
+                
+                <script src="js/minigames.js"></script>
             </div>
         </div>
     </div>

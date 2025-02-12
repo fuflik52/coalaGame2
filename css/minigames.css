@@ -1,0 +1,389 @@
+.minigames-container {
+    padding: 0;
+    height: 100vh;
+    width: 100%;
+    position: relative;
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.minigames-container::-webkit-scrollbar {
+    display: none;
+}
+
+.minigames-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.minigames-header h2 {
+    font-size: 24px;
+    margin-bottom: 8px;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.minigames-header p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.minigames-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding-bottom: 80px;
+}
+
+.minigame-card {
+    background: linear-gradient(145deg, rgba(45, 45, 45, 0.95), rgba(35, 35, 35, 0.98));
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.minigame-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.minigame-card:active {
+    transform: scale(0.98);
+}
+
+.minigame-image {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 16px 16px 0 0;
+}
+
+.minigame-content {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.minigame-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.minigame-description {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.minigame-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.minigame-reward {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #4CAF50;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 4px 8px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 8px;
+}
+
+.minigame-reward img {
+    width: 18px;
+    height: 18px;
+}
+
+.minigame-status {
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.minigame-status.available {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.minigame-status.cooldown {
+    background: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+}
+
+/* Анимации */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.minigame-card.new {
+    animation: pulse 2s infinite;
+}
+
+.minigame-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #4CAF50;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* Стили для слот-машины */
+.slots-container {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.slots-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.slots-header h2 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 24px;
+}
+
+.balance-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.balance-display img {
+    width: 20px;
+    height: 20px;
+}
+
+.balance-display span {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.slot-machine {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.reels-container {
+    flex: 0.8;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    max-height: 300px;
+    height: 300px;
+    width: 90%;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reel {
+    flex: 1;
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    margin: 0 5px;
+}
+
+.symbols-container {
+    position: absolute;
+    width: 100%;
+    transition: none;
+    left: 0;
+    will-change: transform;
+    z-index: 1;
+}
+
+.slot-symbol {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-sizing: border-box;
+    z-index: 1;
+}
+
+.slot-symbol img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+}
+
+.win-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 3px;
+    background: #4CAF50;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.8);
+    width: 90%;
+    margin: 0 auto;
+}
+
+.controls {
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    z-index: 10;
+}
+
+.spin-button {
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    border: none;
+    border-radius: 25px;
+    padding: 15px 40px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 0 auto;
+    position: relative;
+    bottom: 10px;
+}
+
+.spin-button:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(45deg, #45a049, #4CAF50);
+}
+
+.spin-button:active {
+    transform: translateY(0);
+}
+
+.spin-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.spin-cost {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    font-size: 18px;
+}
+
+.win-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(76, 175, 80, 0.9);
+    padding: 20px 40px;
+    border-radius: 30px;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    animation: popIn 0.3s ease-out;
+    z-index: 1000;
+}
+
+@keyframes popIn {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.nav-item[data-section="minigames"] {
+    position: relative;
+}
+
+.nav-item[data-section="minigames"]::after {
+    content: 'тест';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: rgba(255, 152, 0, 0.9);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+} 
